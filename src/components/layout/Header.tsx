@@ -1,0 +1,262 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Menu, X, ChevronDown } from 'lucide-react'
+import { useScrollPosition } from '@/shared/hooks/useScrollPosition'
+import { cn } from '@/shared/utils/cn'
+
+const navigation = [
+  { name: 'Home', href: '/' },
+  { name: 'Services', href: '/services' },
+  { 
+    name: 'Products', 
+    href: '/products',
+    hasDropdown: true,
+    dropdownItems: [
+      { name: 'PPM Tool Finder', href: '/products/ppm-tool-finder' },
+      { name: 'PPM-Tool', href: '/ppm-tool' }
+    ]
+  },
+  { name: 'About', href: '/about' },
+  { name: 'Contact', href: '/contact' },
+]
+
+export function Header() {
+  const { isScrolled } = useScrollPosition()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveDropdown(null)
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
+  const toggleDropdown = (itemName: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    setActiveDropdown(activeDropdown === itemName ? null : itemName)
+  }
+
+  const isCurrentPage = (href: string) => pathname === href
+  const isCurrentDropdownPage = (dropdownItems: any[]) => 
+    dropdownItems.some(item => pathname === item.href)
+
+  return (
+    <header
+      className={cn(
+        "fixed top-0 w-full z-50 transition-all duration-300 bg-white shadow-lg",
+        isScrolled ? 'py-2' : 'py-4'
+      )}
+    >
+      <nav className="container px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center space-x-3 group">
+          <div className="relative h-8 w-8 sm:h-10 sm:w-10">
+            <Image
+              src="/images/Logo_Panoramic_Solutions.webp"
+              alt="Panoramic Solutions Logo"
+              fill
+              className="object-contain group-hover:opacity-80 transition-opacity"
+              priority
+            />
+          </div>
+          <span className="text-lg sm:text-xl font-semibold text-midnight">
+            <span className="hidden sm:inline">Panoramic Solutions</span>
+            <span className="sm:hidden">Panoramic</span>
+          </span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+          {navigation.map((item) => (
+            <div key={item.name} className="relative">
+              {item.hasDropdown ? (
+                <div className="relative group">
+                  <button
+                    className={cn(
+                      "flex items-center space-x-1 text-sm font-medium transition-colors hover:text-alpine relative py-2",
+                      isCurrentDropdownPage(item.dropdownItems || [])
+                        ? 'text-alpine'
+                        : 'text-midnight/70'
+                    )}
+                  >
+                    <span>{item.name}</span>
+                    <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
+                  </button>
+                  
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-midnight/10 rounded-lg shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    {item.dropdownItems?.map((dropdownItem) => (
+                      <Link
+                        key={dropdownItem.name}
+                        href={dropdownItem.href}
+                        className={cn(
+                          "block px-4 py-3 text-sm font-medium transition-colors hover:bg-alpine/5 hover:text-alpine first:rounded-t-lg last:rounded-b-lg",
+                          pathname === dropdownItem.href
+                            ? 'text-alpine bg-alpine/10'
+                            : 'text-midnight/70'
+                        )}
+                      >
+                        {dropdownItem.name}
+                      </Link>
+                    ))}
+                  </div>
+                  
+                  {isCurrentDropdownPage(item.dropdownItems || []) && (
+                    <motion.div
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-alpine"
+                      layoutId="activeTab"
+                    />
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-alpine relative py-2",
+                    isCurrentPage(item.href)
+                      ? 'text-alpine'
+                      : 'text-midnight/70'
+                  )}
+                >
+                  {item.name}
+                  {isCurrentPage(item.href) && (
+                    <motion.div
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-alpine"
+                      layoutId="activeTab"
+                    />
+                  )}
+                </Link>
+              )}
+            </div>
+          ))}
+          
+          <Button
+            size="sm"
+            className="btn-hover-lift bg-alpine hover:bg-summit text-white px-6 py-2"
+            onClick={() => window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank')}
+          >
+            Book A Call
+          </Button>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          className="lg:hidden p-3 text-midnight hover:text-alpine transition-colors"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle mobile menu"
+          style={{ minWidth: '48px', minHeight: '48px' }}
+        >
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </nav>
+
+      {/* Mobile Navigation */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            className="lg:hidden bg-white/95 backdrop-blur-sm border-t border-midnight/10 shadow-lg"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="container px-4 sm:px-6 py-6 space-y-1">
+              {navigation.map((item) => (
+                <div key={item.name}>
+                  {item.hasDropdown ? (
+                    <div>
+                      <button
+                        onClick={(e) => toggleDropdown(`mobile-${item.name}`, e)}
+                        className={cn(
+                          "w-full flex items-center justify-between py-3 px-4 text-base font-medium transition-colors hover:text-alpine hover:bg-alpine/5 rounded-lg",
+                          isCurrentDropdownPage(item.dropdownItems || [])
+                            ? 'text-alpine bg-alpine/10'
+                            : 'text-midnight/70'
+                        )}
+                        style={{ minHeight: '48px' }}
+                      >
+                        <span>{item.name}</span>
+                        <ChevronDown className={cn(
+                          "h-4 w-4 transition-transform",
+                          activeDropdown === `mobile-${item.name}` ? 'rotate-180' : ''
+                        )} />
+                      </button>
+                      
+                      <AnimatePresence>
+                        {activeDropdown === `mobile-${item.name}` && (
+                          <motion.div
+                            className="ml-4 mt-1 space-y-1"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {item.dropdownItems?.map((dropdownItem) => (
+                              <Link
+                                key={dropdownItem.name}
+                                href={dropdownItem.href}
+                                className={cn(
+                                  "block py-2 px-4 text-base font-medium transition-colors hover:text-alpine hover:bg-alpine/5 rounded-lg",
+                                  pathname === dropdownItem.href
+                                    ? 'text-alpine bg-alpine/10'
+                                    : 'text-midnight/70'
+                                )}
+                                onClick={() => {
+                                  setIsMobileMenuOpen(false)
+                                  setActiveDropdown(null)
+                                }}
+                                style={{ minHeight: '48px' }}
+                              >
+                                {dropdownItem.name}
+                              </Link>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "block py-3 px-4 text-base font-medium transition-colors hover:text-alpine hover:bg-alpine/5 rounded-lg",
+                        isCurrentPage(item.href)
+                          ? 'text-alpine bg-alpine/10'
+                          : 'text-midnight/70'
+                      )}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      style={{ minHeight: '48px' }}
+                    >
+                      {item.name}
+                    </Link>
+                  )}
+                </div>
+              ))}
+              
+              <div className="pt-4">
+                <Button
+                  className="w-full bg-alpine hover:bg-summit text-white py-3"
+                  style={{ minHeight: '48px' }}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank')
+                  }}
+                >
+                  Book A Call
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  )
+}

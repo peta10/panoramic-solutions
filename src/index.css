@@ -1,0 +1,240 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 11, 30, 45;
+  --background-start-rgb: 245, 249, 252;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 245, 249, 252;
+    --background-start-rgb: 11, 30, 45;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 245 249 252;
+    --foreground: 11 30 45;
+    --card: 255 255 255;
+    --card-foreground: 11 30 45;
+    --popover: 255 255 255;
+    --popover-foreground: 11 30 45;
+    --primary: 0 87 183;
+    --primary-foreground: 245 249 252;
+    --secondary: 46 139 87;
+    --secondary-foreground: 245 249 252;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --accent: 255 180 0;
+    --accent-foreground: 11 30 45;
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 250 252;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 0 87 183;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 11 30 45;
+    --foreground: 245 249 252;
+    --card: 15 35 50;
+    --card-foreground: 245 249 252;
+    --popover: 15 35 50;
+    --popover-foreground: 245 249 252;
+    --primary: 0 87 183;
+    --primary-foreground: 245 249 252;
+    --secondary: 46 139 87;
+    --secondary-foreground: 245 249 252;
+    --muted: 30 45 60;
+    --muted-foreground: 148 163 184;
+    --accent: 255 180 0;
+    --accent-foreground: 11 30 45;
+    --destructive: 220 38 38;
+    --destructive-foreground: 248 250 252;
+    --border: 30 45 60;
+    --input: 30 45 60;
+    --ring: 0 87 183;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  /* Ensure proper focus styles and form element styling */
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+  }
+  
+  /* Override browser defaults for form elements */
+  input,
+  textarea,
+  select {
+    background-color: white !important;
+    color: #0B1E2D !important;
+  }
+  
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #0057B7 !important;
+    box-shadow: 0 0 0 2px rgba(0, 87, 183, 0.2) !important;
+  }
+  
+  /* Ensure placeholder text is properly styled */
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(11, 30, 45, 0.5) !important;
+  }
+  
+  /* Override any autocomplete styling */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #0B1E2D !important;
+    background-color: white !important;
+    color: #0B1E2D !important;
+  }
+
+  /* Ensure minimum touch targets */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [role="link"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve readability */
+  body {
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Respect user's motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #0057B7 0%, #2E8B57 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, rgba(11, 30, 45, 0.8) 0%, rgba(0, 87, 183, 0.6) 50%, rgba(46, 139, 87, 0.4) 100%);
+  }
+
+  .mountain-footer {
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(46, 139, 87, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(0, 87, 183, 0.1) 0%, transparent 50%);
+  }
+
+  .btn-hover-lift {
+    transition: all 0.2s ease;
+  }
+
+  .btn-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 87, 183, 0.2);
+  }
+
+  .card-tilt {
+    transition: all 0.3s ease;
+  }
+
+  .card-tilt:hover {
+    transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+  }
+
+  /* Mobile-first spacing utilities */
+  .mobile-px {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .mobile-py {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  .mobile-gap {
+    @apply gap-6 sm:gap-8;
+  }
+
+  /* Typography utilities for better mobile experience */
+  .heading-mobile {
+    @apply text-3xl sm:text-4xl lg:text-5xl xl:text-6xl;
+  }
+
+  .subheading-mobile {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+
+  .body-mobile {
+    @apply text-base sm:text-lg;
+  }
+
+  /* Prevent layout shift during animations */
+  .prevent-layout-shift {
+    contain: layout style paint;
+  }
+
+  /* Touch-friendly interactive elements */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Optimized shadows for mobile */
+  .mobile-shadow {
+    @apply shadow-lg sm:shadow-xl lg:shadow-2xl;
+  }
+
+  /* Performance optimizations for animations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Smooth text rendering for animated text */
+  .smooth-text {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .motion-reduce {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
