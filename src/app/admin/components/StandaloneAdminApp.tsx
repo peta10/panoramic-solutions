@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Plus } from 'lucide-react';
+import { AlertCircle, Plus, LogOut } from 'lucide-react';
 import { supabase } from '@/ppm-tool/shared/lib/supabase';
 import { useAuth } from '@/ppm-tool/shared/hooks/useAuth';
-import { AuthMenu } from '@/ppm-tool/components/auth/AuthMenu';
+import { AdminLogin } from './AdminLogin';
 
 // Import types from PPM tool
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
@@ -14,7 +14,7 @@ import { ToolsList } from '@/ppm-tool/features/admin/ToolsList';
 import { EditToolForm } from '@/ppm-tool/features/admin/EditToolForm';
 import { AdminToolForm } from '@/ppm-tool/features/admin/AdminToolForm';
 
-export const AdminDashboard: React.FC = () => {
+export const StandaloneAdminApp: React.FC = () => {
   const [tools, setTools] = useState<Tool[]>([]);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +25,7 @@ export const AdminDashboard: React.FC = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
   
   useEffect(() => {
-    if (user && supabase) {
+    if (user) {
       fetchTools();
       fetchCriteria();
     }
@@ -184,9 +184,9 @@ export const AdminDashboard: React.FC = () => {
   // Show loading state while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-alpine mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -195,17 +195,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Show login form if no user is authenticated
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Panoramic Solutions Admin</h1>
-          <p className="text-gray-600 mb-6 text-center">Please sign in to access the tool management dashboard.</p>
-          <div className="flex justify-center">
-            <AuthMenu user={user} onSignOut={signOut} />
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminLogin />;
   }
 
   // Show access denied if user is not admin
@@ -216,16 +206,22 @@ export const AdminDashboard: React.FC = () => {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600 mb-4">
-            You are signed in as <strong>{user.email}</strong>, but you don't have admin permissions to access this dashboard.
+            You are signed in as <strong>{user.email}</strong>, but you don't have admin permissions.
           </p>
           <p className="text-sm text-gray-500 mb-6">
             Please contact your administrator to request access.
           </p>
           <div className="space-y-3">
-            <AuthMenu user={user} onSignOut={signOut} />
+            <button
+              onClick={signOut}
+              className="flex items-center justify-center w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </button>
             <button
               onClick={() => window.location.href = 'https://panoramic-solutions.com'}
-              className="block w-full px-4 py-2 bg-alpine text-white rounded-lg hover:bg-summit transition-colors"
+              className="block w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               Back to Main Site
             </button>
@@ -237,13 +233,13 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
+      {/* Admin Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-40">
-        <div className="container mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
-                Tool Management Dashboard
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                Panoramic Solutions - Admin Dashboard
               </h1>
             </div>
             
@@ -251,21 +247,30 @@ export const AdminDashboard: React.FC = () => {
               {/* Add New Tool button */}
               <button 
                 onClick={handleAddNewTool}
-                className="flex items-center px-4 py-2 bg-alpine text-white rounded-lg hover:bg-summit transition-colors shadow-sm"
+                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Add New Tool
               </button>
               
-              {/* Auth Menu */}
-              <AuthMenu user={user} onSignOut={signOut} />
+              {/* User Menu */}
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-600">{user.email}</span>
+                <button
+                  onClick={signOut}
+                  className="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
       
       {/* Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start">
             <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
