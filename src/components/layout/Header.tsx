@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { useScrollPosition } from '@/shared/hooks/useScrollPosition'
 import { cn } from '@/shared/utils/cn'
+import { useAuth } from '@/shared/hooks/useAuth'
+import { AuthMenu } from '@/components/auth/AuthMenu'
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -26,11 +28,16 @@ const navigation = [
   { name: 'Contact', href: '/contact' },
 ]
 
+const adminNavigation = [
+  { name: 'Admin', href: '/admin' },
+]
+
 export function Header() {
   const { isScrolled } = useScrollPosition()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const pathname = usePathname()
+  const { user, isAdmin, signOut } = useAuth()
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -139,6 +146,32 @@ export function Header() {
             </div>
           ))}
           
+          {/* Admin Navigation - only show for admin users */}
+          {isAdmin && adminNavigation.map((item) => (
+            <div key={item.name}>
+              <Link
+                href={item.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-alpine relative py-2",
+                  isCurrentPage(item.href)
+                    ? 'text-alpine'
+                    : 'text-midnight/70'
+                )}
+              >
+                {item.name}
+                {isCurrentPage(item.href) && (
+                  <motion.div
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-alpine"
+                    layoutId="activeTab"
+                  />
+                )}
+              </Link>
+            </div>
+          ))}
+          
+          {/* Auth Menu */}
+          <AuthMenu user={user} onSignOut={signOut} />
+          
           <Button
             size="sm"
             className="btn-hover-lift bg-alpine hover:bg-summit text-white px-6 py-2"
@@ -238,6 +271,25 @@ export function Header() {
                       {item.name}
                     </Link>
                   )}
+                </div>
+              ))}
+              
+              {/* Admin Navigation - only show for admin users */}
+              {isAdmin && adminNavigation.map((item) => (
+                <div key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "block py-3 px-4 text-base font-medium transition-colors hover:text-alpine hover:bg-alpine/5 rounded-lg",
+                      isCurrentPage(item.href)
+                        ? 'text-alpine bg-alpine/10'
+                        : 'text-midnight/70'
+                    )}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    style={{ minHeight: '48px' }}
+                  >
+                    {item.name}
+                  </Link>
                 </div>
               ))}
               
