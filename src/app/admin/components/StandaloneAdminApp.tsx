@@ -22,7 +22,13 @@ export const StandaloneAdminApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [isClient, setIsClient] = useState(false);
   const { user, isAdmin, loading, signOut } = useAuth();
+  
+  // Prevent hydration mismatches
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   useEffect(() => {
     if (user) {
@@ -181,6 +187,18 @@ export const StandaloneAdminApp: React.FC = () => {
     }
   };
   
+  // Prevent hydration mismatches by not rendering until client-side
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading state while checking authentication
   if (loading) {
     return (
