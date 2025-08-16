@@ -10,8 +10,13 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         checkAdminStatus(session.user);
@@ -22,7 +27,7 @@ export function useAuth() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         checkAdminStatus(session.user);
@@ -35,7 +40,7 @@ export function useAuth() {
   }, []);
 
   const checkAdminStatus = async (user: User) => {
-    if (!user) {
+    if (!user || !supabase) {
       setIsAdmin(false);
       return;
     }
@@ -62,6 +67,8 @@ export function useAuth() {
   };
 
   const signOut = async () => {
+    if (!supabase) return;
+    
     try {
       await supabase.auth.signOut();
       setIsAdmin(false);

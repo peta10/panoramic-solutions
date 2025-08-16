@@ -94,7 +94,7 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
         }
         
         // Ensure all criteria have an initial value
-        data.forEach(criterion => {
+        data.forEach((criterion: any) => {
           if (!ratings[criterion.id]) {
             ratings[criterion.id] = 1;
           }
@@ -133,8 +133,8 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
         setTagTypes(typeData);
         
         // Find the methodology and function type IDs
-        const methodologyType = typeData.find(t => t.name === 'Methodology');
-        const functionType = typeData.find(t => t.name === 'Function');
+        const methodologyType = typeData.find((t: any) => t.name === 'Methodology');
+        const functionType = typeData.find((t: any) => t.name === 'Function');
         
         if (methodologyType) setMethodologyTypeId(methodologyType.id);
         if (functionType) setFunctionTypeId(functionType.id);

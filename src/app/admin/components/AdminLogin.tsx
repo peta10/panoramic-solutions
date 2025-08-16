@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail, Lock, AlertCircle, LogIn, UserPlus } from 'lucide-react';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/ppm-tool/shared/lib/supabase';
 
 export const AdminLogin: React.FC = () => {
   const [showSignUp, setShowSignUp] = useState(false);
@@ -20,6 +20,12 @@ export const AdminLogin: React.FC = () => {
     setError(null);
     setIsLoading(true);
 
+    if (!isSupabaseConfigured() || !supabase) {
+      setError('Authentication service is not configured. Please contact your administrator.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       if (showSignUp) {
         const { error } = await supabase.auth.signUp({
@@ -36,7 +42,7 @@ export const AdminLogin: React.FC = () => {
         if (error) throw error;
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +61,19 @@ export const AdminLogin: React.FC = () => {
             Tool Management Portal
           </p>
         </div>
+
+        {/* Configuration Status */}
+        {!isSupabaseConfigured() && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+              <div>
+                <p className="text-sm font-medium text-yellow-800">Configuration Required</p>
+                <p className="text-xs text-yellow-600">Supabase environment variables need to be set up.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Login Form */}
         <div className="bg-white rounded-xl shadow-lg p-8">

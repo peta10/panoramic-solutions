@@ -248,7 +248,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         if (data) {
           console.log('Fetched criteria from database:', data);
           // Transform database criteria to match Criterion type, using defaultCriteria for descriptions
-          const transformedCriteria: Criterion[] = data.map(item => {
+          const transformedCriteria: Criterion[] = data.map((item: any) => {
             // Find matching default criterion for descriptions
             const defaultCriterion = defaultCriteria.find(dc => dc.name === item.name);
             return {

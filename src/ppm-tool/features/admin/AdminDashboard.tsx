@@ -76,7 +76,7 @@ export const AdminDashboard: React.FC = () => {
       
       if (data) {
         // Transform database criteria to match Criterion type
-        const formattedCriteria: Criterion[] = data.map(item => ({
+        const formattedCriteria: Criterion[] = data.map((item: any) => ({
           id: item.id,
           name: item.name,
           description: item.description || 'No description available',

@@ -81,7 +81,7 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
           const initialRatings: Record<string, number> = {};
           const initialDescriptions: Record<string, string> = {};
           
-          data.forEach(criterion => {
+          data.forEach((criterion: any) => {
             initialRatings[criterion.id] = 1;
             initialDescriptions[criterion.id] = '';
           });
@@ -120,8 +120,8 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
           setTagTypes(tagTypeData);
           
           // Find methodology and function tag types
-          const methodologyType = tagTypeData.find(t => t.name === 'Methodology');
-          const functionType = tagTypeData.find(t => t.name === 'Function');
+          const methodologyType = tagTypeData.find((t: any) => t.name === 'Methodology');
+          const functionType = tagTypeData.find((t: any) => t.name === 'Function');
           
           if (methodologyType) setMethodologyTagType(methodologyType.id);
           if (functionType) setFunctionTagType(functionType.id);
