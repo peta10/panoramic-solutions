@@ -31,6 +31,12 @@ export const AuthMenu: React.FC<AuthMenuProps> = ({ user, onSignOut }) => {
     setError(null);
     setIsLoading(true);
 
+    if (!supabase) {
+      setError('Authentication service not available');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       if (showSignUp) {
         const { error } = await supabase.auth.signUp({

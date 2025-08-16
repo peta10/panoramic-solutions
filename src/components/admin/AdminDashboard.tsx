@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, Plus } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/shared/hooks/useAuth';
-import { AuthMenu } from '@/components/auth/AuthMenu';
+import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { useAuth } from '@/ppm-tool/shared/hooks/useAuth';
+import { AuthMenu } from '@/ppm-tool/components/auth/AuthMenu';
 
 // Import types from PPM tool
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
@@ -32,12 +32,6 @@ export const AdminDashboard: React.FC = () => {
   }, [user]);
 
   const fetchTools = async () => {
-    if (!supabase) {
-      setError('Database connection not available');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
@@ -70,8 +64,6 @@ export const AdminDashboard: React.FC = () => {
   };
   
   const fetchCriteria = async () => {
-    if (!supabase) return;
-
     try {
       const { data, error } = await supabase
         .from('criteria')
@@ -114,8 +106,6 @@ export const AdminDashboard: React.FC = () => {
   };
   
   const handleDeleteTool = async (toolId: string) => {
-    if (!supabase) return;
-
     if (!confirm('Are you sure you want to delete this tool? This action cannot be undone.')) {
       return;
     }
@@ -138,8 +128,6 @@ export const AdminDashboard: React.FC = () => {
   };
   
   const handleApproveRejectTool = async (toolId: string, status: 'approved' | 'rejected') => {
-    if (!supabase) return;
-
     try {
       setError(null);
       
@@ -160,8 +148,6 @@ export const AdminDashboard: React.FC = () => {
   };
   
   const handleApproveAll = async () => {
-    if (!supabase) return;
-
     try {
       setError(null);
       
@@ -212,8 +198,8 @@ export const AdminDashboard: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Admin Access Required</h1>
-          <p className="text-gray-600 mb-6 text-center">Please sign in to access the admin dashboard.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Panoramic Solutions Admin</h1>
+          <p className="text-gray-600 mb-6 text-center">Please sign in to access the tool management dashboard.</p>
           <div className="flex justify-center">
             <AuthMenu user={user} onSignOut={signOut} />
           </div>
@@ -226,19 +212,22 @@ export const AdminDashboard: React.FC = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-md bg-white rounded-lg shadow-lg p-8">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the admin dashboard. Please contact your administrator.
+            You are signed in as <strong>{user.email}</strong>, but you don't have admin permissions to access this dashboard.
           </p>
-          <div className="space-y-2">
+          <p className="text-sm text-gray-500 mb-6">
+            Please contact your administrator to request access.
+          </p>
+          <div className="space-y-3">
             <AuthMenu user={user} onSignOut={signOut} />
             <button
-              onClick={() => window.history.back()}
-              className="block w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              onClick={() => window.location.href = 'https://panoramic-solutions.com'}
+              className="block w-full px-4 py-2 bg-alpine text-white rounded-lg hover:bg-summit transition-colors"
             >
-              Go Back
+              Back to Main Site
             </button>
           </div>
         </div>

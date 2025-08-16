@@ -7,6 +7,9 @@ import { FullscreenProvider } from '@/ppm-tool/shared/contexts/FullscreenContext
 import { GuidanceProvider } from '@/ppm-tool/shared/contexts/GuidanceContext';
 import { HowItWorksOverlay } from '@/ppm-tool/components/overlays/HowItWorksOverlay';
 
+// Force dynamic rendering to avoid SSG issues with Supabase
+export const dynamic = 'force-dynamic';
+
 export default function PPMToolPage() {
   const [showHowItWorks, setShowHowItWorks] = useState(true); // Show on initial load
   const [showGuidedRanking, setShowGuidedRanking] = useState(false);
