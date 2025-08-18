@@ -88,11 +88,7 @@ export function Footer() {
                   Services
                 </Link>
               </motion.div>
-              <motion.div variants={itemVariants}>
-                <Link href="/ppm-tool-finder" className="block transition-colors duration-200 hover:text-alpine">
-                  PPM Tool Finder
-                </Link>
-              </motion.div>
+
               <motion.div variants={itemVariants}>
                 <Link href="/about" className="block transition-colors duration-200 hover:text-alpine">
                   About

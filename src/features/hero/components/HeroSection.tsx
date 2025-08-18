@@ -128,9 +128,9 @@ export function HeroSection() {
             size="lg"
             className="btn-hover-lift border-2 border-white text-white hover:bg-white hover:text-midnight px-6 sm:px-8 py-3 sm:py-4 shadow-lg font-semibold bg-white/10 backdrop-blur-sm text-base sm:text-sm"
             style={{ minHeight: '48px' }}
-            onClick={() => window.open('/products/ppm-tool-finder', '_self')}
+            onClick={() => window.open('/ppm-tool', '_self')}
           >
-            Find Your PPM Tool
+            Explore PPM Tool
           </Button>
         </motion.div>
       </motion.div>

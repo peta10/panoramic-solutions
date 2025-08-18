@@ -32,38 +32,38 @@ export default function ProductsPage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             
-            {/* PPM Tool Finder */}
+            {/* PPM-Tool */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-midnight/5">
               <div className="w-16 h-16 bg-gradient-to-br from-alpine to-summit rounded-2xl flex items-center justify-center mb-6">
                 <Wrench className="h-8 w-8 text-white" />
               </div>
               
               <h3 className="text-2xl font-bold text-midnight mb-4">
-                PPM Tool Finder
+                PPM-Tool
               </h3>
               
               <p className="text-midnight/70 mb-6 leading-relaxed">
-                Interactive tool to find the perfect Project Portfolio Management solution 
-                for your organization's specific needs and requirements.
+                Interactive Project Portfolio Management comparison tool 
+                to evaluate and compare different PPM platforms for your organization.
               </p>
               
               <div className="space-y-3 mb-8">
                 <div className="flex items-center text-sm text-midnight/60">
                   <Zap className="h-4 w-4 mr-2 text-summit" />
-                  Compare 20+ leading PPM platforms
+                  Compare multiple PPM platforms
                 </div>
                 <div className="flex items-center text-sm text-midnight/60">
                   <Zap className="h-4 w-4 mr-2 text-summit" />
-                  Personalized recommendations
+                  Detailed feature analysis
                 </div>
                 <div className="flex items-center text-sm text-midnight/60">
                   <Zap className="h-4 w-4 mr-2 text-summit" />
-                  Feature comparison matrix
+                  Interactive comparison charts
                 </div>
               </div>
               
               <Button asChild className="w-full bg-alpine hover:bg-summit">
-                <Link href="/ppm-tool-finder">
+                <Link href="/ppm-tool">
                   Explore Tool
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

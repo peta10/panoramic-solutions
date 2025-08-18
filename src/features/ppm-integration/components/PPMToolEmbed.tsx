@@ -13,8 +13,8 @@ interface PPMToolEmbedProps {
 }
 
 const PPMToolEmbed = memo(function PPMToolEmbed({ 
-  src = '/ppm-tool-finder',
-  title = 'PPM Tool Finder',
+  src = '/ppm-tool',
+  title = 'PPM Tool',
   onLoad,
   onError 
 }: PPMToolEmbedProps) {

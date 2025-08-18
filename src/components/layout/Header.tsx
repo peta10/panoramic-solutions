@@ -18,7 +18,6 @@ const navigation = [
     href: '/products',
     hasDropdown: true,
     dropdownItems: [
-      { name: 'PPM Tool Finder', href: '/products/ppm-tool-finder' },
       { name: 'PPM-Tool', href: '/ppm-tool' }
     ]
   },
