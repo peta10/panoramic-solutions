@@ -1,0 +1,3 @@
+[33mfa73c47[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix Netlify build: Update package-lock.json for resend dependency and fix TypeScript error in useLenis
+[33m3976aac[m buildfix
+[33m35a5a77[m 8/19/2025
