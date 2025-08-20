@@ -12,6 +12,7 @@ const nextConfig = {
       'chart.js',
       'react-chartjs-2'
     ],
+    webpackBuildWorker: true,
   },
   
   // Compiler optimizations
@@ -28,6 +29,12 @@ const nextConfig = {
       '@/ppm-tool': path.resolve(__dirname, 'src/ppm-tool'),
       '@': path.resolve(__dirname, 'src')
     };
+    
+    // Ensure proper module resolution for external packages
+    config.resolve.modules = [
+      'node_modules',
+      path.resolve(__dirname, 'node_modules')
+    ];
     
     // Handle PDF generation libraries and canvas fallbacks
     config.resolve.fallback = {
