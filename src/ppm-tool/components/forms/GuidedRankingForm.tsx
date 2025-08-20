@@ -422,7 +422,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
           >
             <motion.div 
               ref={formRef} 
-              className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden pointer-events-auto h-[95vh] max-h-[55rem] md:h-[85vh] md:max-h-[58rem] lg:h-[80vh] lg:max-h-[64rem] flex flex-col"
+              className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden pointer-events-auto h-[95vh] max-h-[55rem] md:h-[98vh] md:max-h-[75rem] lg:h-[95vh] lg:max-h-[75rem] flex flex-col"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
@@ -433,10 +433,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
               animate="visible"
               exit="exit"
               onClick={(e) => e.stopPropagation()}
-              onWheel={(e) => {
-                // Ensure wheel events work properly
-                e.stopPropagation();
-              }}
+              
             >
             {/* Header */}
             <div className="px-4 md:px-6 py-3 md:py-4 border-b flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -478,7 +475,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
             </div>
 
             {/* Question Content - Scrollable Container */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto md:overflow-y-visible">
               <div className="p-4 md:p-6"
                 style={{
                   WebkitOverflowScrolling: 'touch',
@@ -501,12 +498,6 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
                     </h4>
                     <div 
                       className={`space-y-2 md:space-y-3 ${currentQuestion.id === 'q11' ? 'max-h-64 md:max-h-80 lg:max-h-96 overflow-y-auto pr-2' : ''}`}
-                      onWheel={currentQuestion.id === 'q11' ? (e) => {
-                        // Prevent Lenis from interfering with this scroll container
-                        e.stopPropagation();
-                        const target = e.currentTarget;
-                        target.scrollTop += e.deltaY;
-                      } : undefined}
                     >
                         {currentQuestion.options.map((option) => {
                           const isSelected = currentQuestion.isMultiSelect

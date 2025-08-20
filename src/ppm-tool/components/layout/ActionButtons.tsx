@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Send, Calendar } from 'lucide-react';
+import { Send, HelpCircle } from 'lucide-react';
 import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
 import { cn } from '@/ppm-tool/shared/lib/utils';
 import { EmailCaptureModal } from '@/ppm-tool/components/forms/EmailCaptureModal';
@@ -11,11 +11,13 @@ import type { Tool, Criterion } from '@/ppm-tool/shared/types';
 interface ActionButtonsProps {
   selectedTools?: Tool[];
   selectedCriteria?: Criterion[];
+  onShowHowItWorks?: () => void;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({ 
   selectedTools = [], 
-  selectedCriteria = [] 
+  selectedCriteria = [],
+  onShowHowItWorks
 }) => {
   const { isMobile } = useFullscreen();
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -42,10 +44,6 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
     }
   };
 
-  const handleBookCall = () => {
-    window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank');
-  };
-
   // Mobile version - fixed bottom bar
   if (isMobile) {
     return (
@@ -53,30 +51,35 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         <div className="fixed bottom-0 left-0 right-0 z-50">
           {/* Safe area padding for modern mobile devices */}
           <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg p-3 pb-safe">
-            <div className="flex gap-3 max-w-lg mx-auto">
+            <div className="flex gap-2 justify-center max-w-lg mx-auto">
+              {/* How It Works Button - Blue (Mobile) */}
+              {onShowHowItWorks && (
+                <button
+                  onClick={onShowHowItWorks}
+                  className={cn(
+                    "flex-1 bg-blue-400 text-white px-3 py-3 rounded-xl font-medium text-sm",
+                    "flex items-center justify-center gap-2",
+                    "active:scale-95 transition-transform",
+                    "shadow-sm active:shadow-inner hover:bg-blue-500"
+                  )}
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  How It Works
+                </button>
+              )}
+              
+              {/* Get Report Button - Green (Mobile) */}
               <button
                 onClick={handleGetReport}
                 className={cn(
-                  "flex-1 bg-alpine-blue-400 text-white px-4 py-3 rounded-xl font-medium text-sm",
+                  `${onShowHowItWorks ? 'flex-1' : 'w-full'} bg-green-600 text-white px-4 py-3 rounded-xl font-medium text-sm`,
                   "flex items-center justify-center gap-2",
                   "active:scale-95 transition-transform",
-                  "shadow-sm active:shadow-inner hover:bg-alpine-blue-500"
+                  "shadow-sm active:shadow-inner hover:bg-green-700"
                 )}
               >
                 <Send className="w-4 h-4" />
                 Get my Free Comparison Report
-              </button>
-              <button
-                onClick={handleBookCall}
-                className={cn(
-                  "flex-1 bg-green-600 text-white px-4 py-3 rounded-xl font-medium text-sm",
-                  "flex items-center justify-center gap-2",
-                  "active:scale-95 transition-transform",
-                  "shadow-sm active:shadow-inner"
-                )}
-              >
-                <Calendar className="w-4 h-4" />
-                Book a Call
               </button>
             </div>
           </div>
@@ -87,6 +90,8 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           onClose={() => setShowEmailModal(false)}
           onSubmit={handleEmailSubmit}
           isLoading={isGeneratingPDF}
+          selectedTools={selectedTools}
+          selectedCriteria={selectedCriteria}
         />
       </>
     );
@@ -95,21 +100,27 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   // Desktop version - inline buttons
   return (
     <>
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center justify-center gap-3">
+        {/* How It Works Button - Blue */}
+        {onShowHowItWorks && (
+          <button
+            onClick={onShowHowItWorks}
+            className="bg-alpine-blue-400 text-white px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-alpine-blue-500 transition-colors"
+          >
+            <HelpCircle className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">How It Works</span>
+            <span className="sm:hidden">How It Works</span>
+          </button>
+        )}
+        
+        {/* Get Report Button - Green */}
         <button
           onClick={handleGetReport}
-          className="bg-alpine-blue-400 text-white px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-alpine-blue-500 transition-colors"
+          className="bg-green-600 text-white px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-green-700 transition-colors"
         >
           <Send className="w-3 h-3 md:w-4 md:h-4" />
           <span className="hidden sm:inline">Get my Free Comparison Report</span>
           <span className="sm:hidden">Get Report</span>
-        </button>
-        <button
-          onClick={handleBookCall}
-          className="bg-green-600 text-white px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-green-700 transition-colors"
-        >
-          <Calendar className="w-3 h-3 md:w-4 md:h-4" />
-          Book a Call
         </button>
       </div>
 
@@ -118,6 +129,8 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         onClose={() => setShowEmailModal(false)}
         onSubmit={handleEmailSubmit}
         isLoading={isGeneratingPDF}
+        selectedTools={selectedTools}
+        selectedCriteria={selectedCriteria}
       />
     </>
   );

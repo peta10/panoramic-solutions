@@ -17,6 +17,7 @@ import { ShuffleContainer } from '@/ppm-tool/components/animations/ShuffleContai
 import { AnimatedToolCard } from '@/ppm-tool/components/animations/AnimatedToolCard';
 
 
+
 interface ToolSectionProps {
   tools: Tool[];
   selectedTools: Tool[];
@@ -401,6 +402,8 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
           )}
         </div>
       </div>
+
+
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { Button } from '@/ppm-tool/components/ui/button';
 import { cn } from '@/ppm-tool/shared/lib/utils';
 import { getToolRating, roundMatchScore } from '@/ppm-tool/shared/utils/toolRating';
 import { MethodologyTags } from '@/ppm-tool/components/common/MethodologyTags';
+import { Star } from 'lucide-react';
 
 interface OptimizedToolCardProps {
   tool: Tool;
@@ -129,6 +130,7 @@ export const OptimizedToolCard: React.FC<OptimizedToolCardProps> = ({
       <div className="flex flex-col sm:flex-row gap-2">
         {hasFreeTrial(tool.name) && (
           <Button
+            variant="outline"
             className="flex-1 text-xs md:text-sm py-2 md:py-2.5"
             onClick={() => window.open(getTrialUrl(tool.name), '_blank')}
           >
@@ -137,9 +139,10 @@ export const OptimizedToolCard: React.FC<OptimizedToolCardProps> = ({
         )}
         <Button
           variant="outline"
-          className="text-xs md:text-sm py-2 md:py-2.5"
+          className="text-xs md:text-sm py-2 md:py-2.5 flex items-center gap-1"
           onClick={onAddToCompare}
         >
+          <Star className="w-3 h-3 fill-yellow-400 text-yellow-500" />
           Add to Compare
         </Button>
       </div>

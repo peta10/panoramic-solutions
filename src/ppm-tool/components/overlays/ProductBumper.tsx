@@ -8,65 +8,19 @@ interface ProductBumperProps {
   isVisible: boolean;
   onClose: () => void;
   onUseGuided: () => void;
-  guidedButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export const ProductBumper: React.FC<ProductBumperProps> = ({
   isVisible,
   onClose,
-  onUseGuided,
-  guidedButtonRef
+  onUseGuided
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
   
   // Debug logging for ProductBumper render
   console.log('🎯 ProductBumper render - isVisible:', isVisible);
-  const [lineEndPoint, setLineEndPoint] = useState({ 
-    startX: 0, 
-    startY: 0, 
-    endX: 0, 
-    endY: 0 
-  });
-  
-  const [buttonBounds, setButtonBounds] = useState({ 
-    left: 0, 
-    top: 0, 
-    width: 0, 
-    height: 0 
-  });
 
-  // Calculate line end point and button bounds when popup is visible
-  useEffect(() => {
-    if (isVisible && guidedButtonRef?.current && popupRef?.current) {
-      const buttonRect = guidedButtonRef.current.getBoundingClientRect();
-      const popupRect = popupRef.current.getBoundingClientRect();
-      
-      // Simple line: FROM button bottom DOWN to popup center
-      const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-      const buttonBottomY = buttonRect.top + buttonRect.height; // Button bottom Y
-      const popupCenterX = popupRect.left + popupRect.width / 2; // Popup center X  
-      const popupCenterY = popupRect.top + popupRect.height / 2; // Popup center Y
-      
-      setLineEndPoint({ 
-        startX: buttonCenterX,    // Start at button center X
-        startY: buttonBottomY,    // Start at button bottom
-        endX: popupCenterX,       // End at popup center
-        endY: popupCenterY        // End at popup center
-      });
-      
-      setButtonBounds({
-        left: buttonRect.left,
-        top: buttonRect.top,
-        width: buttonRect.width,
-        height: buttonRect.height
-      });
-      
-      console.log('Line points calculated:', { 
-        start: { x: buttonCenterX, y: buttonBottomY },
-        end: { x: popupCenterX, y: popupCenterY }
-      });
-    }
-  }, [isVisible, guidedButtonRef]);
+  // Remove all button-specific positioning logic since this is now page-wide
 
   const popupVariants = {
     hidden: { 
@@ -99,118 +53,14 @@ export const ProductBumper: React.FC<ProductBumperProps> = ({
     <AnimatePresence>
       {isVisible && (
         <>
-
-          
-          {/* Backdrop with blur - split into sections to avoid blurring the button */}
-          {buttonBounds.width > 0 ? (
-            <>
-              {/* Top section */}
-              <motion.div 
-                className="fixed bg-black/20 backdrop-blur-[2px] z-40"
-                style={{
-                  left: 0,
-                  top: 0,
-                  right: 0,
-                  height: buttonBounds.top - 6
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-              />
-              
-              {/* Left section */}
-              <motion.div 
-                className="fixed bg-black/20 backdrop-blur-[2px] z-40"
-                style={{
-                  left: 0,
-                  top: buttonBounds.top - 6,
-                  width: buttonBounds.left - 6,
-                  height: buttonBounds.height + 12
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-              />
-              
-              {/* Right section */}
-              <motion.div 
-                className="fixed bg-black/20 backdrop-blur-[2px] z-40"
-                style={{
-                  left: buttonBounds.left + buttonBounds.width + 6,
-                  top: buttonBounds.top - 6,
-                  right: 0,
-                  height: buttonBounds.height + 12
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-              />
-              
-              {/* Bottom section */}
-              <motion.div 
-                className="fixed bg-black/20 backdrop-blur-[2px] z-40"
-                style={{
-                  left: 0,
-                  top: buttonBounds.top + buttonBounds.height + 6,
-                  right: 0,
-                  bottom: 0
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-              />
-            </>
-          ) : (
-            /* Fallback full backdrop if button bounds not available */
-            <motion.div 
-              className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onClose}
-            />
-          )}
-          
-          {/* Highlight Box Around Button and Connection Line */}
-          {guidedButtonRef?.current && lineEndPoint.startX > 0 && lineEndPoint.startY > 0 && buttonBounds.width > 0 && (
-            <>
-              {/* Subtle highlight border around the guided button */}
-              <div 
-                className="fixed pointer-events-none z-50"
-                style={{
-                  left: buttonBounds.left - 4,
-                  top: buttonBounds.top - 4,
-                  width: buttonBounds.width + 8,
-                  height: buttonBounds.height + 8,
-                  border: '2px solid #3B82F6',
-                  borderRadius: '8px',
-                  boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)'
-                }}
-              />
-              
-              {/* Connection line */}
-              <svg 
-                className="fixed inset-0 w-full h-full pointer-events-none z-[55]"
-                aria-hidden="true"
-              >
-                <line
-                  x1={lineEndPoint.startX}
-                  y1={lineEndPoint.startY}
-                  x2={lineEndPoint.endX}
-                  y2={lineEndPoint.endY}
-                  stroke="#3B82F6"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </>
-          )}
-          
-
+          {/* Simple full-page backdrop */}
+          <motion.div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
           
           {/* Enhanced Centered Popup with Accessibility */}
           <motion.div

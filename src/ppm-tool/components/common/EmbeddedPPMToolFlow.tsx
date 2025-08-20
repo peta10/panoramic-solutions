@@ -19,11 +19,21 @@ import { ActionButtons } from '@/ppm-tool/components/layout/ActionButtons';
 import { GuidedRankingForm } from '@/ppm-tool/components/forms/GuidedRankingForm';
 import { ProductBumper } from '@/ppm-tool/components/overlays/ProductBumper';
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
+import { 
+  shouldShowProductBumper, 
+  dismissProductBumper, 
+  incrementShowCount,
+  markInitialTimerComplete,
+  recordMouseMovement,
+  getTimingConstants,
+  resetProductBumperState
+} from '@/ppm-tool/shared/utils/productBumperState';
 
 interface EmbeddedPPMToolFlowProps {
   showGuidedRanking?: boolean;
   onGuidedRankingComplete?: () => void;
   onOpenGuidedRanking?: () => void;
+  onShowHowItWorks?: () => void;
   guidedButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
@@ -70,6 +80,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   showGuidedRanking = false,
   onGuidedRankingComplete,
   onOpenGuidedRanking,
+  onShowHowItWorks,
   guidedButtonRef
 }) => {
   const { isMobile } = useFullscreen();
@@ -338,91 +349,62 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     // }, 5000);
   }, [startDelayTimer]);
 
-  // Mouse tracking effect
+  // New timing strategy: 8s initial timer + 3s mouse movement timer
   useEffect(() => {
-    if (!mouseTrackingEnabled) {
-      console.log('🔍 Mouse tracking not enabled yet');
-      return;
-    }
+    const { INITIAL_TIMER_MS, MOUSE_MOVEMENT_TIMER_MS } = getTimingConstants();
+    let initialTimer: NodeJS.Timeout;
+    let mouseMovementTimer: NodeJS.Timeout;
+    
+    // Start 8-second initial timer immediately when component mounts
+    initialTimer = setTimeout(() => {
+      console.log('🕐 Initial 8-second timer complete - marking timer complete');
+      markInitialTimerComplete();
+    }, INITIAL_TIMER_MS);
 
-    console.log('🖱️ Mouse tracking enabled! Setting up event listeners');
-    console.log('🧪 To test ProductBumper again, run: localStorage.removeItem("productBumperDismissed"); location.reload()');
-    let countdownActive = false;
-    let mouseLeaveTimeout: NodeJS.Timeout;
-    
-    let mouseStopTimeout: NodeJS.Timeout;
-    
+    // Set up mouse movement tracking
     const trackMouseMovement = (e: MouseEvent) => {
-      // Clear any existing timeout when mouse moves
-      if (mouseStopTimeout) {
-        clearTimeout(mouseStopTimeout);
+      // Record mouse movement and start 3-second timer
+      recordMouseMovement();
+      
+      // Clear existing timer
+      if (mouseMovementTimer) {
+        clearTimeout(mouseMovementTimer);
       }
       
-      // Only trigger if we're not already showing ProductBumper and haven't started a countdown
-      if (!countdownActive && !showProductBumper) {
-        // Set a new timeout for when mouse stops moving
-        mouseStopTimeout = setTimeout(() => {
-          console.log('🛑 Mouse stopped moving! Starting ProductBumper countdown...');
-          countdownActive = true;
-          
-          // Start 8-second countdown
-          let countdown = 8;
-          console.log(`⏳ ProductBumper countdown: ${countdown} seconds`);
-          
-          const countdownInterval = setInterval(() => {
-            countdown--;
-            if (countdown > 0) {
-              console.log(`⏳ ProductBumper countdown: ${countdown} seconds`);
-            } else {
-              console.log('🎯 Countdown complete - triggering ProductBumper');
-              clearInterval(countdownInterval);
-              countdownActive = false;
-              triggerProductBumper();
-            }
-          }, 1000);
-          
-          // Store the interval so it can be cleared if needed
-          mouseLeaveTimeout = countdownInterval as any;
-        }, 8000); // Trigger after 8 seconds of no mouse movement
-      }
+      // Start 3-second timer for mouse movement
+      mouseMovementTimer = setTimeout(() => {
+        console.log('🖱️ 3 seconds after mouse movement - checking if should show ProductBumper');
+        if (shouldShowProductBumper() && !showProductBumper) {
+          console.log('🎯 Triggering ProductBumper after mouse movement timer');
+          incrementShowCount();
+          triggerProductBumper();
+        }
+      }, MOUSE_MOVEMENT_TIMER_MS);
     };
 
-    const handleMouseLeave = () => {
-      // Clear both timers when mouse leaves the page
-      if (mouseStopTimeout) {
-        clearTimeout(mouseStopTimeout);
-      }
-      if (mouseLeaveTimeout) {
-        clearInterval(mouseLeaveTimeout);
-        countdownActive = false;
-        console.log('🛑 Mouse left page - countdown cancelled');
-      }
-    };
-
-    // Add click handler for testing
+    // Shift+Click testing trigger
     const testProductBumperClick = (e: MouseEvent) => {
       if (e.shiftKey) {
-        console.log('🧪 Shift+Click detected - triggering ProductBumper for testing');
+        console.log('🧪 Shift+Click detected - resetting and triggering ProductBumper for testing');
+        resetProductBumperState();
         triggerProductBumper();
       }
     };
 
+    // Add event listeners
     document.addEventListener('mousemove', trackMouseMovement);
-    document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('click', testProductBumperClick);
+
+    console.log('🕐 ProductBumper: Starting 8-second initial timer...');
+    console.log('🧪 To test ProductBumper: Shift+Click anywhere');
 
     return () => {
       document.removeEventListener('mousemove', trackMouseMovement);
-      document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('click', testProductBumperClick);
-      if (mouseStopTimeout) {
-        clearTimeout(mouseStopTimeout);
-      }
-      if (mouseLeaveTimeout) {
-        clearInterval(mouseLeaveTimeout);
-      }
+      if (initialTimer) clearTimeout(initialTimer);
+      if (mouseMovementTimer) clearTimeout(mouseMovementTimer);
     };
-  }, [mouseTrackingEnabled, guidedButtonRef, triggerProductBumper, showProductBumper]);
+  }, [triggerProductBumper, showProductBumper]);
 
   const filteredTools = filterTools(selectedTools, filterConditions, filterMode);
 
@@ -639,6 +621,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             compareCount={comparedTools.size}
             selectedTools={selectedTools}
             selectedCriteria={criteria}
+            onShowHowItWorks={onShowHowItWorks}
           />
           <main className={cn(
             "container mx-auto px-4 py-6",
@@ -649,7 +632,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           {isMobile && (
             <ActionButtons 
               selectedTools={selectedTools} 
-              selectedCriteria={criteria} 
+              selectedCriteria={criteria}
+              onShowHowItWorks={onShowHowItWorks}
             />
           )}
         </div>
@@ -672,7 +656,6 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             closeProductBumper();
             onOpenGuidedRanking && onOpenGuidedRanking();
           }}
-          guidedButtonRef={guidedButtonRef}
         />
 
       </FullscreenProvider>

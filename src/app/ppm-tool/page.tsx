@@ -6,13 +6,13 @@ import { EmbeddedPPMToolFlow } from '@/ppm-tool/components/common/EmbeddedPPMToo
 import { FullscreenProvider } from '@/ppm-tool/shared/contexts/FullscreenContext';
 import { GuidanceProvider } from '@/ppm-tool/shared/contexts/GuidanceContext';
 import { HowItWorksOverlay } from '@/ppm-tool/components/overlays/HowItWorksOverlay';
-import { Zap, Users, Target, TrendingUp } from 'lucide-react';
+import { LegalDisclaimer } from '@/ppm-tool/components/common/LegalDisclaimer';
 
 // Force dynamic rendering to avoid SSG issues with Supabase
 export const dynamic = 'force-dynamic';
 
 export default function PPMToolPage() {
-  const [showHowItWorks, setShowHowItWorks] = useState(true); // Show on initial load
+  const [showHowItWorks, setShowHowItWorks] = useState(false); // Changed from auto-popup to manual trigger
   const [showGuidedRanking, setShowGuidedRanking] = useState(false);
   const guidedButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -34,76 +34,27 @@ export default function PPMToolPage() {
     setShowGuidedRanking(true);
   };
 
+  const handleShowHowItWorks = () => {
+    setShowHowItWorks(true);
+  };
+
   return (
     <ErrorBoundary>
       <FullscreenProvider>
         <GuidanceProvider>
-          {/* Landing Page Section */}
-          <section className="bg-gradient-to-br from-slate-50 to-indigo-50 pt-32 pb-12">
-            <div className="container mx-auto px-4 text-center">
-              {/* Main Title */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-midnight">
-                Find Your Perfect <span className="text-alpine-blue-400">PPM Tool</span>
-              </h1>
-              
-              {/* Subtitle */}
-              <p className="text-xl text-midnight/70 max-w-4xl mx-auto mb-12 leading-relaxed">
-                Get 100% free personalized recommendations in minutes with our intelligent Project Portfolio Management Tool assessment. Make informed decisions and focus on key features identified through deep research for lasting project portfolio success.
-              </p>
-
-              {/* Feature Tabs - Made Much Smaller */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                {/* Instant Intelligence */}
-                <div className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-300 border border-midnight/5">
-                  <div className="flex items-center justify-center mb-2">
-                    <Zap className="h-4 w-4 text-alpine-blue-400" />
-                  </div>
-                  <h3 className="text-sm font-bold text-midnight mb-1">
-                    Instant Intelligence
-                  </h3>
-                  <p className="text-midnight/60 text-xs leading-relaxed">
-                    Get recommendations in minutes, not months
-                  </p>
-                </div>
-
-                {/* Proven Methodology */}
-                <div className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-300 border border-midnight/5">
-                  <div className="flex items-center justify-center mb-2">
-                    <Users className="h-4 w-4 text-alpine-blue-400" />
-                  </div>
-                  <h3 className="text-sm font-bold text-midnight mb-1">
-                    Proven Methodology
-                  </h3>
-                  <p className="text-midnight/60 text-xs leading-relaxed">
-                    Designed using real-world implementations across industries
-                  </p>
-                </div>
-
-                {/* Tailored Results */}
-                <div className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-300 border border-midnight/5">
-                  <div className="flex items-center justify-center mb-2">
-                    <Target className="h-4 w-4 text-alpine-blue-400" />
-                  </div>
-                  <h3 className="text-sm font-bold text-midnight mb-1">
-                    Tailored Results
-                  </h3>
-                  <p className="text-midnight/60 text-xs leading-relaxed">
-                    Recommendations specific to your organization's needs
-                  </p>
-                </div>
-
-                {/* Start on Course */}
-                <div className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-300 border border-midnight/5">
-                  <div className="flex items-center justify-center mb-2">
-                    <TrendingUp className="h-4 w-4 text-alpine-blue-400" />
-                  </div>
-                  <h3 className="text-sm font-bold text-midnight mb-1">
-                    Start on Course
-                  </h3>
-                  <p className="text-midnight/60 text-xs leading-relaxed">
-                    Leverage our deep research and avoid costly tool selection mistakes
-                  </p>
-                </div>
+          {/* Header-style Landing Section */}
+          <section className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm pt-20">
+            <div className="container mx-auto px-3 md:px-4 py-2">
+              <div className="flex items-center justify-between">
+                {/* Main Title */}
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-midnight">
+                  <span className="text-black font-bold">PPM - TOOL FINDER</span>
+                </h1>
+                
+                {/* Subtitle */}
+                <p className="text-sm md:text-base text-midnight/70 max-w-2xl leading-relaxed">
+                  Get <strong>100% free personalized recommendations</strong> in minutes with our intelligent <strong>Project Portfolio Management</strong> Tool assessment. Make informed decisions and focus on key features identified through <strong>deep research</strong> for lasting project portfolio success.
+                </p>
               </div>
             </div>
           </section>
@@ -115,6 +66,7 @@ export default function PPMToolPage() {
               guidedButtonRef={guidedButtonRef}
               showGuidedRanking={showGuidedRanking}
               onGuidedRankingComplete={handleGuidedRankingComplete}
+              onShowHowItWorks={handleShowHowItWorks}
             />
             
             <HowItWorksOverlay
@@ -123,6 +75,13 @@ export default function PPMToolPage() {
               onManualRanking={handleManualRanking}
               onClose={() => setShowHowItWorks(false)}
             />
+          </div>
+
+          {/* Legal Disclaimer - Outside the PPM tool container */}
+          <div className="bg-gray-50 py-6">
+            <div className="container mx-auto px-4">
+              <LegalDisclaimer />
+            </div>
           </div>
         </GuidanceProvider>
       </FullscreenProvider>

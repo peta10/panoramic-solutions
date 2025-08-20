@@ -838,9 +838,17 @@
   @media (max-width: 640px) {
     /* Ensure tooltips don't get cut off on mobile */
     [data-radix-tooltip-content] {
-      max-width: 85vw !important;
+      max-width: 90vw !important;
       word-wrap: break-word;
       hyphens: auto;
+      z-index: 9999 !important;
+      /* Ensure tooltips are above all other content */
+      position: fixed !important;
+      /* Better touch handling */
+      pointer-events: auto !important;
+      /* Prevent text selection issues */
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     /* Improve touch targets for tooltip triggers */
@@ -850,11 +858,31 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      /* Better touch response */
+      -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+      touch-action: manipulation;
     }
 
     /* Ensure tooltips stay within viewport bounds */
     [data-radix-popper-content-wrapper] {
       transform-origin: var(--radix-tooltip-content-transform-origin) !important;
+      z-index: 9999 !important;
+    }
+
+    /* Portal container for tooltips */
+    [data-radix-portal] {
+      z-index: 9999 !important;
+    }
+    
+    /* Prevent scrolling interference with tooltips */
+    .lenis [data-radix-tooltip-trigger] {
+      touch-action: manipulation !important;
+    }
+    
+    /* Ensure tooltip triggers work properly within scrollable areas */
+    [data-lenis-prevent] [data-radix-tooltip-trigger] {
+      touch-action: manipulation !important;
+      -webkit-touch-callout: none;
     }
   }
 

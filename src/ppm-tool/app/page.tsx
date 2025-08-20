@@ -8,7 +8,7 @@ import { GuidanceProvider } from '@/ppm-tool/shared/contexts/GuidanceContext';
 import { HowItWorksOverlay } from '@/ppm-tool/components/overlays/HowItWorksOverlay';
 
 export default function Home() {
-  const [showHowItWorks, setShowHowItWorks] = useState(true); // Show on initial load
+  const [showHowItWorks, setShowHowItWorks] = useState(false); // Changed from auto-popup to manual trigger
   const [showGuidedRanking, setShowGuidedRanking] = useState(false);
   const guidedButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -30,6 +30,10 @@ export default function Home() {
     setShowGuidedRanking(true);
   };
 
+  const handleShowHowItWorks = () => {
+    setShowHowItWorks(true);
+  };
+
   return (
     <ErrorBoundary>
       <GuidanceProvider>
@@ -39,10 +43,11 @@ export default function Home() {
               showGuidedRanking={showGuidedRanking}
               onGuidedRankingComplete={handleGuidedRankingComplete}
               onOpenGuidedRanking={handleOpenGuidedRanking}
+              onShowHowItWorks={handleShowHowItWorks}
               guidedButtonRef={guidedButtonRef}
             />
             
-            {/* How It Works Overlay - shows on initial load */}
+            {/* How It Works Overlay - triggered manually via button */}
             <HowItWorksOverlay
               isVisible={showHowItWorks}
               onClose={() => setShowHowItWorks(false)}

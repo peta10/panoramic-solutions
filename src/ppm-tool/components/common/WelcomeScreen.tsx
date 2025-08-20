@@ -80,7 +80,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onGetStarted, onSk
       {/* Persistent CTA Button */}
       <button
         onClick={onGetStarted}
-        className="fixed bottom-8 left-8 z-50 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+        className="fixed bottom-8 left-8 z-50 bg-blue-400 hover:bg-blue-500 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
       >
         Get Started
         <ArrowRight className="w-5 h-5" />

@@ -139,7 +139,7 @@ export const EnhancedCompactToolCard: React.FC<EnhancedCompactToolCardProps> = (
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-1 md:gap-1.5" onClick={(e) => e.stopPropagation()}>
             {hasFreeTrial(tool.name) && (
-              <Button size="sm" className="h-7 md:h-8 px-2 md:px-3 text-xs text-white bg-alpine-blue-400 hover:bg-alpine-blue-500 w-full sm:w-auto" asChild>
+              <Button size="sm" variant="secondary" className="h-7 md:h-8 px-2 md:px-3 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 w-full sm:w-auto" asChild>
                 <a 
                   href={getTrialUrl(tool.name)} 
                   target="_blank" 
@@ -165,7 +165,7 @@ export const EnhancedCompactToolCard: React.FC<EnhancedCompactToolCardProps> = (
             >
               <Star className={cn(
                 "w-3 h-3 mr-1",
-                isCompared ? "fill-alpine-blue-500" : ""
+                isCompared ? "fill-yellow-400 text-yellow-500" : "fill-yellow-400 text-yellow-500"
               )} />
               {isCompared ? 'Added' : 'Compare'}
             </Button>

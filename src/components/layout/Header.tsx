@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown, Calendar } from 'lucide-react'
 import { useScrollPosition } from '@/shared/hooks/useScrollPosition'
 import { cn } from '@/shared/utils/cn'
 
@@ -140,9 +140,10 @@ export function Header() {
           
           <Button
             size="sm"
-            className="btn-hover-lift bg-alpine hover:bg-summit text-white px-6 py-2"
+            className="btn-hover-lift bg-green-600 hover:bg-green-700 text-white px-6 py-2 flex items-center gap-2"
             onClick={() => window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank')}
           >
+            <Calendar className="w-4 h-4" />
             Book A Call
           </Button>
         </div>
@@ -242,13 +243,14 @@ export function Header() {
               
               <div className="pt-4">
                 <Button
-                  className="w-full bg-alpine hover:bg-summit text-white py-3"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 flex items-center justify-center gap-2"
                   style={{ minHeight: '48px' }}
                   onClick={() => {
                     setIsMobileMenuOpen(false)
                     window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank')
                   }}
                 >
+                  <Calendar className="w-4 h-4" />
                   Book A Call
                 </Button>
               </div>

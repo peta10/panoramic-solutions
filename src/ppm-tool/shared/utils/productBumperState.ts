@@ -7,10 +7,15 @@ export interface ProductBumperState {
   dismissed: boolean;
   dismissedAt: string;
   showCount: number;
+  initialTimerComplete?: boolean;
+  mouseMovementDetected?: boolean;
+  lastMouseMovementAt?: string;
 }
 
 const STORAGE_KEY = 'productBumperState';
 const DISMISS_DURATION_DAYS = 30; // Allow re-showing after 30 days
+const INITIAL_TIMER_MS = 8000; // 8 second initial timer
+const MOUSE_MOVEMENT_TIMER_MS = 3000; // 3 second mouse movement timer
 
 /**
  * Get the current product bumper state from localStorage
@@ -22,7 +27,10 @@ export function getProductBumperState(): ProductBumperState {
       return {
         dismissed: false,
         dismissedAt: '',
-        showCount: 0
+        showCount: 0,
+        initialTimerComplete: false,
+        mouseMovementDetected: false,
+        lastMouseMovementAt: ''
       };
     }
 
@@ -38,7 +46,10 @@ export function getProductBumperState(): ProductBumperState {
         return {
           ...state,
           dismissed: false,
-          dismissedAt: ''
+          dismissedAt: '',
+          initialTimerComplete: false,
+          mouseMovementDetected: false,
+          lastMouseMovementAt: ''
         };
       }
     }
@@ -49,7 +60,10 @@ export function getProductBumperState(): ProductBumperState {
     return {
       dismissed: false,
       dismissedAt: '',
-      showCount: 0
+      showCount: 0,
+      initialTimerComplete: false,
+      mouseMovementDetected: false,
+      lastMouseMovementAt: ''
     };
   }
 }
@@ -91,6 +105,31 @@ export function incrementShowCount(): void {
 }
 
 /**
+ * Mark the initial timer as complete
+ */
+export function markInitialTimerComplete(): void {
+  const currentState = getProductBumperState();
+  const newState: ProductBumperState = {
+    ...currentState,
+    initialTimerComplete: true
+  };
+  saveProductBumperState(newState);
+}
+
+/**
+ * Record mouse movement detection
+ */
+export function recordMouseMovement(): void {
+  const currentState = getProductBumperState();
+  const newState: ProductBumperState = {
+    ...currentState,
+    mouseMovementDetected: true,
+    lastMouseMovementAt: new Date().toISOString()
+  };
+  saveProductBumperState(newState);
+}
+
+/**
  * Check if the product bumper should be shown
  */
 export function shouldShowProductBumper(): boolean {
@@ -101,12 +140,31 @@ export function shouldShowProductBumper(): boolean {
     return false;
   }
   
-  // Additional logic could be added here:
-  // - Limit total number of shows
-  // - Check user engagement metrics
-  // - Consider user journey stage
+  // Check if initial timer is complete
+  if (!state.initialTimerComplete) {
+    return false;
+  }
   
-  return true;
+  // Check if mouse movement detected and enough time has passed
+  if (state.mouseMovementDetected && state.lastMouseMovementAt) {
+    const lastMovement = new Date(state.lastMouseMovementAt);
+    const timeSinceLastMovement = Date.now() - lastMovement.getTime();
+    
+    // Show after 3 seconds of mouse movement
+    return timeSinceLastMovement >= MOUSE_MOVEMENT_TIMER_MS;
+  }
+  
+  return false;
+}
+
+/**
+ * Get timing constants for external use
+ */
+export function getTimingConstants() {
+  return {
+    INITIAL_TIMER_MS,
+    MOUSE_MOVEMENT_TIMER_MS
+  };
 }
 
 /**

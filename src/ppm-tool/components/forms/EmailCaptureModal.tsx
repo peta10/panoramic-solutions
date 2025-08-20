@@ -5,19 +5,25 @@ import { X } from 'lucide-react';
 import { Button } from '@/ppm-tool/components/ui/button';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEmailReport } from '@/ppm-tool/shared/hooks/useEmailReport';
+import type { Tool, Criterion } from '@/ppm-tool/shared/types';
 
 interface EmailCaptureModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (email: string) => void;
   isLoading: boolean;
+  selectedTools?: Tool[];
+  selectedCriteria?: Criterion[];
 }
 
 export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  isLoading
+  isLoading,
+  selectedTools = [],
+  selectedCriteria = []
 }) => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -25,7 +31,21 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
   
   useClickOutside(formRef, onClose);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { sendEmailReport, isLoading: isSendingEmail, error: emailError } = useEmailReport({
+    onSuccess: (response) => {
+      console.log('Email sent successfully:', response);
+      // Don't call onSubmit to avoid PDF generation - email is the new primary flow
+      onClose();
+      // Show success message (you can add a toast notification here if you have a toast system)
+      alert('Email report sent successfully! Check your inbox.');
+    },
+    onError: (error) => {
+      console.error('Email send failed:', error);
+      setError('Failed to send email. Please try again.');
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic email validation
@@ -36,7 +56,19 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
     }
 
     setError('');
-    onSubmit(email);
+
+    // Always use the new email system - no PDF fallback unless explicitly requested
+    console.log('📧 Attempting to send email report with:', {
+      tools: selectedTools.length,
+      criteria: selectedCriteria.length,
+      email: email.replace(/(.{3}).*(@.*)/, '$1***$2')
+    });
+    
+    await sendEmailReport({
+      userEmail: email,
+      selectedTools,
+      selectedCriteria
+    });
   };
 
   // Animation variants matching GuidedRankingForm
@@ -128,14 +160,14 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
                     className="w-full px-3 py-2 md:py-2.5 text-sm md:text-base border rounded-lg focus:ring-2 focus:ring-alpine-blue-400 focus:border-alpine-blue-500 outline-none transition-all"
                     disabled={isLoading}
                   />
-                  {error && (
+                  {(error || emailError) && (
                     <motion.p 
                       className="mt-1 text-xs md:text-sm text-red-600"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      {error}
+                      {error || emailError}
                     </motion.p>
                   )}
                 </div>
@@ -143,18 +175,23 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
                 <motion.button
                   type="submit"
                   className="w-full bg-alpine-blue-400 hover:bg-alpine-blue-500 text-white px-4 py-2 md:py-2.5 text-sm md:text-base rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading}
-                  whileHover={!isLoading ? { scale: 1.02 } : {}}
-                  whileTap={!isLoading ? { scale: 0.98 } : {}}
+                  disabled={isLoading || isSendingEmail}
+                  whileHover={!(isLoading || isSendingEmail) ? { scale: 1.02 } : {}}
+                  whileTap={!(isLoading || isSendingEmail) ? { scale: 0.98 } : {}}
                   animate={{
-                    backgroundColor: isLoading ? '#9ca3af' : '#0057B7'
+                    backgroundColor: (isLoading || isSendingEmail) ? '#9ca3af' : '#0057B7'
                   }}
                   transition={{ duration: 0.2 }}
                 >
-                  {isLoading ? (
+                  {(isLoading || isSendingEmail) ? (
                     <div className="flex items-center justify-center">
                       <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      <span className="text-sm md:text-base">Generating Report...</span>
+                      <span className="text-sm md:text-base">
+                        {selectedTools.length > 0 && selectedCriteria.length > 0 
+                          ? 'Sending Email Report...' 
+                          : 'Generating Report...'
+                        }
+                      </span>
                     </div>
                   ) : (
                     'Send Report'

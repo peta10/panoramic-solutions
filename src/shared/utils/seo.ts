@@ -107,7 +107,7 @@ export function generateOrganizationSchema() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
-      email: 'matt@panoramicsolutions.com',
+      email: 'matt.wagner@panoramic-solutions.com',
     },
     address: {
       '@type': 'PostalAddress',

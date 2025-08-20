@@ -267,7 +267,7 @@ VITE_SITE_URL=https://panoramicsolutions.com
 VITE_SITE_NAME=Panoramic Solutions
 
 # Contact Information
-VITE_CONTACT_EMAIL=matt@panoramicsolutions.com
+VITE_CONTACT_EMAIL=matt.wagner@panoramic-solutions.com
 VITE_CONTACT_PHONE=+18015550123
 
 # Optional: Analytics
@@ -386,7 +386,7 @@ supabase db reset
 ## 📞 Support
 
 For questions or issues:
-- **Email**: matt@panoramicsolutions.com
+- **Email**: matt.wagner@panoramic-solutions.com
 - **Phone**: (801) 555-0123
 - **LinkedIn**: [Matt Wagner](https://www.linkedin.com/in/matt-wagner33/)
 - **Schedule**: [Book a Call](https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt)

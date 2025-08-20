@@ -75,7 +75,8 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
       <div 
         ref={sectionRef}
         id="criteria-section" 
-        className={`bg-white rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative`}
+        className={`bg-white rounded-lg shadow-lg flex flex-col h-full relative`}
+        style={{ overflow: 'visible' }}
       >
         <div className="flex flex-col h-full min-h-0">
           {/* Header */}
@@ -137,7 +138,20 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                                 type="button"
                                 className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
                                 aria-label={`More information about ${criterion.name}`}
-                                onTouchStart={() => {}}
+                                onTouchStart={(e) => {
+                                  // Prevent scroll interference on touch
+                                  e.stopPropagation();
+                                }}
+                                onClick={(e) => {
+                                  // Ensure click works on mobile
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                                style={{
+                                  // Ensure proper touch interaction
+                                  WebkitTapHighlightColor: 'rgba(59, 130, 246, 0.1)',
+                                  touchAction: 'manipulation'
+                                }}
                               >
                                 <HelpCircle className="w-4 h-4" />
                               </button>
@@ -145,7 +159,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                             <TooltipContent 
                               side="top" 
                               align="center"
-                              className="max-w-xs text-sm bg-gray-900 text-white p-3 rounded-lg shadow-lg z-[100] border border-gray-700"
+                              className="max-w-xs text-sm bg-gray-900 text-white p-3 rounded-lg shadow-lg border border-gray-700"
                               sideOffset={12}
                               avoidCollisions={true}
                               collisionPadding={16}

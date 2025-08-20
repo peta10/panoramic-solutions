@@ -21,6 +21,7 @@ interface NavigationToggleProps {
   selectedTools?: Tool[];
   selectedCriteria?: Criterion[];
   onAnimationTrigger?: () => void;
+  onShowHowItWorks?: () => void;
 }
 
 export const NavigationToggle: React.FC<NavigationToggleProps> = ({
@@ -29,7 +30,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
   compareCount = 0,
   selectedTools = [],
   selectedCriteria = [],
-  onAnimationTrigger
+  onAnimationTrigger,
+  onShowHowItWorks
 }) => {
   const { isMobile } = useFullscreen();
   const [isChartGlowing, setIsChartGlowing] = useState(false);
@@ -139,7 +141,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
           {!isMobile && (
             <ActionButtons 
               selectedTools={selectedTools} 
-              selectedCriteria={selectedCriteria} 
+              selectedCriteria={selectedCriteria}
+              onShowHowItWorks={onShowHowItWorks}
             />
           )}
         </div>
