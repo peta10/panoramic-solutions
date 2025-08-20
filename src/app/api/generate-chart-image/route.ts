@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 
-// Try to import canvas, fallback if not available
-let createCanvas: any;
-try {
-  const canvasModule = require('canvas');
-  createCanvas = canvasModule.createCanvas;
-} catch (error) {
-  console.warn('Canvas module not available, using fallback');
-  createCanvas = null;
-}
+// Dynamically import canvas only when needed at runtime
+let createCanvas: any = null;
+
+const getCanvasModule = async () => {
+  if (createCanvas) return createCanvas;
+  
+  try {
+    // Dynamic import to avoid build-time issues
+    const canvasModule = await import('canvas');
+    createCanvas = canvasModule.createCanvas;
+    return createCanvas;
+  } catch (error) {
+    console.warn('Canvas module not available:', error);
+    return null;
+  }
+};
 
 // Chart colors matching the frontend
 const toolColors: [string, string][] = [
@@ -236,8 +243,11 @@ export async function POST(request: NextRequest) {
   try {
     const { tool, criteria, toolIndex = 0 } = await request.json();
     
+    // Get canvas module at runtime
+    const canvasCreate = await getCanvasModule();
+    
     // If canvas is not available, return a placeholder response
-    if (!createCanvas) {
+    if (!canvasCreate) {
       console.log('Canvas not available, returning placeholder for', tool.name);
       return NextResponse.json({ 
         success: false, 
@@ -252,7 +262,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create canvas
-    const canvas = createCanvas(300, 300);
+    const canvas = canvasCreate(300, 300);
     
     // Generate the radar chart
     createRadarChart(tool, criteria, canvas, toolIndex);

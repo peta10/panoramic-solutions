@@ -3,15 +3,22 @@ import { defaultCriteria } from '@/ppm-tool/data/criteria';
 import { getToolRating } from '@/ppm-tool/shared/utils/toolRating';
 import type { Tool, Criterion } from '@/ppm-tool/shared/types';
 
-// Try to import canvas, fallback if not available
-let createCanvas: any;
-try {
-  const canvasModule = require('canvas');
-  createCanvas = canvasModule.createCanvas;
-} catch (error) {
-  console.warn('Canvas module not available, using fallback');
-  createCanvas = null;
-}
+// Dynamically import canvas only when needed at runtime
+let createCanvas: any = null;
+
+const getCanvasModule = async () => {
+  if (createCanvas) return createCanvas;
+  
+  try {
+    // Dynamic import to avoid build-time issues
+    const canvasModule = await import('canvas');
+    createCanvas = canvasModule.createCanvas;
+    return createCanvas;
+  } catch (error) {
+    console.warn('Canvas module not available:', error);
+    return null;
+  }
+};
 
 // Chart colors matching the frontend
 const toolColors: [string, string][] = [
@@ -39,7 +46,7 @@ function generateCacheKey(params: any): string {
 }
 
 // Get cached chart or generate new one
-function getCachedChart(params: any): Buffer {
+function getCachedChart(params: any, canvasCreate: any): Buffer {
   const cacheKey = generateCacheKey(params);
   const cached = chartCache.get(cacheKey);
   
@@ -49,7 +56,7 @@ function getCachedChart(params: any): Buffer {
   }
   
   console.log('🔄 Cache miss, generating new chart for:', params.toolName);
-  const buffer = generateRadarChart(params);
+  const buffer = generateRadarChart(params, canvasCreate);
   
   // Store in cache
   chartCache.set(cacheKey, {
@@ -159,8 +166,8 @@ function parseChartParams(searchParams: URLSearchParams) {
 }
 
 // Generate radar chart
-function generateRadarChart(params: any): Buffer {
-  if (!createCanvas) {
+function generateRadarChart(params: any, canvasCreate: any): Buffer {
+      if (!canvasCreate) {
     console.log('Canvas not available, returning fallback image');
     return createFallbackImage();
   }
@@ -171,7 +178,7 @@ function generateRadarChart(params: any): Buffer {
     const { toolName, scores, rankings, labels, toolIndex } = params;
     
     // Create larger canvas for more criteria
-    const canvas = createCanvas(400, 350);
+    const canvas = canvasCreate(400, 350);
     const ctx = canvas.getContext('2d');
     
     // Clear canvas with white background
@@ -388,7 +395,9 @@ export async function GET(
     console.log('🗑️ Cache cleared for fresh generation');
     
     console.log('📊 Chart request received:', params.params);
-    console.log('📊 Canvas available:', !!createCanvas);
+    
+    const canvasCreate = await getCanvasModule();
+    console.log('📊 Canvas available:', !!canvasCreate);
     
     const searchParams = request.nextUrl.searchParams;
     console.log('📊 Search params:', Object.fromEntries(searchParams.entries()));
@@ -412,7 +421,7 @@ export async function GET(
     }
     
     // Generate chart (with caching)
-    const chartBuffer = getCachedChart(chartParams);
+    const chartBuffer = getCachedChart(chartParams, canvasCreate);
     
     console.log('✅ Chart generated successfully, size:', chartBuffer.length);
     

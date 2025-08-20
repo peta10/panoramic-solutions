@@ -29,13 +29,22 @@ const nextConfig = {
       '@': path.resolve(__dirname, 'src')
     };
     
-    // Handle PDF generation libraries (same as PPM Tool)
+    // Handle PDF generation libraries and canvas fallbacks
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       path: false,
-      stream: false
+      stream: false,
+      canvas: false
     };
+
+    // Handle canvas module for server-side rendering
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        canvas: 'canvas'
+      });
+    }
 
     return config;
   },

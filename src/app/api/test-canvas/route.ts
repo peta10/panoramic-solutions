@@ -5,7 +5,7 @@ export async function GET() {
     // Test if canvas is available
     let createCanvas: any;
     try {
-      const canvasModule = require('canvas');
+      const canvasModule = await import('canvas');
       createCanvas = canvasModule.createCanvas;
       console.log('Canvas module loaded successfully');
     } catch (error) {
