@@ -31,7 +31,7 @@ export const useLenis = (options: {
       smoothWheel: true,
       syncTouch: false, // Disable sync touch to prevent interference
       touchMultiplier: isMobile ? 2 : 1,
-      touchInertiaMultiplier: isMobile ? 45 : 35,
+      // touchInertiaMultiplier: isMobile ? 45 : 35, // This property doesn't exist in LenisOptions
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom easing
       wheelMultiplier: 1,
       infinite: false
