@@ -60,7 +60,9 @@ function getCachedChart(params: any): Buffer {
   // Clean up old cache entries (simple cleanup)
   if (chartCache.size > 100) {
     const oldestKey = chartCache.keys().next().value;
-    chartCache.delete(oldestKey);
+    if (oldestKey) {
+      chartCache.delete(oldestKey);
+    }
   }
   
   return buffer;
@@ -399,7 +401,7 @@ export async function GET(
       console.log('❌ Invalid chart parameters, returning fallback');
       const fallbackBuffer = createFallbackImage();
       
-      return new NextResponse(fallbackBuffer, {
+      return new NextResponse(new Uint8Array(fallbackBuffer), {
         status: 200,
         headers: {
           'Content-Type': 'image/png',
@@ -414,7 +416,7 @@ export async function GET(
     
     console.log('✅ Chart generated successfully, size:', chartBuffer.length);
     
-    return new NextResponse(chartBuffer, {
+    return new NextResponse(new Uint8Array(chartBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'image/png',
@@ -427,7 +429,7 @@ export async function GET(
     console.error('❌ Chart generation error:', error);
     
     const fallbackBuffer = createFallbackImage();
-    return new NextResponse(fallbackBuffer, {
+    return new NextResponse(new Uint8Array(fallbackBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'image/png',

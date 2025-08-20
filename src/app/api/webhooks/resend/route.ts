@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Initialize Supabase client (with fallback for missing env vars)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 // Webhook signing secret from Resend
 const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
@@ -24,6 +26,14 @@ function verifySignature(body: string, signature: string, secret: string): boole
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      console.error('Supabase not configured for webhook handler');
+      return NextResponse.json(
+        { message: 'Service not configured' },
+        { status: 503 }
+      );
+    }
     // Get the raw body for signature verification
     const body = await request.text();
     const signature = request.headers.get('resend-signature');
