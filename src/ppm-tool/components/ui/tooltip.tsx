@@ -21,26 +21,24 @@ const TooltipProvider = ({ children, ...props }: React.ComponentProps<typeof Too
 const Tooltip = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>
->(({ children, ...props }, ref) => {
-  const [open, setOpen] = React.useState(false);
+>(({ children, open, onOpenChange, ...props }, ref) => {
   const isTouchDevice = useTouchDevice();
+  const [internalOpen, setInternalOpen] = React.useState(false);
 
-  // For mobile devices, we control the open state manually
-  if (isTouchDevice) {
-    return (
-      <TooltipPrimitive.Root
-        open={open}
-        onOpenChange={setOpen}
-        {...props}
-      >
-        {children}
-      </TooltipPrimitive.Root>
-    );
-  }
+  // Use controlled state for mobile, uncontrolled for desktop
+  const isControlled = open !== undefined;
+  const tooltipOpen = isControlled ? open : internalOpen;
+  const setTooltipOpen = isControlled ? onOpenChange : setInternalOpen;
 
-  // For desktop, use normal hover behavior
   return (
-    <TooltipPrimitive.Root {...props}>
+    <TooltipPrimitive.Root 
+      {...props}
+      open={tooltipOpen}
+      onOpenChange={setTooltipOpen}
+      // On mobile, disable hover and use faster timing
+      delayDuration={isTouchDevice ? 0 : 700}
+      disableHoverableContent={isTouchDevice}
+    >
       {children}
     </TooltipPrimitive.Root>
   );
@@ -50,46 +48,55 @@ const Tooltip = React.forwardRef<
 const TooltipTrigger = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>
->(({ onClick, onPointerDown, ...props }, ref) => {
+>(({ onClick, asChild, children, ...props }, ref) => {
   const isTouchDevice = useTouchDevice();
 
   const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    // For touch devices, let the click trigger the tooltip
-    if (isTouchDevice) {
-      // Don't prevent default - let Radix handle the click
-      event.stopPropagation();
-    }
+    // On touch devices, don't prevent the default click behavior
+    // Let Radix handle opening/closing the tooltip
     onClick?.(event);
-  }, [isTouchDevice, onClick]);
-
-  const handlePointerDown = React.useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
-    // For touch devices, ensure we handle touch events properly
-    if (isTouchDevice && event.pointerType === 'touch') {
-      event.stopPropagation();
-    }
-    onPointerDown?.(event);
-  }, [isTouchDevice, onPointerDown]);
+  }, [onClick]);
 
   return (
     <TooltipPrimitive.Trigger
       ref={ref}
       onClick={handleClick}
-      onPointerDown={handlePointerDown}
-      // For touch devices, ensure button can be clicked
+      asChild={asChild}
+      // For touch devices, ensure proper touch targets and behavior
       style={isTouchDevice ? { 
         touchAction: 'manipulation',
-        WebkitTapHighlightColor: 'rgba(0, 0, 0, 0.1)'
+        WebkitTapHighlightColor: 'rgba(59, 130, 246, 0.1)',
+        minHeight: '44px',
+        minWidth: '44px',
+        display: asChild ? undefined : 'flex',
+        alignItems: asChild ? undefined : 'center',
+        justifyContent: asChild ? undefined : 'center'
       } : undefined}
       {...props}
-    />
+    >
+      {children}
+    </TooltipPrimitive.Trigger>
   );
 })
 
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => {
+>(({ className, sideOffset = 4, children, ...props }, ref) => {
   const isTouchDevice = useTouchDevice();
+
+  // Auto-close tooltip on mobile after 4 seconds
+  React.useEffect(() => {
+    if (!isTouchDevice) return;
+
+    const timer = setTimeout(() => {
+      // Close any open tooltips by triggering a tap outside
+      const event = new Event('pointerdown', { bubbles: true });
+      document.dispatchEvent(event);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [isTouchDevice]);
 
   return (
     <TooltipPrimitive.Portal>
@@ -112,14 +119,40 @@ const TooltipContent = React.forwardRef<
         collisionPadding={isTouchDevice ? 16 : 8}
         sticky="partial"
         onPointerDownOutside={isTouchDevice ? (e) => {
-          // Allow closing tooltip by tapping outside on mobile
-          e.preventDefault();
+          // On mobile, allow closing tooltip by tapping outside
+          // Don't prevent default - just let the tooltip close
         } : undefined}
         {...props}
-      />
+      >
+        {children}
+      </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );
 })
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+// Higher-level component that provides a complete mobile-friendly tooltip
+interface SimpleTooltipProps {
+  content: React.ReactNode;
+  children: React.ReactNode;
+  side?: "top" | "right" | "bottom" | "left";
+  align?: "start" | "center" | "end";
+  className?: string;
+}
+
+const SimpleTooltip = ({ content, children, side = "top", align = "center", className }: SimpleTooltipProps) => {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent side={side} align={align} className={className}>
+          {content}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, SimpleTooltip }

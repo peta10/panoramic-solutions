@@ -623,10 +623,15 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             selectedCriteria={criteria}
             onShowHowItWorks={onShowHowItWorks}
           />
-          <main className={cn(
-            "container mx-auto px-4 py-6",
-            isMobile && "pb-28" // Increased padding to accommodate the action buttons
-          )}>
+          <main 
+            className={cn(
+              "container mx-auto px-4 py-6",
+              isMobile && "pb-28" // Increased padding to accommodate the action buttons
+            )}
+            style={{
+              paddingTop: "140px" // Adjusted for smaller py-2 containers
+            }}
+          >
             {renderContent()}
           </main>
           {isMobile && (

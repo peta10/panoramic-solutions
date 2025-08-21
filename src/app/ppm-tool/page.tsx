@@ -42,23 +42,6 @@ export default function PPMToolPage() {
     <ErrorBoundary>
       <FullscreenProvider>
         <GuidanceProvider>
-          {/* Header-style Landing Section */}
-          <section style={{ backgroundColor: '#F0F4FE' }} className="border-b border-gray-200/50 pt-24">
-            <div className="container mx-auto px-3 md:px-4 py-4">
-              <div className="flex flex-col items-center text-center">
-                {/* Main Title */}
-                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-midnight mb-3">
-                  <span className="bg-gradient-to-r from-primary-400 to-primary-500 bg-clip-text text-transparent font-extrabold text-xl md:text-2xl lg:text-3xl tracking-tight">PPM Tool Finder</span>
-                </h1>
-                
-                {/* Subtitle */}
-                <p className="text-sm md:text-base text-midnight/70 max-w-4xl">
-                  Get <strong>100% free personalized recommendations</strong> with our intelligent <strong>Project Portfolio Management</strong> Tool assessment.
-                </p>
-              </div>
-            </div>
-          </section>
-
           {/* PPM Tool Section */}
           <div className="min-h-screen" style={{ backgroundColor: '#F0F4FE' }}>
             <EmbeddedPPMToolFlow 

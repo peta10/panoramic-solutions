@@ -61,6 +61,29 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     };
   }, []);
 
+  // Calculate header height (fixed - no scroll changes)
+  const getHeaderHeight = () => {
+    // Header uses py-2 (16px padding) consistently
+    // Logo height: h-8 (32px) on mobile, h-10 (40px) on desktop
+    const padding = 16; // py-2 = 16px (fixed)
+    const logoHeight = isMobile ? 32 : 40; // h-8 = 32px, h-10 = 40px
+    return padding + logoHeight;
+  };
+
+  // Calculate navigation height (fixed - no scroll changes)
+  const getNavigationHeight = () => {
+    // Navigation uses py-2 (16px padding) consistently
+    // Plus content height ~40px
+    const padding = 16; // py-2 = 16px (fixed)
+    const contentHeight = 40; // Approximate content height
+    return padding + contentHeight;
+  };
+
+  // Total combined height for content offset
+  const getTotalFixedHeight = () => {
+    return getHeaderHeight() + getNavigationHeight();
+  };
+
   const steps: NavigationStep[] = isMobile 
     ? [
         { id: 'criteria', label: 'Rank Your Criteria', icon: Sliders, description: 'Set importance levels' },
@@ -74,15 +97,20 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
 
   return (
     <nav 
-      className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm"
+      className="fixed w-full bg-white shadow-lg z-50"
+      style={{ 
+        top: `${getHeaderHeight()}px`, // Position right below the header
+        '--total-fixed-height': `${getTotalFixedHeight()}px` // Expose total height for content padding
+      } as React.CSSProperties}
       aria-label="PPM Tool Navigation"
       role="navigation"
     >
-      <div className="container mx-auto px-3 md:px-4 py-2 md:py-3">
+      <div className="container mx-auto px-3 md:px-4 py-2">
         <div className={cn(
           "flex items-center",
           isMobile ? "justify-center" : "justify-between"
         )}>
+          {/* Navigation Steps - Left Side */}
           <div className={cn(
             "flex items-center",
             isMobile ? "w-full max-w-md space-x-1 md:space-x-2 mx-auto" : "space-x-2 md:space-x-4"
@@ -91,7 +119,6 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
               const isActive = currentStep === step.id;
               const isChartStep = step.id === 'chart';
               const shouldGlow = isChartStep && isChartGlowing;
-
               return (
                 <button
                   key={step.id}
@@ -101,7 +128,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
                     isMobile ? 'flex-1 justify-center' : '',
                     isActive
                       ? 'bg-gradient-to-r from-primary-400 to-primary-500 text-white shadow-lg'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-900',
                     shouldGlow && 'chart-toggle-glow'
                   )}
                 >
@@ -109,7 +136,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
                     'flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded-lg transition-all duration-300',
                     isActive
                       ? 'bg-white/20'
-                      : 'bg-gray-200 group-hover:bg-gray-300'
+                      : 'bg-gray-300 group-hover:bg-gray-400'
                   )}>
                     {React.createElement(step.icon, {
                       className: cn(
@@ -136,8 +163,20 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
               );
             })}
           </div>
+
+          {/* PPM Tool Title - Center (Desktop only) */}
+          {!isMobile && (
+            <div className="absolute left-1/2 transform -translate-x-1/2 text-center max-w-md">
+              <h1 className="text-sm md:text-base font-black text-gray-900">
+                PPM Tool Finder
+              </h1>
+              <p className="text-xs text-gray-600 leading-tight">
+                Get 100% free personalized recommendations with our intelligent Project Portfolio Management Tool assessment.
+              </p>
+            </div>
+          )}
           
-          {/* Add ActionButtons for desktop only */}
+          {/* Action Buttons - Right Side (Desktop only) */}
           {!isMobile && (
             <ActionButtons 
               selectedTools={selectedTools} 
@@ -146,6 +185,18 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
             />
           )}
         </div>
+
+        {/* Mobile Title - Below navigation */}
+        {isMobile && (
+          <div className="text-center mt-2 pt-2 border-t border-gray-200/50">
+            <h1 className="text-xs font-black text-gray-900">
+              PPM Tool Finder
+            </h1>
+            <p className="text-xs text-gray-600 leading-tight">
+              Get 100% free personalized recommendations with our intelligent Project Portfolio Management Tool assessment.
+            </p>
+          </div>
+        )}
       </div>
     </nav>
   );

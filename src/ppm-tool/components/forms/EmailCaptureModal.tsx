@@ -42,6 +42,7 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
       toast({
         title: "Report Sent",
         description: "Check your inbox for your personalized PPM tool analysis.",
+        variant: "success",
       });
     },
     onError: (error) => {

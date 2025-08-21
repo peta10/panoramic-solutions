@@ -189,24 +189,18 @@ export class PPMEmailTemplateGenerator {
             ? `https://${process.env.VERCEL_URL}` 
             : 'http://localhost:3000'; // Server-side: use full URL
 
-        const response = await fetch(`${baseUrl}/api/generate-chart-image`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            tool, 
-            criteria: selectedCriteria, 
-            toolIndex: i 
-          }),
-          signal: AbortSignal.timeout(10000) // 10 second timeout per chart
+        // Use canvas charts for Gmail compatibility (PNG format)
+        const chartParams = new URLSearchParams({
+          tool: tool.name,
+          toolData: encodeURIComponent(JSON.stringify(tool)),
+          criteria: selectedCriteria.map((c: any) => c.id).join(','),
+          userRankings: selectedCriteria.map(() => '3').join(','), // Default user rating
+          toolIndex: i.toString()
         });
         
-        if (response.ok) {
-          const { imageUrl } = await response.json();
-          charts.push({ toolName: tool.name, chartImageUrl: imageUrl });
-        } else {
-          console.warn(`Failed to generate radar chart for ${tool.name}`);
-          charts.push({ toolName: tool.name, chartImageUrl: null });
-        }
+        const imageUrl = `${baseUrl}/api/chart/dynamic.png?${chartParams.toString()}`;
+        console.log(`📊 PPM Generator: Using canvas chart for ${tool.name}: ${imageUrl}`);
+        charts.push({ toolName: tool.name, chartImageUrl: imageUrl });
       } catch (error) {
         console.warn(`Error generating radar chart for ${tool.name}:`, error);
         charts.push({ toolName: tool.name, chartImageUrl: null });
@@ -233,8 +227,8 @@ export class PPMEmailTemplateGenerator {
           <img src="${chart.chartImageUrl}" alt="${chart.toolName} Comparison Chart" 
                style="max-width: 100%; height: auto; border-radius: 6px;" />
           <div style="margin-top: 10px;">
-            <span style="color: #34d399; font-size: 12px;">● Your Rankings</span>
-            <span style="color: #6b7280; font-size: 12px; margin-left: 15px;">● ${chart.toolName} Rankings</span>
+            <span style="color: #10b981; font-size: 12px;">● Your Rankings</span>
+            <span style="color: #2563eb; font-size: 12px; margin-left: 15px;">● ${chart.toolName} Rankings</span>
           </div>
         ` : `
           <div style="background-color: #ffffff; padding: 30px; border-radius: 6px; border: 2px dashed #e2e8f0;">
@@ -253,9 +247,8 @@ export class PPMEmailTemplateGenerator {
           <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 20px; font-weight: bold;" class="mobile-text">
             Your Rankings vs Tool Rankings
           </h3>
-          <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 15px; line-height: 22px;" class="mobile-small">
-            These charts show how your ranked criteria relate to each leader's research-backed rankings.
-          </p>
+
+
           <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 15px; line-height: 22px;" class="mobile-small">
             These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world 
             implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.

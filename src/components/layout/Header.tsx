@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Menu, X, ChevronDown, Calendar } from 'lucide-react'
-import { useScrollPosition } from '@/shared/hooks/useScrollPosition'
+
 import { cn } from '@/shared/utils/cn'
 
 const navigation = [
@@ -26,7 +26,6 @@ const navigation = [
 ]
 
 export function Header() {
-  const { isScrolled } = useScrollPosition()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const pathname = usePathname()
@@ -51,10 +50,7 @@ export function Header() {
 
   return (
     <header
-      className={cn(
-        "fixed top-0 w-full z-50 transition-all duration-300 bg-white shadow-lg",
-        isScrolled ? 'py-2' : 'py-4'
-      )}
+      className="fixed top-0 w-full z-50 bg-white shadow-lg py-2"
     >
       <nav className="container px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}

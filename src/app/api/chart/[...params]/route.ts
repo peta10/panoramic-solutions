@@ -20,14 +20,10 @@ const getCanvasModule = async () => {
   }
 };
 
-// Chart colors matching the frontend
+// Chart colors - Blue and Green only for Gmail compatibility
 const toolColors: [string, string][] = [
-  ['rgba(220, 38, 38, 0.2)', 'rgba(220, 38, 38, 1)'],      // Red
-  ['rgba(37, 99, 235, 0.2)', 'rgba(37, 99, 235, 1)'],      // Blue  
-  ['rgba(16, 185, 129, 0.2)', 'rgba(16, 185, 129, 1)'],    // Emerald
-  ['rgba(147, 51, 234, 0.2)', 'rgba(147, 51, 234, 1)'],    // Purple
-  ['rgba(236, 72, 153, 0.2)', 'rgba(236, 72, 153, 1)'],    // Pink
-  ['rgba(20, 184, 166, 0.2)', 'rgba(20, 184, 166, 1)'],    // Teal
+  ['rgba(37, 99, 235, 0.2)', 'rgba(37, 99, 235, 1)'],      // Blue
+  ['rgba(16, 185, 129, 0.2)', 'rgba(16, 185, 129, 1)'],    // Green
 ];
 
 const getToolColor = (index: number): [string, string] => {

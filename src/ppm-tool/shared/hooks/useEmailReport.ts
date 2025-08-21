@@ -158,19 +158,22 @@ function getBaseUrl(): string {
  */
 async function generateChartImage(tools: Tool[], criteria: Criterion[]): Promise<string | undefined> {
   try {
-    const response = await fetch('/api/generate-chart-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tools, criteria }),
-      // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(30000) // 30 second timeout
-    });
-    
-    if (response.ok) {
-      const { imageUrl } = await response.json();
+    // Use canvas chart generation for Gmail compatibility
+    if (tools.length > 0) {
+      const tool = tools[0]; // Use first tool for chart
+      const chartParams = new URLSearchParams({
+        tool: tool.name,
+        toolData: encodeURIComponent(JSON.stringify(tool)),
+        criteria: criteria.map((c: any) => c.id).join(','),
+        userRankings: criteria.map(() => '3').join(','), // Default ratings
+        toolIndex: '0'
+      });
+      
+      const imageUrl = `/api/chart/dynamic.png?${chartParams.toString()}`;
+      console.log('📊 useEmailReport: Using canvas chart:', imageUrl);
       return imageUrl;
     } else {
-      console.warn('Chart image generation failed:', response.status, response.statusText);
+      console.warn('No tools available for chart generation');
       return undefined;
     }
   } catch (error) {

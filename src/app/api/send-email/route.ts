@@ -367,17 +367,26 @@ async function handleReactEmail(request: NextRequest, body: any) {
     return '2563eb'; // Blue for all tools
   };
 
-  // Smart highlights generator - Hybrid approach with rules + AI polish
+  // Smart highlights generator - Uses actual tool insights from database
   const generateSmartHighlights = async (tool: any, userCriteria: any[]) => {
     try {
-      // Step 1: Rules-based logic to identify tool strengths
+      // Step 1: Rules-based logic to identify tool strengths with actual insights
       const toolStrengths = userCriteria
-        .map((criterion: any) => ({
-          name: criterion.name,
-          toolScore: getToolRating(tool, criterion),
-          userPriority: criterion.userRating || criterion.weight || 5,
-          importance: (criterion.userRating || criterion.weight || 5) * (getToolRating(tool, criterion) || 0)
-        }))
+        .map((criterion: any) => {
+          const toolScore = getToolRating(tool, criterion);
+          const importance = (criterion.userRating || criterion.weight || 5) * (toolScore || 0);
+          
+          // Get actual explanation from tool data
+          const explanation = getToolExplanation(tool, criterion);
+          
+          return {
+            name: criterion.name,
+            toolScore,
+            userPriority: criterion.userRating || criterion.weight || 5,
+            importance,
+            explanation: explanation || ''
+          };
+        })
         .filter(item => item.toolScore >= 4) // Only consider strong areas (4+ rating)
         .sort((a, b) => b.importance - a.importance) // Sort by importance (user priority * tool score)
         .slice(0, 2); // Top 2 most important strengths
@@ -388,15 +397,55 @@ async function handleReactEmail(request: NextRequest, body: any) {
         .slice(0, 3)
         .map(c => c.name);
 
+      // Helper function to get tool explanation (same as in the components)
+      const getToolExplanation = (tool: any, criterion: any): string => {
+        try {
+          if (Array.isArray(tool.criteria)) {
+            const criterionData = tool.criteria.find((c: any) => 
+              c.id === criterion.id || c.name === criterion.name
+            );
+            if (criterionData && typeof criterionData.description === 'string') {
+              return criterionData.description;
+            }
+          }
+
+          if (tool.ratingExplanations && typeof tool.ratingExplanations[criterion.id] === 'string') {
+            return tool.ratingExplanations[criterion.id];
+          }
+
+          return '';
+        } catch (error) {
+          return '';
+        }
+      };
+
       if (toolStrengths.length === 0) {
-        return "Balanced performance across all areas";
+        // No strong areas found, create a generic but tool-specific highlight
+        const toolSpecificHighlights: Record<string, string> = {
+          'Airtable': 'Flexible database approach with excellent usability',
+          'Smartsheet': 'Spreadsheet-like interface with powerful automation',
+          'Monday.com': 'Intuitive interface and team collaboration features',
+          'Jira': 'Comprehensive project tracking and agile capabilities',
+          'Asana': 'Clean interface with strong task management',
+          'ClickUp': 'All-in-one workspace with customizable features',
+          'Notion': 'Versatile workspace combining notes and project management',
+          'Trello': 'Visual boards for simple project organization',
+          'Azure DevOps': 'Integrated development and project management suite',
+          'MS Project': 'Enterprise-grade project planning and scheduling'
+        };
+        
+        return toolSpecificHighlights[tool.name] || "Balanced performance across all areas";
       }
 
-      // Step 2: Create raw highlight data for AI polishing
+      // Step 2: Create comprehensive data for AI polishing using actual insights
       const rawHighlight = toolStrengths.map(s => `${s.name} ${s.toolScore}/5`).join(', ');
       const strengthNames = toolStrengths.map(s => s.name);
+      const actualInsights = toolStrengths
+        .filter(s => s.explanation && s.explanation.trim().length > 0)
+        .map(s => `${s.name}: ${s.explanation.trim()}`)
+        .join(' | ');
       
-      // Step 3: AI Polish via OpenAI (with fallback to rules-based)
+      // Step 3: AI Polish via OpenAI using actual tool insights (with fallback to rules-based)
       if (process.env.OPENAI_API_KEY) {
         try {
           const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -410,27 +459,50 @@ async function handleReactEmail(request: NextRequest, body: any) {
             messages: [
               {
                 role: 'system',
-                content: `You are writing concise, VARIED business highlights for a PPM tool comparison email.
-CRITICAL: Each highlight must be UNIQUE and use DIFFERENT phrasing patterns.
-Vary your sentence structure: sometimes lead with the benefit, sometimes with the tool strength, sometimes with the use case.
-Examples of varied patterns:
-- "Delivers exceptional [strength] for [use case]"
-- "Perfect for teams prioritizing [strength]"  
-- "Streamlines [process] with robust [feature]"
-- "Combines [strength1] with [strength2] capabilities"
-- "Ideal when [use case] is your priority"
-AVOID: Starting every highlight with "Strong in" or "Excels in" - use natural variation!
-Output: Single phrase (max 12 words), natural language, avoid repetitive patterns.`
+                content: `You are a business consultant creating unique, specific highlights for PPM tools. Each tool needs a DISTINCT value proposition.
+
+CRITICAL RULES:
+1. NO generic phrases like "Strong in" or "Excels at" 
+2. Be SPECIFIC about HOW the tool delivers value
+3. Focus on the UNIQUE differentiator for this specific tool
+4. Use CONCRETE benefits, not abstract strengths
+5. Each highlight must sound completely different from others
+
+SPECIFIC GUIDANCE BY TOOL:
+- Airtable: Emphasize database flexibility + ease of use combination
+- Jira: Focus on agile/development workflow integration
+- Smartsheet: Highlight familiar spreadsheet interface + enterprise features
+- Monday.com: Emphasize visual project management + team collaboration
+- Asana: Focus on task organization + simplicity
+- ClickUp: Emphasize all-in-one functionality + customization
+- Planview: Focus on enterprise portfolio management capabilities
+
+OUTPUT FORMATS (vary these):
+- "Built for [specific use case] with [unique approach]"
+- "[Unique feature] designed for [target user]"
+- "Transforms [process] through [specific method]"
+- "[Key differentiator] meets [business need]"
+- "Specialized for [use case] requiring [specific capability]"
+
+Keep under 12 words. Be concrete and specific, not generic.`
               },
               {
                 role: 'user',
                 content: `Tool: ${tool.name}
 User's top priorities: ${topPriorities.join(', ')}
 Tool scores: ${rawHighlight}
-Main strengths: ${strengthNames.join(' and ')}
+Key differentiators: ${strengthNames.join(' and ')}
 
-Create a unique highlight that sounds different from typical "Strong in X" phrases. 
-Use varied sentence structure and natural business language.`
+ACTUAL TOOL INSIGHTS FROM DATABASE:
+${actualInsights || 'No specific insights available - use tool knowledge'}
+
+Create a UNIQUE highlight for ${tool.name} that:
+1. Uses the actual insights above to explain HOW it delivers value
+2. Focuses on its specific competitive advantage based on real data
+3. Connects to user priorities: ${topPriorities.slice(0, 2).join(' and ')}
+4. Transforms technical insights into business benefits
+
+Base your response on the actual insights provided, not generic assumptions.`
               }
             ],
             max_tokens: 50,
@@ -454,15 +526,46 @@ Use varied sentence structure and natural business language.`
         console.log(`ℹ️ OpenAI API key not configured, using rules-based highlights for ${tool.name}`);
       }
       
-      // Fallback: Rules-based highlight with variation if AI fails
+      // Fallback: Rules-based highlight with tool-specific uniqueness
+      const primaryStrength = strengthNames[0]?.toLowerCase() || 'overall performance';
+      const secondaryStrength = strengthNames[1]?.toLowerCase();
+      
+      // Tool-specific fallback highlights that emphasize unique value props
+      const toolSpecificFallbacks: Record<string, string> = {
+        'Airtable': secondaryStrength ? `Database flexibility meets ${secondaryStrength} for hybrid teams` : 'Database-driven project management with spreadsheet familiarity',
+        'Jira': secondaryStrength ? `Agile-native platform with strong ${secondaryStrength}` : 'Developer-centric project tracking with enterprise scalability',
+        'Smartsheet': secondaryStrength ? `Spreadsheet interface enhanced by ${secondaryStrength}` : 'Enterprise spreadsheet approach to project management',
+        'Monday.com': secondaryStrength ? `Visual workflow design with ${secondaryStrength}` : 'Color-coded project boards for team transparency',
+        'Asana': secondaryStrength ? `Clean task management with ${secondaryStrength}` : 'Intuitive task organization for focus-driven teams',
+        'ClickUp': secondaryStrength ? `All-in-one workspace featuring ${secondaryStrength}` : 'Comprehensive project hub with customizable workflows',
+        'Planview': secondaryStrength ? `Enterprise portfolio control with ${secondaryStrength}` : 'Strategic portfolio management for large organizations',
+        'Azure DevOps': secondaryStrength ? `Integrated development lifecycle with ${secondaryStrength}` : 'End-to-end DevOps platform for technical teams'
+      };
+      
+      if (toolSpecificFallbacks[tool.name]) {
+        return toolSpecificFallbacks[tool.name];
+      }
+      
+      // Generic fallback patterns with more variation
       const fallbackPatterns = [
-        () => `Delivers exceptional ${strengthNames[0]} capabilities`,
-        () => `Perfect for teams prioritizing ${strengthNames[0]}`,
-        () => `Streamlines workflows with robust ${strengthNames[0]}`,
-        () => `Combines ${strengthNames[0]}${strengthNames[1] ? ` and ${strengthNames[1]}` : ''} features`,
-        () => `Ideal when ${strengthNames[0]} is your priority`,
-        () => `Excels at ${strengthNames[0]} for growing teams`,
-        () => `Balances ${strengthNames[0]} with ease of use`
+        () => `Built for ${primaryStrength} with enterprise-grade reliability`,
+        () => `Specialized approach to ${primaryStrength} for modern teams`,
+        () => `Transforms ${primaryStrength} through intuitive design`,
+        () => secondaryStrength ? `Balances ${primaryStrength} with ${secondaryStrength} capabilities` : `Focused on ${primaryStrength} excellence`,
+        () => `Designed for teams where ${primaryStrength} drives success`,
+        () => `Professional-grade ${primaryStrength} platform`,
+        () => {
+          // Context-aware pattern selection
+          if (primaryStrength.includes('ease of use') || primaryStrength.includes('usability')) {
+            return `User-friendly with strong functionality`;
+          } else if (primaryStrength.includes('integration')) {
+            return `Seamless connectivity and workflow integration`;
+          } else if (primaryStrength.includes('collaboration')) {
+            return `Built for team coordination and communication`;
+          } else {
+            return `Balances ${primaryStrength} with intuitive design`;
+          }
+        }
       ];
       
       // Use tool name hash to consistently pick a pattern (but still varied across tools)
@@ -475,45 +578,70 @@ Use varied sentence structure and natural business language.`
     }
   };
   
-  // Function to generate dynamic chart URLs for the top 3 tools
-  const generateChartsHTML = (tools: any[], criteria: any[], userRankings: any) => {
+  // Function to generate GPT-4 radar charts for the top 3 tools
+  const generateChartsHTML = async (tools: any[], criteria: any[], userRankings: any) => {
     try {
       const baseUrl = getBaseUrl();
-      console.log('🎯 Generating dynamic chart URLs for', tools.length, 'tools');
+      console.log('🎯 Generating Gmail-compatible canvas radar charts for', tools.length, 'tools');
       
-      return tools.map((recommendation, index) => {
+      const chartPromises = tools.map(async (recommendation, index) => {
         const tool = recommendation.tool;
         
-        // Get user rankings for this tool's criteria
-        const toolUserRankings = criteria.map((c: any) => {
-          const userRating = userRankings && userRankings[c.id] ? userRankings[c.id] : 3;
-          return userRating;
-        });
+        try {
+          // Prepare criteria with user ratings for GPT-4 chart generation
+          const chartCriteria = criteria.map((c: any) => ({
+            ...c,
+            userRating: userRankings && userRankings[c.id] ? userRankings[c.id] : 3
+          }));
+          
+          // Use canvas charts for Gmail compatibility (PNG format)
+          // Create chart URL with proper tool data, criteria, and user rankings
+          const chartParams = new URLSearchParams({
+            tool: tool.name,
+            toolData: encodeURIComponent(JSON.stringify(tool)),
+            criteria: chartCriteria.map((c: any) => c.id).join(','),
+            userRankings: chartCriteria.map((c: any) => c.userRating).join(','),
+            toolIndex: index.toString()
+          });
+          
+          const chartUrl = `${baseUrl}/api/chart/dynamic.png?${chartParams.toString()}`;
+          
+          // For Gmail compatibility, use the canvas-generated chart URL directly
+          console.log(`📊 Generated canvas chart URL for ${tool.name}: ${chartUrl}`);
+          
+          return `
+            <div style="margin-bottom:24px;text-align:center;">
+              <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
+                <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
+                <img src="${chartUrl}" 
+                     alt="${tool.name} Comparison Chart" 
+                     style="width:100%;max-width:250px;height:auto;display:block;margin:0 auto;" 
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                <div style="display:none;background:#ffffff;padding:20px;border-radius:6px;border:2px dashed #e2e8f0;">
+                  <p style="margin:0;color:#9ca3af;font-size:12px;font-style:italic;">
+                    📊 Chart temporarily unavailable
+                  </p>
+                </div>
+                <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
+                  <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
+                </div>
+              </div>
+            </div>
+          `;
+          
+        } catch (error) {
+          console.warn(`❌ Error generating canvas chart for ${tool.name}:`, error);
+        }
         
-        // Create chart URL with proper tool data, criteria, and user rankings
-        const chartParams = new URLSearchParams({
-          tool: tool.name,
-          toolData: encodeURIComponent(JSON.stringify(tool)),
-          criteria: criteria.map((c: any) => c.id).join(','),
-          userRankings: toolUserRankings.join(','),
-          toolIndex: index.toString()
-        });
-        
-        const chartUrl = `${baseUrl}/api/chart/dynamic.png?${chartParams.toString()}`;
-        
-        console.log(`📊 Generated chart URL for ${tool.name}:`, chartUrl);
-        console.log(`📊 User rankings for ${tool.name}:`, toolUserRankings);
-        
+        // Fallback when chart generation fails
         return `
           <div style="margin-bottom:24px;text-align:center;">
             <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
               <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
-              <img src="${chartUrl}" 
-                   alt="${tool.name} Comparison Chart" 
-                   style="width:100%;max-width:250px;height:auto;display:block;margin:0 auto;" 
-                   onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-              <div style="display:none;font-size:10px;color:#6c757d;padding:20px;">
-                Chart loading...
+              <div style="background:#ffffff;padding:30px;border-radius:6px;border:2px dashed #e2e8f0;">
+                <p style="margin:0;color:#9ca3af;font-size:14px;font-style:italic;">
+                  📊 Chart visualization available in your full report
+                </p>
               </div>
               <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
                 <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
@@ -521,10 +649,14 @@ Use varied sentence structure and natural business language.`
             </div>
           </div>
         `;
-      }).join('');
+      });
+      
+      const chartResults = await Promise.all(chartPromises);
+      return chartResults.join('');
       
     } catch (error) {
-      console.error('❌ Error generating chart URLs:', error);
+      console.error('❌ Error generating GPT-4 charts:', error);
+      // Return fallback for all tools if there's a major error
       return tools.map((recommendation, index) => {
         const tool = recommendation.tool;
         
@@ -532,7 +664,11 @@ Use varied sentence structure and natural business language.`
           <div style="margin-bottom:24px;text-align:center;">
             <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
               <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
-              <div style="font-size:10px;color:#6c757d;padding:20px;">Chart temporarily unavailable</div>
+              <div style="background:#ffffff;padding:30px;border-radius:6px;border:2px dashed #e2e8f0;">
+                <p style="margin:0;color:#9ca3af;font-size:14px;font-style:italic;">
+                  📊 Chart visualization available in your full report
+                </p>
+              </div>
               <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
                 <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
               </div>
@@ -672,14 +808,15 @@ Use varied sentence structure and natural business language.`
          <tr>
            <td style="padding:20px 28px;font-family:Arial,Helvetica,sans-serif;background:#e3f2fd;">
              <div style="font-size:18px;font-weight:700;margin:0 0 6px 0;color:#1565c0;">Your Rankings vs Tool Rankings</div>
-             <div style="font-size:14px;color:#424242;margin:0 0 16px 0;">These charts show how your ranked criteria relate to each leader's research-backed rankings.</div>
+
+
              <div style="font-size:12px;color:#1565c0;line-height:1.6;margin:0 0 16px 0;">
                These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
              </div>
             
             <!-- Three Charts Stacked Vertically -->
             <div style="margin-top:16px;">
-                ${generateChartsHTML(topRecommendations.slice(0, 3), selectedCriteria, userRankings)}
+                ${await generateChartsHTML(topRecommendations.slice(0, 3), selectedCriteria, userRankings)}
             </div>
             
           </td>
