@@ -1,5 +1,6 @@
 import { Tool, Criterion } from '../types';
 import { getToolRating, calculateScore, roundMatchScore } from './toolRating';
+import { AIAnalysisService } from '../services/aiAnalysisService';
 
 interface EmailTemplateData {
   userEmail: string;
@@ -52,9 +53,38 @@ export class PPMEmailTemplateGenerator {
   }
 
   /**
-   * Generate insights text based on top 3 tools
+   * Generate AI-powered insights text based on top 3 tools
    */
-  private static generateInsights(topTools: WeightedScore[], criteria: Criterion[]): string {
+  private static async generateInsights(topTools: WeightedScore[], criteria: Criterion[], userEmail?: string): Promise<string> {
+    if (topTools.length < 1) {
+      return "Based on your criteria, these tools offer the best fit for your organization.";
+    }
+
+    try {
+      // Prepare data for AI analysis
+      const criteriaWeights: Record<string, number> = {};
+      criteria.forEach(criterion => {
+        criteriaWeights[criterion.name] = criterion.userRating / 5; // Convert 1-5 rating to decimal
+      });
+
+      const analysisData = {
+        topTools: topTools.map(wt => wt.tool),
+        criteriaWeights,
+        userEmail
+      };
+
+      const analysis = await AIAnalysisService.generateAnalysis(analysisData);
+      return analysis.summary;
+    } catch (error) {
+      console.error('AI Analysis failed, using fallback:', error);
+      return this.generateBasicInsights(topTools, criteria);
+    }
+  }
+
+  /**
+   * Fallback method for generating basic insights (original logic)
+   */
+  private static generateBasicInsights(topTools: WeightedScore[], criteria: Criterion[]): string {
     if (topTools.length < 2) {
       return "Based on your criteria, these tools offer the best fit for your organization.";
     }
@@ -142,7 +172,7 @@ export class PPMEmailTemplateGenerator {
   /**
    * Generate the complete HTML email template
    */
-  public static generateHTMLEmail(data: EmailTemplateData): string {
+  public static async generateHTMLEmail(data: EmailTemplateData): Promise<string> {
     const {
       selectedTools,
       selectedCriteria,
@@ -161,7 +191,7 @@ export class PPMEmailTemplateGenerator {
     // Generate dynamic content
     const criteriaList = selectedCriteria.map(c => c.name).join(', ');
     const topCriteria = this.getTopCriteriaForDisplay(selectedCriteria);
-    const insights = this.generateInsights(topThree, selectedCriteria);
+    const insights = await this.generateInsights(topThree, selectedCriteria, data.userEmail);
     const honorableMentions = this.generateHonorableMentions(scoredTools, topThree);
 
     // Get our base template
@@ -254,8 +284,8 @@ export class PPMEmailTemplateGenerator {
                     <!-- Top 3 Recommendations Header -->
                     <tr>
                         <td style="padding: 0 30px;" class="mobile-padding">
-                            <h2 style="margin: 0 0 20px 0; color: #2d3748; font-size: 22px; font-weight: bold; border-bottom: 3px solid #0057B7; padding-bottom: 10px;" class="mobile-text">
-                                Comparison Snapshot – Top 3
+                            <h2 style="margin: 0 0 20px 0; color: #2d3748; font-size: 24px; font-weight: bold; border-bottom: 3px solid #0057B7; padding-bottom: 10px;" class="mobile-text">
+                                Top 3 Tools for your Project Portfolio Management Use Case
                             </h2>
                         </td>
                     </tr>
@@ -324,8 +354,8 @@ export class PPMEmailTemplateGenerator {
                     <!-- Key Insights -->
                     <tr>
                         <td style="padding: 0 30px 25px;" class="mobile-padding">
-                            <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 20px; font-weight: bold;" class="mobile-text">
-                                Your Insights
+                            <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 24px; font-weight: bold;" class="mobile-text">
+                                Analysis Summary
                             </h3>
                             <div style="background-color: #f7fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #0057B7;">
                                 <p style="margin: 0; color: #4a5568; font-size: 15px; line-height: 24px;" class="mobile-small">
@@ -350,7 +380,7 @@ export class PPMEmailTemplateGenerator {
                     <!-- Chart Section -->
                     <tr>
                         <td style="padding: 0 30px 25px;" class="mobile-padding">
-                            <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 20px; font-weight: bold;" class="mobile-text">
+                            <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 24px; font-weight: bold;" class="mobile-text">
                                 Your Rankings vs Tool Scores
                             </h3>
                             <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 15px; line-height: 22px;" class="mobile-small">
@@ -469,7 +499,7 @@ export class PPMEmailTemplateGenerator {
   /**
    * Generate plain text version for email clients that don't support HTML
    */
-  public static generatePlainTextEmail(data: EmailTemplateData): string {
+  public static async generatePlainTextEmail(data: EmailTemplateData): Promise<string> {
     const { selectedTools, selectedCriteria } = data;
     
     // Calculate weighted scores and get top 3
@@ -477,7 +507,8 @@ export class PPMEmailTemplateGenerator {
     const topThree = scoredTools.slice(0, 3);
 
     const criteriaList = selectedCriteria.map(c => c.name).join(', ');
-    const insights = this.generateInsights(topThree, selectedCriteria)
+    const rawInsights = await this.generateInsights(topThree, selectedCriteria, data.userEmail);
+    const insights = rawInsights
       .replace(/\*\*/g, '')
       .replace(/<[^>]*>/g, '');
 
@@ -527,14 +558,14 @@ To unsubscribe: ${data.unsubscribeLink || '#'}
   /**
    * Generate Resend-compatible email payload
    */
-  public static generateResendPayload(data: EmailTemplateData, testMode = false): {
+  public static async generateResendPayload(data: EmailTemplateData, testMode = false): Promise<{
     from: string;
     to: string;
     subject: string;
     html: string;
     text: string;
     tags: Array<{ name: string; value: string }>;
-  } {
+  }> {
     // In test mode, use a simple template to isolate delivery issues
     if (testMode) {
       const simpleHtml = `
@@ -586,8 +617,8 @@ Panoramic Solutions
       from: 'Matt Wagner <matt.wagner@panoramic-solutions.com>',
       to: data.userEmail,
       subject: subjectLine,
-      html: this.generateHTMLEmail(data),
-      text: this.generatePlainTextEmail(data),
+      html: await this.generateHTMLEmail(data),
+      text: await this.generatePlainTextEmail(data),
       tags: [
         { name: 'category', value: 'ppm-tool-report' },
         { name: 'source', value: 'comparison-tool' },

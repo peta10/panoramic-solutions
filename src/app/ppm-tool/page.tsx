@@ -43,17 +43,17 @@ export default function PPMToolPage() {
       <FullscreenProvider>
         <GuidanceProvider>
           {/* Header-style Landing Section */}
-          <section className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm pt-20">
-            <div className="container mx-auto px-3 md:px-4 py-2">
-              <div className="flex items-center justify-between">
+          <section className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm pt-16">
+            <div className="container mx-auto px-3 md:px-4 py-4">
+              <div className="flex flex-col items-center text-center">
                 {/* Main Title */}
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-midnight">
-                  <span className="text-black font-bold">PPM - TOOL FINDER</span>
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-midnight mb-3">
+                  <span className="text-black font-extrabold text-xl md:text-2xl lg:text-3xl tracking-tight">PPM Tool Finder</span>
                 </h1>
                 
                 {/* Subtitle */}
-                <p className="text-sm md:text-base text-midnight/70 max-w-2xl leading-relaxed">
-                  Get <strong>100% free personalized recommendations</strong> in minutes with our intelligent <strong>Project Portfolio Management</strong> Tool assessment. Make informed decisions and focus on key features identified through <strong>deep research</strong> for lasting project portfolio success.
+                <p className="text-sm md:text-base text-midnight/70 max-w-4xl">
+                  Get <strong>100% free personalized recommendations</strong> with our intelligent <strong>Project Portfolio Management</strong> Tool assessment.
                 </p>
               </div>
             </div>

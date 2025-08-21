@@ -7,6 +7,7 @@ import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEmailReport } from '@/ppm-tool/shared/hooks/useEmailReport';
 import type { Tool, Criterion } from '@/ppm-tool/shared/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface EmailCaptureModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const formRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   
   useClickOutside(formRef, onClose);
 
@@ -36,8 +38,11 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
       console.log('Email sent successfully:', response);
       // Don't call onSubmit to avoid PDF generation - email is the new primary flow
       onClose();
-      // Show success message (you can add a toast notification here if you have a toast system)
-      alert('Email report sent successfully! Check your inbox.');
+      // Show success toast notification
+      toast({
+        title: "Report Sent",
+        description: "Check your inbox for your personalized PPM tool analysis.",
+      });
     },
     onError: (error) => {
       console.error('Email send failed:', error);

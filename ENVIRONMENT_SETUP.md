@@ -12,6 +12,9 @@ Create a `.env.local` file in the project root:
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# OpenAI Configuration (for AI-generated analysis summaries)
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 ### For Production (Netlify, Vercel, etc.)
@@ -25,6 +28,11 @@ Set these environment variables in your hosting platform:
 2. **NEXT_PUBLIC_SUPABASE_ANON_KEY**: Your Supabase anonymous key
    - Found in: Supabase Dashboard → Settings → API
    - This is the public anonymous key (not the service role key)
+
+3. **OPENAI_API_KEY**: Your OpenAI API key for natural language analysis
+   - Format: `sk-...` (starts with sk-)
+   - Found in: OpenAI Dashboard → API Keys
+   - Used for generating human-like analysis summaries in email reports
 
 ## Getting Supabase Credentials
 

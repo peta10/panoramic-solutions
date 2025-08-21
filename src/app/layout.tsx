@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { StructuredData } from '@/features/seo/components/StructuredData'
 import { generateSiteMetadata } from '@/shared/utils/seo'
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -46,6 +47,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
+          <Toaster />
         </ClientProviders>
       </body>
     </html>

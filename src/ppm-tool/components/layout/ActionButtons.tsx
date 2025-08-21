@@ -72,10 +72,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
               <button
                 onClick={handleGetReport}
                 className={cn(
-                  `${onShowHowItWorks ? 'flex-1' : 'w-full'} bg-green-600 text-white px-4 py-3 rounded-xl font-medium text-sm`,
+                  `${onShowHowItWorks ? 'flex-1' : 'w-full'} bg-green-700 text-white px-4 py-3 rounded-xl font-medium text-sm`,
                   "flex items-center justify-center gap-2",
                   "active:scale-95 transition-transform",
-                  "shadow-sm active:shadow-inner hover:bg-green-700"
+                  "shadow-sm active:shadow-inner hover:bg-green-800"
                 )}
               >
                 <Send className="w-4 h-4" />
@@ -113,10 +113,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           </button>
         )}
         
-        {/* Get Report Button - Green */}
+        {/* Get Report Button - Blue Gradient */}
         <button
           onClick={handleGetReport}
-          className="bg-green-600 text-white px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-green-700 transition-colors"
+          className="bg-alpine-blue-500 text-white px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-alpine-blue-600 transition-colors"
         >
           <Send className="w-3 h-3 md:w-4 md:h-4" />
           <span className="hidden sm:inline">Get my Free Comparison Report</span>

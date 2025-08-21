@@ -53,7 +53,7 @@ export const useEmailReport = (options: UseEmailReportOptions = {}) => {
         new URLSearchParams(window.location.search).get('emailTest') === 'true';
 
       // Generate email payload
-      const emailPayload = PPMEmailTemplateGenerator.generateResendPayload({
+      const emailPayload = await PPMEmailTemplateGenerator.generateResendPayload({
         ...data,
         chartImageUrl,
         bookingLink: 'https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt',

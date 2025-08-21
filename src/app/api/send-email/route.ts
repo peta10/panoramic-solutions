@@ -362,6 +362,11 @@ async function handleReactEmail(request: NextRequest, body: any) {
   const marketingData = parseGuidedRankingData(guidedRankingAnswers, personalizationData);
   console.log('📊 Parsed marketing data:', marketingData);
 
+  // Helper function to get tool color in hex format for legends (simplified to just blue)
+  const getToolColorHex = (): string => {
+    return '2563eb'; // Blue for all tools
+  };
+
   // Smart highlights generator - Hybrid approach with rules + AI polish
   const generateSmartHighlights = async (tool: any, userCriteria: any[]) => {
     try {
@@ -405,22 +410,31 @@ async function handleReactEmail(request: NextRequest, body: any) {
             messages: [
               {
                 role: 'system',
-                content: `You are writing concise business highlights for a PPM tool comparison email. 
-The input gives tool name, user's top priorities, and tool's strongest criteria with scores. 
-Output must be a single short phrase (max 12 words) that reads naturally, highlights the tool's strengths, 
-and avoids generic marketing buzzwords. Do not invent scores or features not provided.`
+                content: `You are writing concise, VARIED business highlights for a PPM tool comparison email.
+CRITICAL: Each highlight must be UNIQUE and use DIFFERENT phrasing patterns.
+Vary your sentence structure: sometimes lead with the benefit, sometimes with the tool strength, sometimes with the use case.
+Examples of varied patterns:
+- "Delivers exceptional [strength] for [use case]"
+- "Perfect for teams prioritizing [strength]"  
+- "Streamlines [process] with robust [feature]"
+- "Combines [strength1] with [strength2] capabilities"
+- "Ideal when [use case] is your priority"
+AVOID: Starting every highlight with "Strong in" or "Excels in" - use natural variation!
+Output: Single phrase (max 12 words), natural language, avoid repetitive patterns.`
               },
               {
                 role: 'user',
                 content: `Tool: ${tool.name}
 User's top priorities: ${topPriorities.join(', ')}
 Tool scores: ${rawHighlight}
-Raw highlight: ${strengthNames.join(' and ')}
-Draft a polished highlight phrase.`
+Main strengths: ${strengthNames.join(' and ')}
+
+Create a unique highlight that sounds different from typical "Strong in X" phrases. 
+Use varied sentence structure and natural business language.`
               }
             ],
             max_tokens: 50,
-            temperature: 0.7
+            temperature: 0.9
           })
         });
 
@@ -440,12 +454,20 @@ Draft a polished highlight phrase.`
         console.log(`ℹ️ OpenAI API key not configured, using rules-based highlights for ${tool.name}`);
       }
       
-      // Fallback: Rules-based highlight if AI fails
-      if (toolStrengths.length === 1) {
-        return `Standout in ${strengthNames[0]} for specialized needs`;
-      } else {
-        return `Strong in ${strengthNames.join(' & ')} for comprehensive control`;
-      }
+      // Fallback: Rules-based highlight with variation if AI fails
+      const fallbackPatterns = [
+        () => `Delivers exceptional ${strengthNames[0]} capabilities`,
+        () => `Perfect for teams prioritizing ${strengthNames[0]}`,
+        () => `Streamlines workflows with robust ${strengthNames[0]}`,
+        () => `Combines ${strengthNames[0]}${strengthNames[1] ? ` and ${strengthNames[1]}` : ''} features`,
+        () => `Ideal when ${strengthNames[0]} is your priority`,
+        () => `Excels at ${strengthNames[0]} for growing teams`,
+        () => `Balances ${strengthNames[0]} with ease of use`
+      ];
+      
+      // Use tool name hash to consistently pick a pattern (but still varied across tools)
+      const patternIndex = Math.abs(tool.name.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % fallbackPatterns.length;
+      return fallbackPatterns[patternIndex]();
       
     } catch (error) {
       console.error('Error generating highlights:', error);
@@ -496,24 +518,21 @@ Draft a polished highlight phrase.`
         };
         
         return `
-          <td style="width:33.33%;text-align:center;vertical-align:top;padding:0 8px;">
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:12px;margin-bottom:8px;">
-              <div style="font-size:12px;font-weight:700;color:#2c3e50;margin-bottom:8px;">${tool.name}</div>
+          <div style="margin-bottom:24px;text-align:center;">
+            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
+              <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
               <img src="${chartUrl}" 
                    alt="${tool.name} Comparison Chart" 
-                   style="width:100%;max-width:200px;height:auto;display:block;" 
+                   style="width:100%;max-width:250px;height:auto;display:block;margin:0 auto;" 
                    onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
               <div style="display:none;font-size:10px;color:#6c757d;padding:20px;">
                 Chart loading...
               </div>
+              <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
+                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Scores
+              </div>
             </div>
-            <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-bottom:4px;">
-              <strong>${score}% match</strong> - Green dashed: Your rankings
-            </div>
-            <div style="font-size:9px;color:#495057;line-height:1.3;font-style:italic;">
-              ${getToolOverview(tool)}
-            </div>
-          </td>
+          </div>
         `;
       }).join('');
       
@@ -523,30 +542,16 @@ Draft a polished highlight phrase.`
         const tool = recommendation.tool;
         const score = Math.round(recommendation.score);
         
-        const getToolOverview = (toolData: any) => {
-          const strengths = criteria
-            .filter((c: any) => getToolRating(toolData, c) >= 4)
-            .map((c: any) => c.name)
-            .slice(0, 2);
-            
-          return strengths.length > 0 
-            ? `Strong in ${strengths.join(' & ')}`
-            : 'Solid overall performance';
-        };
-        
         return `
-          <td style="width:33.33%;text-align:center;vertical-align:top;padding:0 8px;">
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:12px;margin-bottom:8px;">
-              <div style="font-size:12px;font-weight:700;color:#2c3e50;margin-bottom:8px;">${tool.name}</div>
+          <div style="margin-bottom:24px;text-align:center;">
+            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
+              <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
               <div style="font-size:10px;color:#6c757d;padding:20px;">Chart temporarily unavailable</div>
+              <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
+                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Scores
+              </div>
             </div>
-            <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-bottom:4px;">
-              <strong>${score}% match</strong>
-            </div>
-            <div style="font-size:9px;color:#495057;line-height:1.3;font-style:italic;">
-              ${getToolOverview(tool)}
-            </div>
-          </td>
+          </div>
         `;
       }).join('');
     }
@@ -603,7 +608,7 @@ Draft a polished highlight phrase.`
               <tr>
                 <td style="width:33.33%;text-align:center;vertical-align:top;padding:0 8px;">
                   <div style="text-align:center;">
-                    <div style="font-size:16px;margin-bottom:4px;">👥</div>
+                    <div style="font-size:16px;margin-bottom:4px;">✅</div>
                     <div style="font-size:12px;font-weight:700;color:#2c3e50;margin-bottom:4px;">Proven Methodology</div>
                     <div style="font-size:10px;color:#6c757d;line-height:1.3;">Designed using real-world implementations across industries</div>
                   </div>
@@ -627,8 +632,8 @@ Draft a polished highlight phrase.`
             
             <!-- Process cue -->
             <div style="font-size:12px;color:#666;line-height:1.5;margin-top:16px;">
-              You ranked your priorities using our guided method across the following criteria:
-              ${selectedCriteria.map((c: any) => `<strong>${c.name}</strong>`).join(', ')}.
+              You ranked your priorities using our guided method across the following <strong>Project Portfolio Management (PPM)</strong> criteria:
+              ${selectedCriteria.map((c: any) => c.name).join(', ')}.
             </div>
           </td>
         </tr>
@@ -636,7 +641,7 @@ Draft a polished highlight phrase.`
                  <!-- Results Overview - Light Blue Background -->
          <tr>
            <td style="padding:20px 28px;font-family:Arial,Helvetica,sans-serif;background:#e3f2fd;">
-             <div style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:#1565c0;">Results Overview - Top 3</div>
+             <div style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#1565c0;">Top 3 Tools for your Project Portfolio Management Use Case</div>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
               <thead>
                 <tr style="background:#e9ecef;">
@@ -664,7 +669,7 @@ Draft a polished highlight phrase.`
                  <!-- Analysis Summary & Additional Considerations - White Background -->
          <tr>
            <td style="padding:20px 28px;font-family:Arial,Helvetica,sans-serif;background:#ffffff;">
-             <div style="font-size:14px;font-weight:700;margin:0 0 8px 0;color:#2c3e50;">Analysis Summary</div>
+             <div style="font-size:18px;font-weight:700;margin:0 0 8px 0;color:#2c3e50;">Analysis Summary</div>
             <div style="font-size:14px;color:#2c3e50;line-height:1.6;margin-bottom:16px;">
               ${insights.mainInsight}
               ${insights.tieNote ? `<div style="font-size:12px;color:#6c757d;margin-top:6px;"><strong>Note:</strong> ${insights.tieNote}</div>` : ''}
@@ -680,21 +685,16 @@ Draft a polished highlight phrase.`
                  <!-- Your Rankings vs Tool Scores - Light Blue Background -->
          <tr>
            <td style="padding:20px 28px;font-family:Arial,Helvetica,sans-serif;background:#e3f2fd;">
-             <div style="font-size:14px;font-weight:700;margin:0 0 6px 0;color:#1565c0;">Your Rankings vs Tool Scores</div>
-            <div style="font-size:12px;color:#1565c0;margin:0 0 10px 0;line-height:1.5;">
-              This visual shows how your ranked criteria align with each leader's actual scores.
-            </div>
+             <div style="font-size:18px;font-weight:700;margin:0 0 6px 0;color:#1565c0;">Your Rankings vs Tool Scores</div>
             
-            <!-- Three Charts Side by Side -->
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
-              <tr>
+            <!-- Three Charts Stacked Vertically -->
+            <div style="margin-top:16px;">
                 ${generateChartsHTML(topRecommendations.slice(0, 3), selectedCriteria, userRankings)}
-              </tr>
-            </table>
+            </div>
             
             <!-- Final Summary -->
             <div style="font-size:12px;color:#1565c0;line-height:1.6;margin-top:16px;">
-              These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you move forward with confidence and reduce implementation challenges.
+              These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
             </div>
           </td>
         </tr>
@@ -702,6 +702,9 @@ Draft a polished highlight phrase.`
         <!-- Signature - White Background -->
         <tr>
           <td style="padding:24px 28px 28px 28px;font-family:Arial,Helvetica,sans-serif;background:#ffffff;">
+            <div style="font-size:12px;color:#2c3e50;line-height:1.6;margin:0 0 16px 0;">
+              We're glad you took the time to explore your priorities through this process. These insights serve as a starting point to accelerate progress toward successful PPM adoption.
+            </div>
             <div style="font-size:12px;color:#2c3e50;margin:0 0 16px 0;">Regards,</div>
             <div style="font-size:14px;color:#2c3e50;font-weight:700;margin:0 0 4px 0;">Matt Wagner, PMP</div>
             <div style="font-size:12px;color:#6c757d;margin:0 0 12px 0;">Founder & Solutions Architect | Panoramic Solutions</div>
