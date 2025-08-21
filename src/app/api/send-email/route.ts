@@ -177,7 +177,7 @@ function generateDynamicInsights(topRecommendations: any[], selectedCriteria: an
       mainInsight = `<strong>${winner.tool.name}</strong> and <strong>${runnerUp.tool.name}</strong> are essentially tied at ${Math.round(winner.score)}% and ${Math.round(runnerUp.score)}% respectively. ${winner.tool.name} excels in ${winnerStrengthAreas.map(s => s.name).join(' and ')}, while ${runnerUp.tool.name} stands out in ${runnerUpStrengthAreas.map(s => s.name).join(' and ')}. <strong>${thirdPlace.tool.name}</strong> rounds out the top three at ${Math.round(thirdPlace.score)}%, offering strong ${thirdPlaceStrengthAreas[0]?.name || 'capabilities'} for organizations prioritizing that area.`;
     } else {
       // Close but not exact tie
-      mainInsight = `<strong>${winner.tool.name}</strong> leads by a small margin with ${Math.round(winner.score)}% vs ${runnerUp.tool.name}'s ${Math.round(runnerUp.score)}%. ${winner.tool.name} performs better in ${winnerStrengthAreas.map(s => s.name).join(' and ')}, while ${runnerUp.tool.name} has advantages in ${runnerUpStrengthAreas.map(s => s.name).join(' and ')}. <strong>${thirdPlace.tool.name}</strong> at ${Math.round(thirdPlace.score)}% brings particular strength in ${thirdPlaceStrengthAreas[0]?.name || 'specialized areas'}, making it worth considering if that's a key priority.`;
+      mainInsight = `<strong>${winner.tool.name}</strong> leads by a small margin with ${Math.round(winner.score)}% vs <strong>${runnerUp.tool.name}</strong>'s ${Math.round(runnerUp.score)}%. ${winner.tool.name} performs better in ${winnerStrengthAreas.map(s => s.name).join(' and ')}, while <strong>${runnerUp.tool.name}</strong> has advantages in ${runnerUpStrengthAreas.map(s => s.name).join(' and ')}. <strong>${thirdPlace.tool.name}</strong> at ${Math.round(thirdPlace.score)}% brings particular strength in ${thirdPlaceStrengthAreas[0]?.name || 'specialized areas'}, making it worth considering if that's a key priority.`;
     }
   } else {
     mainInsight = `<strong>${winner.tool.name}</strong> is your top recommendation with a ${Math.round(winner.score)}% match score, performing well in your highest-priority areas: ${winnerStrengthAreas.map(s => s.name).join(' and ')}. <strong>${runnerUp.tool.name}</strong> follows at ${Math.round(runnerUp.score)}% with notable strengths in ${runnerUpStrengthAreas.map(s => s.name).join(' and ')}, while <strong>${thirdPlace.tool.name}</strong> at ${Math.round(thirdPlace.score)}% offers compelling ${thirdPlaceStrengthAreas[0]?.name || 'capabilities'} that could make it the right choice for specific use cases.`;
@@ -210,7 +210,7 @@ function generateDynamicInsights(topRecommendations: any[], selectedCriteria: an
   return {
     mainInsight,
     tieNote: isCloseTie && scoreDiff <= 2 ? `With such similar scores, your specific implementation timeline, budget, and team preferences should guide your final decision.` : 
-             isCloseTie ? `The small difference suggests both tools are excellent fits - consider which strengths align better with your immediate needs.` : null,
+             isCloseTie ? `The small difference suggests these top tools are excellent fits - consider which strengths align better with your immediate needs.` : null,
     honorableMentions
   };
 }
@@ -483,7 +483,6 @@ Use varied sentence structure and natural business language.`
       
       return tools.map((recommendation, index) => {
         const tool = recommendation.tool;
-        const score = Math.round(recommendation.score);
         
         // Get user rankings for this tool's criteria
         const toolUserRankings = criteria.map((c: any) => {
@@ -505,18 +504,6 @@ Use varied sentence structure and natural business language.`
         console.log(`📊 Generated chart URL for ${tool.name}:`, chartUrl);
         console.log(`📊 User rankings for ${tool.name}:`, toolUserRankings);
         
-        // Generate tool overview
-        const getToolOverview = (toolData: any) => {
-          const strengths = criteria
-            .filter((c: any) => getToolRating(toolData, c) >= 4)
-            .map((c: any) => c.name)
-            .slice(0, 2);
-            
-          return strengths.length > 0 
-            ? `Strong in ${strengths.join(' & ')}`
-            : 'Solid overall performance';
-        };
-        
         return `
           <div style="margin-bottom:24px;text-align:center;">
             <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
@@ -529,7 +516,7 @@ Use varied sentence structure and natural business language.`
                 Chart loading...
               </div>
               <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
-                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Scores
+                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
               </div>
             </div>
           </div>
@@ -540,7 +527,6 @@ Use varied sentence structure and natural business language.`
       console.error('❌ Error generating chart URLs:', error);
       return tools.map((recommendation, index) => {
         const tool = recommendation.tool;
-        const score = Math.round(recommendation.score);
         
         return `
           <div style="margin-bottom:24px;text-align:center;">
@@ -548,7 +534,7 @@ Use varied sentence structure and natural business language.`
               <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
               <div style="font-size:10px;color:#6c757d;padding:20px;">Chart temporarily unavailable</div>
               <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
-                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Scores
+                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
               </div>
             </div>
           </div>
@@ -682,20 +668,20 @@ Use varied sentence structure and natural business language.`
           </td>
         </tr>
 
-                 <!-- Your Rankings vs Tool Scores - Light Blue Background -->
+                 <!-- Your Rankings vs Tool Rankings - Light Blue Background -->
          <tr>
            <td style="padding:20px 28px;font-family:Arial,Helvetica,sans-serif;background:#e3f2fd;">
-             <div style="font-size:18px;font-weight:700;margin:0 0 6px 0;color:#1565c0;">Your Rankings vs Tool Scores</div>
+             <div style="font-size:18px;font-weight:700;margin:0 0 6px 0;color:#1565c0;">Your Rankings vs Tool Rankings</div>
+             <div style="font-size:14px;color:#424242;margin:0 0 16px 0;">These charts show how your ranked criteria relate to each leader's research-backed rankings.</div>
+             <div style="font-size:12px;color:#1565c0;line-height:1.6;margin:0 0 16px 0;">
+               These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
+             </div>
             
             <!-- Three Charts Stacked Vertically -->
             <div style="margin-top:16px;">
                 ${generateChartsHTML(topRecommendations.slice(0, 3), selectedCriteria, userRankings)}
             </div>
             
-            <!-- Final Summary -->
-            <div style="font-size:12px;color:#1565c0;line-height:1.6;margin-top:16px;">
-              These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
-            </div>
           </td>
         </tr>
 
@@ -703,7 +689,7 @@ Use varied sentence structure and natural business language.`
         <tr>
           <td style="padding:24px 28px 28px 28px;font-family:Arial,Helvetica,sans-serif;background:#ffffff;">
             <div style="font-size:12px;color:#2c3e50;line-height:1.6;margin:0 0 16px 0;">
-              We're glad you took the time to explore your priorities through this process. These insights serve as a starting point to accelerate progress toward successful PPM adoption.
+              We're glad you took the time to explore your priorities through this process. These insights serve as a launch point to accelerate progress toward successful PPM adoption.
             </div>
             <div style="font-size:12px;color:#2c3e50;margin:0 0 16px 0;">Regards,</div>
             <div style="font-size:14px;color:#2c3e50;font-weight:700;margin:0 0 4px 0;">Matt Wagner, PMP</div>

@@ -43,12 +43,12 @@ export default function PPMToolPage() {
       <FullscreenProvider>
         <GuidanceProvider>
           {/* Header-style Landing Section */}
-          <section className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm pt-16">
+          <section style={{ backgroundColor: '#F0F4FE' }} className="border-b border-gray-200/50 pt-24">
             <div className="container mx-auto px-3 md:px-4 py-4">
               <div className="flex flex-col items-center text-center">
                 {/* Main Title */}
                 <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-midnight mb-3">
-                  <span className="text-black font-extrabold text-xl md:text-2xl lg:text-3xl tracking-tight">PPM Tool Finder</span>
+                  <span className="bg-gradient-to-r from-primary-400 to-primary-500 bg-clip-text text-transparent font-extrabold text-xl md:text-2xl lg:text-3xl tracking-tight">PPM Tool Finder</span>
                 </h1>
                 
                 {/* Subtitle */}
@@ -60,7 +60,7 @@ export default function PPMToolPage() {
           </section>
 
           {/* PPM Tool Section */}
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <div className="min-h-screen" style={{ backgroundColor: '#F0F4FE' }}>
             <EmbeddedPPMToolFlow 
               onOpenGuidedRanking={handleOpenGuidedRanking}
               guidedButtonRef={guidedButtonRef}

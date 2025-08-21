@@ -28,7 +28,7 @@ Tool rankings and features may vary based on version, implementation, and specif
                 <p className="text-sm text-gray-700 cursor-help">
                   <span className="font-medium">Disclaimer:</span> The recommendations and match scores provided are for informational purposes only and do not constitute professional advice.{' '}
                   <span className="underline decoration-dotted underline-offset-2">
-                    Additional details shown upon hover
+                    Click or hover for additional details
                   </span>
                 </p>
               </TooltipTrigger>

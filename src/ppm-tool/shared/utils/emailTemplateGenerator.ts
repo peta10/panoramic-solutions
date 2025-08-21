@@ -170,6 +170,104 @@ export class PPMEmailTemplateGenerator {
   }
 
   /**
+   * Generate individual radar chart images for top 3 tools
+   */
+  private static async generateRadarCharts(
+    topThreeTools: WeightedScore[],
+    selectedCriteria: Criterion[]
+  ): Promise<{ toolName: string; chartImageUrl: string | null }[]> {
+    const charts = [];
+    
+    for (let i = 0; i < topThreeTools.length; i++) {
+      const { tool } = topThreeTools[i];
+      
+      try {
+        // Use full URL for server-side requests
+        const baseUrl = typeof window !== 'undefined' 
+          ? '' // Client-side: use relative URL
+          : process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL 
+            ? `https://${process.env.VERCEL_URL}` 
+            : 'http://localhost:3000'; // Server-side: use full URL
+
+        const response = await fetch(`${baseUrl}/api/generate-chart-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            tool, 
+            criteria: selectedCriteria, 
+            toolIndex: i 
+          }),
+          signal: AbortSignal.timeout(10000) // 10 second timeout per chart
+        });
+        
+        if (response.ok) {
+          const { imageUrl } = await response.json();
+          charts.push({ toolName: tool.name, chartImageUrl: imageUrl });
+        } else {
+          console.warn(`Failed to generate radar chart for ${tool.name}`);
+          charts.push({ toolName: tool.name, chartImageUrl: null });
+        }
+      } catch (error) {
+        console.warn(`Error generating radar chart for ${tool.name}:`, error);
+        charts.push({ toolName: tool.name, chartImageUrl: null });
+      }
+    }
+    
+    return charts;
+  }
+
+  /**
+   * Generate radar charts section HTML
+   */
+  private static generateRadarChartsHTML(
+    radarCharts: { toolName: string; chartImageUrl: string | null }[]
+  ): string {
+    if (radarCharts.length === 0) return '';
+    
+    const chartsHTML = radarCharts.map(chart => `
+      <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center;">
+        <h4 style="margin: 0 0 15px 0; color: #2d3748; font-size: 18px; font-weight: bold;">
+          ${chart.toolName}
+        </h4>
+        ${chart.chartImageUrl ? `
+          <img src="${chart.chartImageUrl}" alt="${chart.toolName} Comparison Chart" 
+               style="max-width: 100%; height: auto; border-radius: 6px;" />
+          <div style="margin-top: 10px;">
+            <span style="color: #34d399; font-size: 12px;">● Your Rankings</span>
+            <span style="color: #6b7280; font-size: 12px; margin-left: 15px;">● ${chart.toolName} Rankings</span>
+          </div>
+        ` : `
+          <div style="background-color: #ffffff; padding: 30px; border-radius: 6px; border: 2px dashed #e2e8f0;">
+            <p style="margin: 0; color: #9ca3af; font-size: 14px; font-style: italic;">
+              📊 Chart visualization available in your full report
+            </p>
+          </div>
+        `}
+      </div>
+    `).join('');
+    
+    return `
+      <!-- Radar Charts Section -->
+      <tr>
+        <td style="padding: 0 30px 25px;" class="mobile-padding">
+          <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 20px; font-weight: bold;" class="mobile-text">
+            Your Rankings vs Tool Rankings
+          </h3>
+          <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 15px; line-height: 22px;" class="mobile-small">
+            These charts show how your ranked criteria relate to each leader's research-backed rankings.
+          </p>
+          <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 15px; line-height: 22px;" class="mobile-small">
+            These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world 
+            implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
+          </p>
+          
+          ${chartsHTML}
+        </td>
+      </tr>
+    `;
+  }
+
+  /**
    * Generate the complete HTML email template
    */
   public static async generateHTMLEmail(data: EmailTemplateData): Promise<string> {
@@ -188,11 +286,15 @@ export class PPMEmailTemplateGenerator {
     const scoredTools = this.calculateWeightedScores(selectedTools, selectedCriteria);
     const topThree = scoredTools.slice(0, 3);
 
+    // Generate radar charts for top 3 tools
+    const radarCharts = await this.generateRadarCharts(topThree, selectedCriteria);
+
     // Generate dynamic content
     const criteriaList = selectedCriteria.map(c => c.name).join(', ');
     const topCriteria = this.getTopCriteriaForDisplay(selectedCriteria);
     const insights = await this.generateInsights(topThree, selectedCriteria, data.userEmail);
     const honorableMentions = this.generateHonorableMentions(scoredTools, topThree);
+    const radarChartsHTML = this.generateRadarChartsHTML(radarCharts);
 
     // Get our base template
     const template = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -377,34 +479,7 @@ export class PPMEmailTemplateGenerator {
                         </td>
                     </tr>
                     
-                    <!-- Chart Section -->
-                    <tr>
-                        <td style="padding: 0 30px 25px;" class="mobile-padding">
-                            <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 24px; font-weight: bold;" class="mobile-text">
-                                Your Rankings vs Tool Scores
-                            </h3>
-                            <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 15px; line-height: 22px;" class="mobile-small">
-                                This chart compares <strong>your rankings</strong> to the top tools, showing exactly where they align (and where they don't).
-                            </p>
-                            
-                            <!-- Chart Container -->
-                            ${chartImageUrl ? `
-                            <div style="text-align: center; margin: 20px 0;">
-                                <img src="${chartImageUrl}" alt="PPM Tool Comparison Chart" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #e2e8f0;" class="chart-container" />
-                            </div>
-                            ` : `
-                            <div style="background-color: #f7fafc; padding: 30px; border-radius: 8px; text-align: center; border: 2px dashed #e2e8f0;">
-                                <p style="margin: 0; color: #718096; font-size: 15px; font-style: italic;">
-                                    📊 Chart visualization available in your full report
-                                </p>
-                            </div>
-                            `}
-                            
-                            <p style="margin: 15px 0 0 0; color: #718096; font-size: 13px; font-style: italic; text-align: center;" class="mobile-small">
-                                *If the chart doesn't display, your Top 3 snapshot above still provides the full picture.
-                            </p>
-                        </td>
-                    </tr>
+                    ${radarChartsHTML}
                     
                     <!-- Value Proposition -->
                     <tr>

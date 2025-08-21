@@ -34,20 +34,6 @@ export const CriteriaRatings: React.FC<CriteriaRatingsProps> = ({
                         type="button"
                         className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
                         aria-label={`More information about ${criterion.name}`}
-                        onTouchStart={(e) => {
-                          // Prevent scroll interference on touch
-                          e.stopPropagation();
-                        }}
-                        onClick={(e) => {
-                          // Ensure click works on mobile
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        style={{
-                          // Ensure proper touch interaction
-                          WebkitTapHighlightColor: 'rgba(59, 130, 246, 0.1)',
-                          touchAction: 'manipulation'
-                        }}
                       >
                         <HelpCircle className={compact ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
                       </button>

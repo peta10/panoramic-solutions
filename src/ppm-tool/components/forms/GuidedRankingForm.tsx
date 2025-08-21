@@ -4,6 +4,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { Criterion } from '@/ppm-tool/shared/types';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
+import { useTouchDevice } from '@/ppm-tool/shared/hooks/useTouchDevice';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface GuidedRankingFormProps {
@@ -200,6 +201,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
   const [otherAnswers, setOtherAnswers] = React.useState<Record<string, string>>({});
 
   const formRef = React.useRef<HTMLDivElement>(null);
+  const isTouchDevice = useTouchDevice();
   
   // Reset form state whenever the form closes
   const resetFormState = () => {
@@ -209,6 +211,18 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
   };
 
   const handleClose = () => {
+    // If user has answered any questions, apply partial rankings with defaults
+    if (Object.keys(answers).length > 0) {
+      const rankings = calculateRankings();
+      const personalizationData = extractPersonalizationData(answers);
+      
+      // Apply rankings to criteria but keep sliders unlocked
+      onUpdateRankings(rankings);
+      
+      // Save answers and personalization data if available
+      onSaveAnswers?.(answers, personalizationData);
+    }
+    
     resetFormState();
     onClose();
   };
@@ -271,9 +285,9 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     const rankings: { [key: string]: number } = {};
     const weights: { [key: string]: number } = {};
     
-    // Initialize rankings with actual criteria IDs
+    // Initialize rankings with actual criteria IDs - default to 3 (neutral)
     criteria.forEach(criterion => {
-      rankings[criterion.id] = 0;
+      rankings[criterion.id] = 3;
       weights[criterion.id] = 0;
     });
 
@@ -284,31 +298,33 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     });
 
     // Calculate Scalability using multiplication rule for Q1 and Q2 with proper range mapping
-    const projectsQuestionValue = (answers['q1'] as number) || 1;
-    const tasksQuestionValue = (answers['q2'] as number) || 1;
-    
-    // Map question values to actual ranges (always use HIGH side of ranges)
-    const projectRanges = [10, 29, 99, 499, 500]; // <10, 10-29, 30-99, 100-499, 500+
-    const taskRanges = [20, 99, 499, 999, 1000];  // <20, 20-99, 100-499, 500-999, 1000+
-    
-    const projectsPerYear = projectRanges[projectsQuestionValue - 1] || 500;
-    const tasksPerProject = taskRanges[tasksQuestionValue - 1] || 1000;
-    const totalVolume = projectsPerYear * tasksPerProject;
-    
-    // Convert total volume to scalability score using correct bands
-    let scalabilityScore = 1;
-    if (totalVolume >= 200000) scalabilityScore = 5;     // ≥200,000 total = Score 5
-    else if (totalVolume >= 30000) scalabilityScore = 4; // 30,000-199,999 total = Score 4  
-    else if (totalVolume >= 5000) scalabilityScore = 3;  // 5,000-29,999 total = Score 3
-    else if (totalVolume >= 500) scalabilityScore = 2;   // 500-4,999 total = Score 2
-    // else scalabilityScore = 1;                         // <500 total = Score 1
-    
-    // Map scalability to actual criteria ID
     const scalabilityId = criteriaNameToId['Scalability'];
-    if (scalabilityId) {
+    
+    // Only calculate scalability if both Q1 and Q2 are answered
+    if (answers['q1'] && answers['q2'] && scalabilityId) {
+      const projectsQuestionValue = answers['q1'] as number;
+      const tasksQuestionValue = answers['q2'] as number;
+      
+      // Map question values to actual ranges (always use HIGH side of ranges)
+      const projectRanges = [10, 29, 99, 499, 500]; // <10, 10-29, 30-99, 100-499, 500+
+      const taskRanges = [20, 99, 499, 999, 1000];  // <20, 20-99, 100-499, 500-999, 1000+
+      
+      const projectsPerYear = projectRanges[projectsQuestionValue - 1] || 500;
+      const tasksPerProject = taskRanges[tasksQuestionValue - 1] || 1000;
+      const totalVolume = projectsPerYear * tasksPerProject;
+      
+      // Convert total volume to scalability score using correct bands
+      let scalabilityScore = 1;
+      if (totalVolume >= 200000) scalabilityScore = 5;     // ≥200,000 total = Score 5
+      else if (totalVolume >= 30000) scalabilityScore = 4; // 30,000-199,999 total = Score 4  
+      else if (totalVolume >= 5000) scalabilityScore = 3;  // 5,000-29,999 total = Score 3
+      else if (totalVolume >= 500) scalabilityScore = 2;   // 500-4,999 total = Score 2
+      // else scalabilityScore = 1;                         // <500 total = Score 1
+      
       rankings[scalabilityId] = scalabilityScore;
       weights[scalabilityId] = 1;
     }
+    // If Q1 or Q2 not answered, scalability remains at default value of 3
 
     // Calculate other criteria from individual questions
     Object.entries(answers).forEach(([questionId, answer]) => {
@@ -318,6 +334,10 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
           // Map criteria names to actual IDs
           const criteriaId = criteriaNameToId[criteriaName];
           if (criteriaId && criteriaId !== scalabilityId) { // Skip scalability as it's calculated above
+            // Reset to 0 for calculation on first answer for this criterion
+            if (weights[criteriaId] === 0) {
+              rankings[criteriaId] = 0;
+            }
             rankings[criteriaId] += answer * weight;
             weights[criteriaId] += weight;
           }
@@ -328,19 +348,23 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     // Calculate weighted averages for non-scalability criteria
     Object.keys(rankings).forEach(criterionId => {
       if (criterionId !== scalabilityId && weights[criterionId] > 0) {
+        // Calculate the value from answered questions
         rankings[criterionId] = Math.round(rankings[criterionId] / weights[criterionId]);
         rankings[criterionId] = Math.max(1, Math.min(5, rankings[criterionId]));
       }
+      // If weights[criterionId] === 0, keep the default value of 3
     });
 
     // Handle flexibility calculation (Q6 + Q7 / 2) - rounds UP for in-between values
-    const processChanges = (answers['q6'] as number) || 3;
-    const workflowAutomation = (answers['q7'] as number) || 3;
-    const flexibilityAverage = (processChanges + workflowAutomation) / 2;
     const flexibilityId = criteriaNameToId['Flexibility & Customization'];
-    if (flexibilityId) {
+    if (flexibilityId && answers['q6'] && answers['q7']) {
+      // Only calculate if both Q6 and Q7 are answered
+      const processChanges = answers['q6'] as number;
+      const workflowAutomation = answers['q7'] as number;
+      const flexibilityAverage = (processChanges + workflowAutomation) / 2;
       rankings[flexibilityId] = Math.ceil(flexibilityAverage);
     }
+    // If Q6 or Q7 not answered, flexibility remains at default value of 3
 
     return rankings;
   };
@@ -418,11 +442,15 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
           exit="exit"
         >
           <div 
-            className="absolute inset-4 flex items-center justify-center pointer-events-none"
+            className="absolute inset-2 sm:inset-4 flex items-center justify-center pointer-events-none"
           >
             <motion.div 
               ref={formRef} 
-              className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden pointer-events-auto h-[95vh] max-h-[55rem] md:h-[98vh] md:max-h-[75rem] lg:h-[95vh] lg:max-h-[75rem] flex flex-col"
+              className={`bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden pointer-events-auto flex flex-col ${
+                isTouchDevice 
+                  ? 'h-[96vh] max-h-[50rem] sm:h-[92vh] sm:max-h-[55rem] md:h-[96vh] md:max-h-[65rem]' 
+                  : 'h-[95vh] max-h-[55rem] sm:h-[90vh] sm:max-h-[65rem] md:h-[98vh] md:max-h-[75rem] lg:h-[95vh] lg:max-h-[75rem]'
+              }`}
               style={{
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
@@ -475,8 +503,8 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
             </div>
 
             {/* Question Content - Scrollable Container */}
-            <div className="flex-1 overflow-y-auto md:overflow-y-visible">
-              <div className="p-4 md:p-6"
+            <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+              <div className={`p-4 md:p-6 ${isTouchDevice ? 'pb-6' : ''}`}
                 style={{
                   WebkitOverflowScrolling: 'touch',
                   overscrollBehavior: 'contain'
@@ -497,7 +525,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
                       {currentQuestion.text}
                     </h4>
                     <div 
-                      className={`space-y-2 md:space-y-3 ${currentQuestion.id === 'q11' ? 'max-h-64 md:max-h-80 lg:max-h-96 overflow-y-auto pr-2' : ''}`}
+                      className="space-y-2 md:space-y-3"
                     >
                         {currentQuestion.options.map((option) => {
                           const isSelected = currentQuestion.isMultiSelect
@@ -513,11 +541,11 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
                             <button
                               key={option.value}
                               onClick={() => handleAnswer(currentQuestion.id, option.value)}
-                              className={`w-full text-left px-3 md:px-4 py-2 md:py-3 rounded-lg border transition-all duration-200 text-sm md:text-base ${
+                              className={`w-full text-left px-3 md:px-4 py-3 md:py-4 rounded-lg border transition-all duration-200 text-sm md:text-base ${
                                 isSelected
                                   ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
                                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-900'
-                              }`}
+                              } ${isTouchDevice ? 'py-4 touch-manipulation' : ''}`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex flex-col">
@@ -580,11 +608,11 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
             </div>
 
             {/* Footer - Always visible */}
-            <div className="px-4 md:px-6 py-3 md:py-4 border-t bg-gray-50 flex justify-between flex-shrink-0 sticky bottom-0">
+            <div className={`px-4 md:px-6 py-3 md:py-4 border-t bg-gray-50 flex justify-between flex-shrink-0 sticky bottom-0 ${isTouchDevice ? 'py-4' : ''}`}>
               <button
                 onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
                 disabled={currentStep === 0}
-                className="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isTouchDevice ? 'py-3 touch-manipulation' : ''}`}
               >
                 Previous
               </button>
@@ -601,7 +629,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
                   isQuestionAnswered(currentQuestion) 
                     ? 'bg-blue-600 hover:bg-blue-500' 
                     : 'bg-gray-400 hover:bg-gray-400'
-                }`}
+                } ${isTouchDevice ? 'py-3 touch-manipulation' : ''}`}
               >
                 {currentStep < questions.length - 1 ? 'Next' : 'Generate Your Rankings'}
               </button>
