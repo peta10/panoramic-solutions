@@ -12,6 +12,7 @@ import { filterTools } from '@/ppm-tool/shared/utils/filterTools';
 import { supabase } from '@/ppm-tool/shared/lib/supabase';
 import { ErrorBoundary } from '@/ppm-tool/components/common/ErrorBoundary';
 import { FullscreenProvider, useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useLenis } from '@/ppm-tool/shared/hooks/useLenis';
 import { CriteriaSection } from '@/ppm-tool/features/criteria/components/CriteriaSection';
 import { ToolSection } from '@/ppm-tool/features/tools/ToolSection';
 import { cn } from '@/ppm-tool/shared/lib/utils';
@@ -84,6 +85,13 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   guidedButtonRef
 }) => {
   const { isMobile } = useFullscreen();
+  
+  // Disable Lenis smooth scroll on mobile to prevent tooltip interference
+  useLenis({
+    disabled: isMobile, // Completely disable Lenis on mobile devices
+    isMobile: isMobile
+  });
+  
   const { 
     showProductBumper, 
     closeProductBumper, 

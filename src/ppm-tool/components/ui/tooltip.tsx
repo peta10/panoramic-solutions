@@ -35,9 +35,8 @@ const Tooltip = React.forwardRef<
       {...props}
       open={tooltipOpen}
       onOpenChange={setTooltipOpen}
-      // On mobile, disable hover and use faster timing
+      // On mobile, use faster timing for better responsiveness
       delayDuration={isTouchDevice ? 0 : 700}
-      disableHoverableContent={isTouchDevice}
     >
       {children}
     </TooltipPrimitive.Root>
