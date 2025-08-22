@@ -82,6 +82,247 @@ export class PPMEmailTemplateGenerator {
   }
 
   /**
+   * Generate comparison table using OpenAI for enhanced insights
+   */
+  private static async generateComparisonTable(
+    topThreeTools: WeightedScore[],
+    selectedCriteria: Criterion[]
+  ): Promise<string> {
+    if (topThreeTools.length === 0 || selectedCriteria.length === 0) {
+      return '<p style="text-align: center; color: #666;">No comparison data available.</p>';
+    }
+
+    // Get top 5 criteria based on user ratings for table display
+    const topCriteria = selectedCriteria
+      .sort((a, b) => b.userRating - a.userRating)
+      .slice(0, 5);
+
+    // Generate enhanced insights for each tool/criterion combination using OpenAI
+    const enhancedInsights = await this.generateTableInsights(topThreeTools, topCriteria);
+
+    return this.generateComparisonTableHTML(topThreeTools, topCriteria, enhancedInsights);
+  }
+
+  /**
+   * Generate enhanced table insights using OpenAI
+   */
+  private static async generateTableInsights(
+    topThreeTools: WeightedScore[],
+    topCriteria: Criterion[]
+  ): Promise<Record<string, Record<string, string>>> {
+    const insights: Record<string, Record<string, string>> = {};
+
+    // Only use OpenAI if API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('ℹ️ OpenAI API key not configured, using database insights for table');
+      return this.extractDatabaseInsights(topThreeTools, topCriteria);
+    }
+
+    try {
+      // Process tools in parallel for better performance
+      const toolPromises = topThreeTools.map(async (weightedTool) => {
+        const tool = weightedTool.tool;
+        const toolInsights: Record<string, string> = {};
+
+        // Get criteria insights for this tool
+        for (const criterion of topCriteria) {
+          const toolRating = this.getToolRating(tool, criterion);
+          const databaseInsight = this.getToolExplanation(tool, criterion);
+          
+          // Generate enhanced insight using OpenAI
+          const enhancedInsight = await this.generateSingleInsight(
+            tool.name,
+            criterion.name,
+            toolRating,
+            criterion.userRating,
+            databaseInsight
+          );
+          
+          toolInsights[criterion.id] = enhancedInsight;
+        }
+
+        insights[tool.id] = toolInsights;
+      });
+
+      await Promise.all(toolPromises);
+      return insights;
+
+    } catch (error) {
+      console.error('Error generating table insights with OpenAI:', error);
+      return this.extractDatabaseInsights(topThreeTools, topCriteria);
+    }
+  }
+
+  /**
+   * Generate a single enhanced insight using OpenAI
+   */
+  private static async generateSingleInsight(
+    toolName: string,
+    criterionName: string,
+    toolRating: number,
+    userRating: number,
+    databaseInsight: string
+  ): Promise<string> {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are creating concise insights for an email comparison table. Transform technical database insights into executive-friendly explanations.
+
+RULES:
+1. Maximum 60 characters for email table display
+2. Focus on business value, not technical features
+3. Use action-oriented language
+4. Be specific about HOW the tool delivers value
+5. Consider the user's rating vs tool's rating
+
+COMPARISON CONTEXT:
+- If tool rating > user rating: Emphasize "exceeds needs" 
+- If tool rating = user rating: Focus on "perfect fit"
+- If tool rating < user rating: Highlight "basic coverage"
+
+OUTPUT: Single phrase, business-focused, under 60 characters.`
+            },
+            {
+              role: 'user',
+              content: `Tool: ${toolName}
+Criterion: ${criterionName}
+Tool Rating: ${toolRating}/5
+User Rating: ${userRating}/5
+Database Insight: ${databaseInsight || 'Standard capabilities available'}
+
+Create a concise business insight (max 60 chars) that explains the VALUE this tool provides for this criterion.`
+            }
+          ],
+          max_tokens: 30,
+          temperature: 0.3,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const insight = data.choices[0]?.message?.content?.trim();
+        
+        if (insight && insight.length <= 60) {
+          return insight.replace(/["""]/g, '');
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to generate insight for ${toolName} - ${criterionName}:`, error);
+    }
+
+    // Fallback to database insight or generate basic insight
+    return this.generateBasicInsight(toolName, criterionName, toolRating, userRating, databaseInsight);
+  }
+
+  /**
+   * Extract insights from database without OpenAI enhancement
+   */
+  private static extractDatabaseInsights(
+    topThreeTools: WeightedScore[],
+    topCriteria: Criterion[]
+  ): Record<string, Record<string, string>> {
+    const insights: Record<string, Record<string, string>> = {};
+
+    topThreeTools.forEach(weightedTool => {
+      const tool = weightedTool.tool;
+      const toolInsights: Record<string, string> = {};
+
+      topCriteria.forEach(criterion => {
+        const toolRating = this.getToolRating(tool, criterion);
+        const databaseInsight = this.getToolExplanation(tool, criterion);
+        
+        toolInsights[criterion.id] = this.generateBasicInsight(
+          tool.name,
+          criterion.name,
+          toolRating,
+          criterion.userRating,
+          databaseInsight
+        );
+      });
+
+      insights[tool.id] = toolInsights;
+    });
+
+    return insights;
+  }
+
+  /**
+   * Generate a basic insight without OpenAI
+   */
+  private static generateBasicInsight(
+    toolName: string,
+    criterionName: string,
+    toolRating: number,
+    userRating: number,
+    databaseInsight: string
+  ): string {
+    // Use database insight if available, truncate to 60 chars
+    if (databaseInsight && databaseInsight.trim().length > 0) {
+      const truncated = databaseInsight.trim();
+      return truncated.length > 60 ? truncated.substring(0, 57) + '...' : truncated;
+    }
+
+    // Generate basic insight based on ratings
+    const comparison = toolRating >= userRating ? 'Strong' : 'Basic';
+    const performance = toolRating >= 4 ? 'excellent' : toolRating >= 3 ? 'good' : 'standard';
+    
+    return `${comparison} ${performance} ${criterionName.toLowerCase()} capabilities`;
+  }
+
+  /**
+   * Helper function to get tool rating for a criterion
+   */
+  private static getToolRating(tool: Tool, criterion: Criterion): number {
+    // First try criteria array
+    if (Array.isArray(tool.criteria)) {
+      const criterionData = tool.criteria.find(c => 
+        c.id === criterion.id || c.name === criterion.name
+      );
+      if (criterionData && typeof criterionData.ranking === 'number') {
+        return criterionData.ranking;
+      }
+    }
+
+    // Then try ratings object
+    if (tool.ratings && typeof tool.ratings[criterion.name] === 'number') {
+      return tool.ratings[criterion.name];
+    }
+
+    return 0;
+  }
+
+  /**
+   * Helper function to get tool explanation for a criterion
+   */
+  private static getToolExplanation(tool: Tool, criterion: Criterion): string {
+    // First try criteria array
+    if (Array.isArray(tool.criteria)) {
+      const criterionData = tool.criteria.find(c => 
+        c.id === criterion.id || c.name === criterion.name
+      );
+      if (criterionData && typeof criterionData.description === 'string') {
+        return criterionData.description;
+      }
+    }
+
+    // Then try ratingExplanations
+    if (tool.ratingExplanations && typeof tool.ratingExplanations[criterion.id] === 'string') {
+      return tool.ratingExplanations[criterion.id];
+    }
+
+    return '';
+  }
+
+  /**
    * Fallback method for generating basic insights (original logic)
    */
   private static generateBasicInsights(topTools: WeightedScore[], criteria: Criterion[]): string {
@@ -136,27 +377,79 @@ export class PPMEmailTemplateGenerator {
   }
 
   /**
-   * Get main strength description for a tool
+   * Get varied and natural strength description for a tool
    */
   private static getToolMainStrength(scoredTool: WeightedScore): string {
     const toolName = scoredTool.tool.name;
     
-    // Define known strengths for popular tools
-    const toolStrengths: Record<string, string> = {
-      'Jira': 'standout Agile capabilities at scale',
-      'Asana': 'very strong in ease of use, lighter for portfolio governance',
-      'Azure DevOps': 'tight integration with development workflows',
-      'ClickUp': 'versatile feature set with strong customization',
-      'Planview': 'enterprise portfolio governance and resource management',
-      'Smartsheet': 'spreadsheet-like interface with powerful automation',
-      'Monday.com': 'intuitive interface and team collaboration features',
-      'Airtable': 'flexible database approach with excellent usability',
-      'MS Project': 'comprehensive project management with Microsoft integration',
-      'Adobe Workfront': 'creative workflow optimization and portfolio management',
-      'Hive': 'modern interface with good collaboration features'
+    // Multiple varied descriptions for each tool to avoid repetition
+    const toolStrengthVariations: Record<string, string[]> = {
+      'Jira': [
+        'developer-centric with comprehensive agile capabilities',
+        'enterprise-grade issue tracking and sprint management',
+        'robust DevOps integration for technical workflows'
+      ],
+      'Asana': [
+        'user-friendly design focused on team clarity',
+        'intuitive task organization for growing teams',
+        'clean interface with strong collaboration features'
+      ],
+      'Azure DevOps': [
+        'integrated development lifecycle management',
+        'Microsoft ecosystem alignment with CI/CD strengths',
+        'end-to-end DevOps platform for technical teams'
+      ],
+      'ClickUp': [
+        'all-in-one workspace with extensive customization',
+        'feature-rich platform combining multiple productivity tools',
+        'versatile solution for diverse organizational needs'
+      ],
+      'Planview': [
+        'strategic portfolio management for large enterprises',
+        'advanced resource optimization and capacity planning',
+        'executive-level reporting with governance focus'
+      ],
+      'Smartsheet': [
+        'spreadsheet familiarity enhanced with automation',
+        'grid-based approach with enterprise workflow capabilities',
+        'familiar interface bridging Excel and project management'
+      ],
+      'Monday.com': [
+        'visual project boards with team transparency',
+        'color-coded workflows for clear project visibility',
+        'modern interface designed for collaborative teams'
+      ],
+      'Airtable': [
+        'database flexibility with spreadsheet ease of use',
+        'hybrid approach combining structure with usability',
+        'creative workflow management with powerful integrations'
+      ],
+      'MS Project': [
+        'comprehensive scheduling with Microsoft integration',
+        'traditional project planning with enterprise features',
+        'advanced resource management for complex initiatives'
+      ],
+      'Adobe Workfront': [
+        'creative workflow optimization with portfolio management',
+        'marketing-focused with strong creative team features',
+        'campaign management integrated with project delivery'
+      ],
+      'Hive': [
+        'modern interface with flexible workflow options',
+        'team-centric design with good collaboration tools',
+        'contemporary approach to project coordination'
+      ]
     };
 
-    return toolStrengths[toolName] || `competitive performance across multiple criteria (${scoredTool.overallScore}/10 overall)`;
+    const variations = toolStrengthVariations[toolName];
+    if (variations && variations.length > 0) {
+      // Use a hash-based approach to consistently select a variation but ensure variety
+      const variationIndex = Math.abs(toolName.split('').reduce((a, b) => a + b.charCodeAt(0), 0)) % variations.length;
+      return variations[variationIndex];
+    }
+
+    // Fallback for unknown tools
+    return `competitive performance across multiple criteria (${scoredTool.overallScore}/10 overall)`;
   }
 
   /**
@@ -261,6 +554,168 @@ export class PPMEmailTemplateGenerator {
   }
 
   /**
+   * Generate comparison table HTML with enhanced insights
+   */
+  private static generateComparisonTableHTML(
+    topThreeTools: WeightedScore[],
+    topCriteria: Criterion[],
+    enhancedInsights: Record<string, Record<string, string>>
+  ): string {
+    const tools = topThreeTools.slice(0, 3); // Ensure max 3 tools
+    
+    // Helper function to get star rating display
+    const getStarRating = (rating: number): string => {
+      const fullStars = '★'.repeat(rating);
+      const emptyStars = '☆'.repeat(5 - rating);
+      return fullStars + emptyStars;
+    };
+
+    // Helper function to get comparison indicator
+    const getComparisonClass = (toolRating: number, userRating: number): string => {
+      if (toolRating > userRating) return 'exceeds';
+      if (toolRating === userRating) return 'meets';
+      return 'below';
+    };
+
+    // Helper function to get ranking number
+    const getRankingNumber = (index: number): string => {
+      const rankings = ['#1', '#2', '#3'];
+      return rankings[index] || `#${index + 1}`;
+    };
+
+    // Generate table headers
+    const headerRow = `
+      <tr>
+        <th style="
+          background-color: #4a5568;
+          color: white;
+          padding: 16px 12px;
+          text-align: left;
+          font-weight: bold;
+          font-size: 14px;
+          border: none;
+          width: 25%;
+        ">
+          Your Criteria<br/>
+          <span style="font-size: 11px; opacity: 0.9;">(Your Priority)</span>
+        </th>
+        ${tools.map((tool, index) => `
+          <th style="
+            background-color: #4a5568;
+            color: white;
+            padding: 16px 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            border: none;
+            width: 25%;
+          ">
+            ${getRankingNumber(index)} ${tool.tool.name}<br/>
+            <span style="font-size: 11px; opacity: 0.9;">${Math.round(tool.overallScore)}% Match</span>
+          </th>
+        `).join('')}
+      </tr>
+    `;
+
+    // Generate table rows for each criterion
+    const criteriaRows = topCriteria.map(criterion => {
+      return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="
+            padding: 16px 12px;
+            background-color: #f8fafc;
+            border: none;
+            vertical-align: top;
+            font-size: 13px;
+            line-height: 1.4;
+          ">
+            <div style="font-weight: bold; color: #2d3748; margin-bottom: 4px;">
+              ${criterion.name}
+            </div>
+            <div style="color: #4a5568; font-size: 11px;">
+              Your Rating: ${criterion.userRating}/5
+            </div>
+          </td>
+          ${tools.map(tool => {
+            const toolRating = this.getToolRating(tool.tool, criterion);
+            const comparisonClass = getComparisonClass(toolRating, criterion.userRating);
+            const insight = enhancedInsights[tool.tool.id]?.[criterion.id] || 'Standard capabilities';
+            
+            // Color coding based on comparison
+            const bgColor = comparisonClass === 'exceeds' ? '#f0fff4' : 
+                           comparisonClass === 'meets' ? '#eff6ff' : '#fef7f0';
+            const textColor = comparisonClass === 'exceeds' ? '#065f46' : 
+                             comparisonClass === 'meets' ? '#1e40af' : '#9a3412';
+            
+            return `
+              <td style="
+                padding: 16px 12px;
+                background-color: ${bgColor};
+                border: none;
+                vertical-align: top;
+                text-align: center;
+                font-size: 13px;
+                line-height: 1.4;
+              ">
+                <div style="margin-bottom: 6px;">
+                  <span style="font-size: 16px;">${getStarRating(toolRating)}</span>
+                </div>
+                <div style="font-weight: bold; color: ${textColor}; margin-bottom: 4px;">
+                  (${toolRating}/5)
+                </div>
+                <div style="color: #4a5568; font-size: 11px; line-height: 1.3;">
+                  ${insight}
+                </div>
+              </td>
+            `;
+          }).join('')}
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <!-- Comparison Table Section -->
+      <tr>
+        <td style="padding: 0 30px 25px;" class="mobile-padding">
+          <h3 style="margin: 0 0 15px 0; color: #2d3748; font-size: 20px; font-weight: bold;" class="mobile-text">
+            Tool Comparison Analysis
+          </h3>
+          <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 15px; line-height: 22px;" class="mobile-small">
+            Your top criteria vs. our recommended tools with <strong>AI-enhanced insights</strong> from our database.
+          </p>
+          
+          <div style="overflow-x: auto; margin: 0 -15px;">
+            <table style="
+              width: 100%;
+              max-width: 100%;
+              min-width: 600px;
+              border-collapse: collapse;
+              background-color: white;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            ">
+              ${headerRow}
+              ${criteriaRows}
+            </table>
+          </div>
+          
+          <div style="margin-top: 20px; text-align: center;">
+            <div style="display: inline-block; background-color: #f8fafc; padding: 12px 20px; border-radius: 6px; font-size: 12px; color: #4a5568;">
+              <span style="color: #065f46;">■ Exceeds your needs</span>
+              <span style="margin: 0 15px; color: #1e40af;">■ Meets your needs</span>
+              <span style="color: #9a3412;">■ Basic coverage</span>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+
+
+  /**
    * Generate the complete HTML email template
    */
   public static async generateHTMLEmail(data: EmailTemplateData): Promise<string> {
@@ -279,15 +734,14 @@ export class PPMEmailTemplateGenerator {
     const scoredTools = this.calculateWeightedScores(selectedTools, selectedCriteria);
     const topThree = scoredTools.slice(0, 3);
 
-    // Generate radar charts for top 3 tools
-    const radarCharts = await this.generateRadarCharts(topThree, selectedCriteria);
+    // Generate comparison table for top 3 tools using OpenAI enhancement
+    const comparisonTableHTML = await this.generateComparisonTable(topThree, selectedCriteria);
 
     // Generate dynamic content
     const criteriaList = selectedCriteria.map(c => c.name).join(', ');
     const topCriteria = this.getTopCriteriaForDisplay(selectedCriteria);
     const insights = await this.generateInsights(topThree, selectedCriteria, data.userEmail);
     const honorableMentions = this.generateHonorableMentions(scoredTools, topThree);
-    const radarChartsHTML = this.generateRadarChartsHTML(radarCharts);
 
     // Get our base template
     const template = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -454,7 +908,7 @@ export class PPMEmailTemplateGenerator {
                             </h3>
                             <div style="background-color: #f7fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #0057B7;">
                                 <p style="margin: 0; color: #4a5568; font-size: 15px; line-height: 24px;" class="mobile-small">
-                                    ${insights}
+                                    ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                 </p>
                             </div>
                         </td>
@@ -472,7 +926,7 @@ export class PPMEmailTemplateGenerator {
                         </td>
                     </tr>
                     
-                    ${radarChartsHTML}
+                    ${comparisonTableHTML}
                     
                     <!-- Value Proposition -->
                     <tr>

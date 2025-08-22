@@ -115,105 +115,7 @@ function calculateTopRecommendations(tools: any[], criteria: any[]) {
   return sortedTools;
 }
 
-// Generate dynamic insights based on the analysis results
-function generateDynamicInsights(topRecommendations: any[], selectedCriteria: any[]) {
-  const top3 = topRecommendations.slice(0, 3);
-  const winner = top3[0];
-  const runnerUp = top3[1];
-  
-  // Check for close scores (tie scenario)
-  const scoreDiff = winner.score - runnerUp.score;
-  const isCloseTie = scoreDiff < 5;
-  
-  // Find winner's strongest areas
-  const winnerStrengths = selectedCriteria
-    .map(c => ({ 
-      name: c.name, 
-      rating: winner.tool.ratings?.[c.id] || 3,
-      weight: c.weight || 5 
-    }))
-    .filter(c => c.rating >= 4)
-    .sort((a, b) => (b.rating * b.weight) - (a.rating * a.weight))
-    .slice(0, 2);
-  
-  // Generate main insight - EXPANDED TO COVER ALL 3 TOOLS
-  const thirdPlace = top3[2];
-  
-  // Find strength areas for all three tools
-  const winnerStrengthAreas = selectedCriteria
-    .map(c => ({ 
-      name: c.name, 
-      rating: winner.tool.ratings?.[c.id] || 3,
-      weight: c.weight || 5 
-    }))
-    .filter(c => c.rating >= 4)
-    .sort((a, b) => (b.rating * b.weight) - (a.rating * a.weight))
-    .slice(0, 2);
-
-  const runnerUpStrengthAreas = selectedCriteria
-    .map(c => ({ 
-      name: c.name, 
-      rating: runnerUp.tool.ratings?.[c.id] || 3,
-      weight: c.weight || 5 
-    }))
-    .filter(c => c.rating >= 4)
-    .sort((a, b) => (b.rating * b.weight) - (a.rating * a.weight))
-    .slice(0, 2);
-
-  const thirdPlaceStrengthAreas = selectedCriteria
-    .map(c => ({ 
-      name: c.name, 
-      rating: thirdPlace.tool.ratings?.[c.id] || 3,
-      weight: c.weight || 5 
-    }))
-    .filter(c => c.rating >= 4)
-    .sort((a, b) => (b.rating * b.weight) - (a.rating * a.weight))
-    .slice(0, 1);
-
-  let mainInsight = '';
-  if (isCloseTie) {
-    if (scoreDiff <= 2) {
-      // Very close tie or exact tie
-      mainInsight = `<strong>${winner.tool.name}</strong> and <strong>${runnerUp.tool.name}</strong> are essentially tied at ${Math.round(winner.score)}% and ${Math.round(runnerUp.score)}% respectively. ${winner.tool.name} excels in ${winnerStrengthAreas.map(s => s.name).join(' and ')}, while ${runnerUp.tool.name} stands out in ${runnerUpStrengthAreas.map(s => s.name).join(' and ')}. <strong>${thirdPlace.tool.name}</strong> rounds out the top three at ${Math.round(thirdPlace.score)}%, offering strong ${thirdPlaceStrengthAreas[0]?.name || 'capabilities'} for organizations prioritizing that area.`;
-    } else {
-      // Close but not exact tie
-      mainInsight = `<strong>${winner.tool.name}</strong> leads by a small margin with ${Math.round(winner.score)}% vs <strong>${runnerUp.tool.name}</strong>'s ${Math.round(runnerUp.score)}%. ${winner.tool.name} performs better in ${winnerStrengthAreas.map(s => s.name).join(' and ')}, while <strong>${runnerUp.tool.name}</strong> has advantages in ${runnerUpStrengthAreas.map(s => s.name).join(' and ')}. <strong>${thirdPlace.tool.name}</strong> at ${Math.round(thirdPlace.score)}% brings particular strength in ${thirdPlaceStrengthAreas[0]?.name || 'specialized areas'}, making it worth considering if that's a key priority.`;
-    }
-  } else {
-    mainInsight = `<strong>${winner.tool.name}</strong> is your top recommendation with a ${Math.round(winner.score)}% match score, performing well in your highest-priority areas: ${winnerStrengthAreas.map(s => s.name).join(' and ')}. <strong>${runnerUp.tool.name}</strong> follows at ${Math.round(runnerUp.score)}% with notable strengths in ${runnerUpStrengthAreas.map(s => s.name).join(' and ')}, while <strong>${thirdPlace.tool.name}</strong> at ${Math.round(thirdPlace.score)}% offers compelling ${thirdPlaceStrengthAreas[0]?.name || 'capabilities'} that could make it the right choice for specific use cases.`;
-  }
-  
-  // Generate honorable mentions (tools 4-6)
-  const honorableMentions = topRecommendations.slice(3, 6).map(tool => {
-    // Find this tool's best area
-    const bestArea = selectedCriteria
-      .map(c => ({ 
-        name: c.name, 
-        rating: tool.tool.ratings?.[c.id] || 3 
-      }))
-      .sort((a, b) => b.rating - a.rating)[0];
-    
-    const highlights = [
-      `Strong ${bestArea?.name || 'capabilities'}`,
-      'Good value proposition',
-      'Solid implementation support',
-      'Growing market presence',
-      'Specialized features'
-    ];
-    
-    return {
-      name: tool.tool.name,
-      highlight: highlights[Math.floor(Math.random() * highlights.length)]
-    };
-  });
-  
-  return {
-    mainInsight,
-    tieNote: isCloseTie && scoreDiff <= 2 ? `With such similar scores, your specific implementation timeline, budget, and team preferences should guide your final decision.` : 
-             isCloseTie ? `The small difference suggests these top tools are excellent fits - consider which strengths align better with your immediate needs.` : null,
-    honorableMentions
-  };
-}
+// NOTE: generateDynamicInsights has been replaced with generateAIInsights which uses the AIAnalysisService
 
 // Helper function to parse guided ranking data for marketing insights
 function parseGuidedRankingData(guidedRankingAnswers: any, personalizationData: any) {
@@ -367,6 +269,28 @@ async function handleReactEmail(request: NextRequest, body: any) {
     return '2563eb'; // Blue for all tools
   };
 
+  // Helper function to get tool explanation (same as in the components)
+  const getToolExplanation = (tool: any, criterion: any): string => {
+    try {
+      if (Array.isArray(tool.criteria)) {
+        const criterionData = tool.criteria.find((c: any) => 
+          c.id === criterion.id || c.name === criterion.name
+        );
+        if (criterionData && typeof criterionData.description === 'string') {
+          return criterionData.description;
+        }
+      }
+
+      if (tool.ratingExplanations && typeof tool.ratingExplanations[criterion.id] === 'string') {
+        return tool.ratingExplanations[criterion.id];
+      }
+
+      return '';
+    } catch (error) {
+      return '';
+    }
+  };
+
   // Smart highlights generator - Uses actual tool insights from database
   const generateSmartHighlights = async (tool: any, userCriteria: any[]) => {
     try {
@@ -396,28 +320,6 @@ async function handleReactEmail(request: NextRequest, body: any) {
         .sort((a, b) => (b.userRating || 0) - (a.userRating || 0))
         .slice(0, 3)
         .map(c => c.name);
-
-      // Helper function to get tool explanation (same as in the components)
-      const getToolExplanation = (tool: any, criterion: any): string => {
-        try {
-          if (Array.isArray(tool.criteria)) {
-            const criterionData = tool.criteria.find((c: any) => 
-              c.id === criterion.id || c.name === criterion.name
-            );
-            if (criterionData && typeof criterionData.description === 'string') {
-              return criterionData.description;
-            }
-          }
-
-          if (tool.ratingExplanations && typeof tool.ratingExplanations[criterion.id] === 'string') {
-            return tool.ratingExplanations[criterion.id];
-          }
-
-          return '';
-        } catch (error) {
-          return '';
-        }
-      };
 
       if (toolStrengths.length === 0) {
         // No strong areas found, create a generic but tool-specific highlight
@@ -578,104 +480,553 @@ Base your response on the actual insights provided, not generic assumptions.`
     }
   };
   
-  // Function to generate GPT-4 radar charts for the top 3 tools
-  const generateChartsHTML = async (tools: any[], criteria: any[], userRankings: any) => {
+  // Function to generate comparison table for the top 3 tools (replaces radar charts)
+  const generateComparisonTableHTML = async (tools: any[], criteria: any[], userRankings: any) => {
     try {
-      const baseUrl = getBaseUrl();
-      console.log('🎯 Generating Gmail-compatible canvas radar charts for', tools.length, 'tools');
+      console.log('📊 Generating comparison table for', tools.length, 'tools');
       
-      const chartPromises = tools.map(async (recommendation, index) => {
+      if (tools.length === 0 || criteria.length === 0) {
+        return '<p style="text-align: center; color: #666;">No comparison data available.</p>';
+      }
+
+      // Show all criteria, sorted by user ratings for table display
+      const topCriteria = criteria
+        .sort((a: any, b: any) => (b.userRating || 0) - (a.userRating || 0));
+
+      // Generate enhanced insights for each tool/criterion combination using OpenAI
+      const enhancedInsights = await generateTableInsights(tools, topCriteria, userRankings);
+
+      return generateTableHTML(tools, topCriteria, enhancedInsights, userRankings);
+
+    } catch (error) {
+      console.error('❌ Error generating comparison table:', error);
+      return '<p style="text-align: center; color: #666;">Comparison table temporarily unavailable.</p>';
+    }
+  };
+
+  // Generate enhanced table insights using OpenAI
+  const generateTableInsights = async (tools: any[], topCriteria: any[], userRankings: any): Promise<Record<string, Record<string, string>>> => {
+    const insights: Record<string, Record<string, string>> = {};
+
+    // Only use OpenAI if API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('ℹ️ OpenAI API key not configured, using database insights for table');
+      return extractDatabaseInsights(tools, topCriteria, userRankings);
+    }
+
+    try {
+      // Process tools in parallel for better performance
+      const toolPromises = tools.map(async (recommendation: any) => {
         const tool = recommendation.tool;
-        
-        try {
-          // Prepare criteria with user ratings for GPT-4 chart generation
-          const chartCriteria = criteria.map((c: any) => ({
-            ...c,
-            userRating: userRankings && userRankings[c.id] ? userRankings[c.id] : 3
-          }));
+        const toolInsights: Record<string, string> = {};
+
+        // Get criteria insights for this tool
+        for (const criterion of topCriteria) {
+          const toolRating = getToolRating(tool, criterion);
+          const databaseInsight = getToolExplanation(tool, criterion);
           
-          // Use canvas charts for Gmail compatibility (PNG format)
-          // Create chart URL with proper tool data, criteria, and user rankings
-          const chartParams = new URLSearchParams({
-            tool: tool.name,
-            toolData: encodeURIComponent(JSON.stringify(tool)),
-            criteria: chartCriteria.map((c: any) => c.id).join(','),
-            userRankings: chartCriteria.map((c: any) => c.userRating).join(','),
-            toolIndex: index.toString()
-          });
+          // Generate enhanced insight using OpenAI
+          const enhancedInsight = await generateSingleInsight(
+            tool.name,
+            criterion.name,
+            toolRating,
+            criterion.userRating || 3,
+            databaseInsight
+          );
           
-          const chartUrl = `${baseUrl}/api/chart/dynamic.png?${chartParams.toString()}`;
-          
-          // For Gmail compatibility, use the canvas-generated chart URL directly
-          console.log(`📊 Generated canvas chart URL for ${tool.name}: ${chartUrl}`);
-          
-          return `
-            <div style="margin-bottom:24px;text-align:center;">
-              <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
-                <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
-                <img src="${chartUrl}" 
-                     alt="${tool.name} Comparison Chart" 
-                     style="width:100%;max-width:250px;height:auto;display:block;margin:0 auto;" 
-                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-                <div style="display:none;background:#ffffff;padding:20px;border-radius:6px;border:2px dashed #e2e8f0;">
-                  <p style="margin:0;color:#9ca3af;font-size:12px;font-style:italic;">
-                    📊 Chart temporarily unavailable
-                  </p>
-                </div>
-                <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
-                  <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
-                </div>
-              </div>
-            </div>
-          `;
-          
-        } catch (error) {
-          console.warn(`❌ Error generating canvas chart for ${tool.name}:`, error);
+          toolInsights[criterion.id] = enhancedInsight;
         }
+
+        insights[tool.id] = toolInsights;
+      });
+
+      await Promise.all(toolPromises);
+      return insights;
+
+    } catch (error) {
+      console.error('Error generating table insights with OpenAI:', error);
+      return extractDatabaseInsights(tools, topCriteria, userRankings);
+    }
+  };
+
+  // Generate a single enhanced insight using OpenAI
+  const generateSingleInsight = async (
+    toolName: string,
+    criterionName: string,
+    toolRating: number,
+    userRating: number,
+    databaseInsight: string
+  ): Promise<string> => {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are creating concise insights for an email comparison table. Transform technical database insights into executive-friendly explanations.
+
+RULES:
+1. Maximum 60 characters for email table display
+2. Focus on business value, not technical features
+3. Use action-oriented language
+4. Be specific about HOW the tool delivers value
+5. Consider the user's rating vs tool's rating
+
+COMPARISON CONTEXT:
+- If tool rating > user rating: Emphasize "exceeds needs" 
+- If tool rating = user rating: Focus on "perfect fit"
+- If tool rating < user rating: Highlight "basic coverage"
+
+OUTPUT: Single phrase, business-focused, under 60 characters.`
+            },
+            {
+              role: 'user',
+              content: `Tool: ${toolName}
+Criterion: ${criterionName}
+Tool Rating: ${toolRating}/5
+User Rating: ${userRating}/5
+Database Insight: ${databaseInsight || 'Standard capabilities available'}
+
+Create a concise business insight (max 60 chars) that explains the VALUE this tool provides for this criterion.`
+            }
+          ],
+          max_tokens: 30,
+          temperature: 0.3,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const insight = data.choices[0]?.message?.content?.trim();
         
-        // Fallback when chart generation fails
-        return `
-          <div style="margin-bottom:24px;text-align:center;">
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
-              <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
-              <div style="background:#ffffff;padding:30px;border-radius:6px;border:2px dashed #e2e8f0;">
-                <p style="margin:0;color:#9ca3af;font-size:14px;font-style:italic;">
-                  📊 Chart visualization available in your full report
-                </p>
-              </div>
-              <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
-                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
-              </div>
+        if (insight && insight.length <= 60) {
+          return insight.replace(/["""]/g, '');
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to generate insight for ${toolName} - ${criterionName}:`, error);
+    }
+
+    // Fallback to database insight or generate basic insight
+    return generateBasicInsight(toolName, criterionName, toolRating, userRating, databaseInsight);
+  };
+
+  // Extract insights from database without OpenAI enhancement
+  const extractDatabaseInsights = (tools: any[], topCriteria: any[], userRankings: any): Record<string, Record<string, string>> => {
+    const insights: Record<string, Record<string, string>> = {};
+
+    tools.forEach((recommendation: any) => {
+      const tool = recommendation.tool;
+      const toolInsights: Record<string, string> = {};
+
+      topCriteria.forEach((criterion: any) => {
+        const toolRating = getToolRating(tool, criterion);
+        const databaseInsight = getToolExplanation(tool, criterion);
+        
+        toolInsights[criterion.id] = generateBasicInsight(
+          tool.name,
+          criterion.name,
+          toolRating,
+          criterion.userRating || 3,
+          databaseInsight
+        );
+      });
+
+      insights[tool.id] = toolInsights;
+    });
+
+    return insights;
+  };
+
+  // Generate a basic insight without OpenAI
+  const generateBasicInsight = (
+    toolName: string,
+    criterionName: string,
+    toolRating: number,
+    userRating: number,
+    databaseInsight: string
+  ): string => {
+    // Use database insight if available, truncate to 60 chars
+    if (databaseInsight && databaseInsight.trim().length > 0) {
+      const truncated = databaseInsight.trim();
+      return truncated.length > 60 ? truncated.substring(0, 57) + '...' : truncated;
+    }
+
+    // Generate basic insight based on ratings
+    const comparison = toolRating >= userRating ? 'Strong' : 'Basic';
+    const performance = toolRating >= 4 ? 'excellent' : toolRating >= 3 ? 'good' : 'standard';
+    
+    return `${comparison} ${performance} ${criterionName.toLowerCase()} capabilities`;
+  };
+
+  // Generate the HTML table
+  const generateTableHTML = (tools: any[], topCriteria: any[], enhancedInsights: Record<string, Record<string, string>>, userRankings: any): string => {
+    const toolsSlice = tools.slice(0, 3); // Ensure max 3 tools
+    
+    // Helper function to get star rating display
+    const getStarRating = (rating: number): string => {
+      const fullStars = '★'.repeat(rating);
+      const emptyStars = '☆'.repeat(5 - rating);
+      return fullStars + emptyStars;
+    };
+
+    // Helper function to get comparison indicator
+    const getComparisonClass = (toolRating: number, userRating: number): string => {
+      if (toolRating > userRating) return 'exceeds';
+      if (toolRating === userRating) return 'meets';
+      return 'below';
+    };
+
+    // Helper function to get ranking number
+    const getRankingNumber = (index: number): string => {
+      const rankings = ['#1', '#2', '#3'];
+      return rankings[index] || `#${index + 1}`;
+    };
+
+
+
+    // Generate table headers
+    const headerRow = `
+      <tr>
+        <th style="
+          background-color: #4a5568;
+          color: white;
+          padding: 16px 12px;
+          text-align: left;
+          font-weight: bold;
+          font-size: 14px;
+          border: none;
+          width: 25%;
+        ">
+          Your Criteria<br/>
+          <span style="font-size: 11px; opacity: 0.9;">(Your Priority)</span>
+        </th>
+        ${toolsSlice.map((recommendation: any, index: number) => `
+          <th style="
+            background-color: #4a5568;
+            color: white;
+            padding: 16px 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            border: none;
+            width: 25%;
+          ">
+            ${getRankingNumber(index)} ${recommendation.tool.name}<br/>
+            <span style="font-size: 11px; opacity: 0.9;">${Math.round(recommendation.overallScore || 0)}% Match</span>
+          </th>
+        `).join('')}
+      </tr>
+    `;
+
+    // Generate table rows for each criterion
+    const criteriaRows = topCriteria.map((criterion: any) => {
+      return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="
+            padding: 16px 12px;
+            background-color: #f8fafc;
+            border: none;
+            vertical-align: top;
+            font-size: 13px;
+            line-height: 1.4;
+          ">
+            <div style="font-weight: bold; color: #2d3748; margin-bottom: 4px;">
+              ${criterion.name}
+            </div>
+            <div style="color: #4a5568; font-size: 11px;">
+              Your Rating: ${criterion.userRating || 3}/5
+            </div>
+          </td>
+          ${toolsSlice.map((recommendation: any) => {
+            const tool = recommendation.tool;
+            const toolRating = getToolRating(tool, criterion);
+            const comparisonClass = getComparisonClass(toolRating, criterion.userRating || 3);
+            const insight = enhancedInsights[tool.id]?.[criterion.id] || 'Standard capabilities';
+            
+            // Color coding based on comparison
+            const bgColor = comparisonClass === 'exceeds' ? '#f0fff4' : 
+                           comparisonClass === 'meets' ? '#eff6ff' : '#fef7f0';
+            const textColor = comparisonClass === 'exceeds' ? '#065f46' : 
+                             comparisonClass === 'meets' ? '#1e40af' : '#9a3412';
+            
+            return `
+              <td style="
+                padding: 16px 12px;
+                background-color: ${bgColor};
+                border: none;
+                vertical-align: top;
+                text-align: center;
+                font-size: 13px;
+                line-height: 1.4;
+              ">
+                <div style="margin-bottom: 6px;">
+                  <span style="font-size: 16px;">${getStarRating(toolRating)}</span>
+                </div>
+                <div style="font-weight: bold; color: ${textColor}; margin-bottom: 4px;">
+                  (${toolRating}/5)
+                </div>
+                <div style="color: #4a5568; font-size: 11px; line-height: 1.3;">
+                  ${insight}
+                </div>
+              </td>
+            `;
+          }).join('')}
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <div style="margin: 40px 0;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h3 style="margin: 0 0 10px 0; color: #1a202c; font-size: 24px; font-weight: bold;">
+            Tool Comparison Analysis
+          </h3>
+          <p style="margin: 0; color: #4a5568; font-size: 16px;">
+            Your top criteria vs. our recommended tools with AI-enhanced insights
+          </p>
+        </div>
+        
+        <div style="overflow-x: auto; margin: 0 -15px;">
+          <table style="
+            width: 100%;
+            max-width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          ">
+            ${headerRow}
+            ${criteriaRows}
+          </table>
+        </div>
+        
+                  <div style="margin-top: 20px; text-align: center;">
+            <div style="display: inline-block; background-color: #f8fafc; padding: 12px 20px; border-radius: 6px; font-size: 12px; color: #4a5568;">
+              <span style="color: #065f46;">■ Exceeds your needs</span>
+              <span style="margin: 0 15px; color: #1e40af;">■ Meets your needs</span>
+              <span style="color: #9a3412;">■ Basic coverage</span>
             </div>
           </div>
-        `;
-      });
-      
-      const chartResults = await Promise.all(chartPromises);
-      return chartResults.join('');
+      </div>
+    `;
+  };
+
+  // Generate varied and natural tool highlights for honorable mentions
+  const generateVariedToolHighlight = async (tool: any, selectedCriteria: any[]): Promise<string> => {
+    try {
+      // Get tool's strongest areas
+      const toolStrengths = selectedCriteria
+        .map((criterion: any) => ({
+          name: criterion.name,
+          toolRating: getToolRating(tool, criterion),
+          userImportance: criterion.userRating || 3
+        }))
+        .filter(item => item.toolRating >= 4) // Only consider strong areas
+        .sort((a, b) => (b.toolRating * b.userImportance) - (a.toolRating * a.userImportance)) // Sort by weighted importance
+        .slice(0, 2); // Top 2 strengths
+
+      // Tool-specific highlight templates for variety
+      const toolTemplates: Record<string, string[]> = {
+        'Jira': [
+          'Developer-focused with robust agile capabilities',
+          'Comprehensive issue tracking and sprint management',
+          'Enterprise-grade with strong DevOps integration'
+        ],
+        'MS Project': [
+          'Enterprise scheduling with advanced resource management',
+          'Traditional project planning with Microsoft ecosystem benefits',
+          'Comprehensive reporting for large-scale initiatives'
+        ],
+        'ClickUp': [
+          'All-in-one platform with extensive customization options',
+          'Feature-rich workspace for diverse team needs',
+          'Versatile tool combining multiple productivity features'
+        ],
+        'Asana': [
+          'Clean interface focused on task clarity and team coordination',
+          'User-friendly design with strong collaboration features',
+          'Intuitive project organization for growing teams'
+        ],
+        'Azure DevOps': [
+          'Integrated development lifecycle management',
+          'Strong CI/CD pipeline integration for technical teams',
+          'Microsoft ecosystem alignment with developer workflows'
+        ],
+        'Planview': [
+          'Strategic portfolio management for enterprise environments',
+          'Advanced resource optimization and capacity planning',
+          'Executive-level reporting and portfolio governance'
+        ],
+        'Airtable': [
+          'Database flexibility with spreadsheet familiarity',
+          'Hybrid approach combining structured data with ease of use',
+          'Creative workflow management with powerful integrations'
+        ],
+        'Smartsheet': [
+          'Spreadsheet interface enhanced with project management features',
+          'Enterprise automation with familiar user experience',
+          'Grid-based approach with advanced workflow capabilities'
+        ],
+        'Monday.com': [
+          'Visual project boards with intuitive team collaboration',
+          'Color-coded workflows for clear project visibility',
+          'Modern interface designed for team transparency'
+        ]
+      };
+
+      // Use OpenAI to generate varied highlights if available
+      if (process.env.OPENAI_API_KEY && toolStrengths.length > 0) {
+        try {
+          const strengthContext = toolStrengths.map(s => `${s.name} (${s.toolRating}/5)`).join(', ');
+          
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'system',
+                  content: `Create UNIQUE honorable mention descriptions for PPM tools. Each description must be:
+1. Under 12 words
+2. Focus on the tool's UNIQUE value proposition
+3. Use varied, natural language (no repetitive phrases)
+4. Business-focused, not technical
+5. Each tool needs a DIFFERENT style of description
+
+VARY THE FORMATS:
+- "Specialized for [use case]"
+- "Combines [feature] with [benefit]"
+- "Designed for [target user] requiring [need]"
+- "[Unique approach] for [business outcome]"
+- "Strong [differentiator] meets [requirement]"
+
+Avoid repetitive words like "Strong", "Solid", "Good" - be creative and specific.`
+                },
+                {
+                  role: 'user',
+                  content: `Tool: ${tool.name}
+Strengths: ${strengthContext}
+
+Create a unique, varied description for ${tool.name} that stands out from other tools. Focus on what makes it different, not generic strengths.`
+                }
+              ],
+              max_tokens: 25,
+              temperature: 0.8,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const aiHighlight = data.choices[0]?.message?.content?.trim();
+            
+            if (aiHighlight && aiHighlight.length > 0 && aiHighlight.length <= 80) {
+              return aiHighlight.replace(/["""]/g, '');
+            }
+          }
+        } catch (aiError) {
+          console.log(`⚠️ AI highlight failed for ${tool.name}, using template fallback`);
+        }
+      }
+
+      // Fallback to template-based variety
+      const templates = toolTemplates[tool.name];
+      if (templates && templates.length > 0) {
+        // Use tool name hash to consistently pick a template but ensure variety
+        const templateIndex = Math.abs(tool.name.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % templates.length;
+        return templates[templateIndex];
+      }
+
+      // Generic fallback with variety based on strengths
+      if (toolStrengths.length > 0) {
+        const primaryStrength = toolStrengths[0].name.toLowerCase();
+        const patterns = [
+          `Specialized ${primaryStrength} capabilities with enterprise focus`,
+          `Balanced approach to ${primaryStrength} and team coordination`,
+          `${primaryStrength.charAt(0).toUpperCase() + primaryStrength.slice(1)}-focused platform for growing organizations`,
+          `Comprehensive ${primaryStrength} solution with implementation support`,
+          `Professional-grade ${primaryStrength} features for structured teams`
+        ];
+        
+        const patternIndex = Math.abs(tool.name.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % patterns.length;
+        return patterns[patternIndex];
+      }
+
+      return 'Well-rounded platform with competitive feature set';
       
     } catch (error) {
-      console.error('❌ Error generating GPT-4 charts:', error);
-      // Return fallback for all tools if there's a major error
-      return tools.map((recommendation, index) => {
-        const tool = recommendation.tool;
-        
-        return `
-          <div style="margin-bottom:24px;text-align:center;">
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:16px;margin:0 auto;max-width:300px;">
-              <div style="font-size:14px;font-weight:700;color:#2c3e50;margin-bottom:12px;">${tool.name}</div>
-              <div style="background:#ffffff;padding:30px;border-radius:6px;border:2px dashed #e2e8f0;">
-                <p style="margin:0;color:#9ca3af;font-size:14px;font-style:italic;">
-                  📊 Chart visualization available in your full report
-                </p>
-              </div>
-              <div style="font-size:10px;color:#6c757d;line-height:1.4;margin-top:8px;">
-                <span style="color:#10b981;">■</span> Your Rankings &nbsp;&nbsp; <span style="color:#${getToolColorHex()};">■</span> ${tool.name} Rankings
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      console.error(`Error generating highlight for ${tool.name}:`, error);
+      return 'Solid capabilities with good implementation support';
+    }
+  };
+
+  // Generate AI-powered insights using AIAnalysisService (replaces the old generateDynamicInsights)
+  const generateAIInsights = async (topRecommendations: any[], selectedCriteria: any[], userEmail?: string) => {
+    try {
+      // Import the AIAnalysisService
+      const { AIAnalysisService } = await import('@/ppm-tool/shared/services/aiAnalysisService');
+      
+      // Prepare data for AI analysis
+      const criteriaWeights: Record<string, number> = {};
+      selectedCriteria.forEach((criterion: any) => {
+        criteriaWeights[criterion.name] = (criterion.userRating || 3) / 5; // Convert 1-5 rating to decimal
+      });
+
+      const analysisData = {
+        topTools: topRecommendations.slice(0, 3).map((rec: any) => rec.tool),
+        criteriaWeights,
+        userEmail
+      };
+
+      const analysis = await AIAnalysisService.generateAnalysis(analysisData);
+      
+      // Convert the analysis summary to the format expected by the React template
+      const top3 = topRecommendations.slice(0, 3);
+      const honorableMentions = await Promise.all(topRecommendations.slice(3, 6).map(async (tool: any) => {
+        const highlight = await generateVariedToolHighlight(tool.tool, selectedCriteria);
+        return {
+          name: tool.tool.name,
+          highlight
+        };
+      }));
+
+      return {
+        mainInsight: analysis.summary, // Use the AI-generated summary instead of rule-based
+        tieNote: null, // Let the AI analysis handle tie scenarios
+        honorableMentions
+      };
+
+    } catch (error) {
+      console.error('AI Analysis failed, using fallback:', error);
+      
+      // Fallback to a simple analysis if AI fails
+      const top3 = topRecommendations.slice(0, 3);
+      const winner = top3[0];
+      const runnerUp = top3[1];
+      
+      const honorableMentions = topRecommendations.slice(3, 6).map((tool: any) => ({
+        name: tool.tool.name,
+        highlight: 'Solid implementation support'
+      }));
+
+      return {
+        mainInsight: `${winner.tool.name} leads with ${Math.round(winner.score)}% vs ${runnerUp.tool.name}'s ${Math.round(runnerUp.score)}%. Each tool offers distinct advantages based on your specific priorities and requirements.`,
+        tieNote: null,
+        honorableMentions
+      };
     }
   };
 
@@ -688,8 +1039,8 @@ Base your response on the actual insights provided, not generic assumptions.`
   }
   
   try {
-    // Generate dynamic insights and honorable mentions
-    const insights = generateDynamicInsights(topRecommendations, selectedCriteria);
+    // Generate AI-powered insights using the enhanced prompt system
+    const insights = await generateAIInsights(topRecommendations, selectedCriteria, userEmail);
     
     // Generate AI-polished highlights for top 3 tools
     console.log('🤖 Generating AI-polished highlights for top 3 tools...');
@@ -793,7 +1144,7 @@ Base your response on the actual insights provided, not generic assumptions.`
            <td style="padding:20px 28px;font-family:Arial,Helvetica,sans-serif;background:#ffffff;">
              <div style="font-size:18px;font-weight:700;margin:0 0 8px 0;color:#2c3e50;">Analysis Summary</div>
             <div style="font-size:14px;color:#2c3e50;line-height:1.6;margin-bottom:16px;">
-              ${insights.mainInsight}
+              ${insights.mainInsight.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
               ${insights.tieNote ? `<div style="font-size:12px;color:#6c757d;margin-top:6px;"><strong>Note:</strong> ${insights.tieNote}</div>` : ''}
             </div>
             
@@ -814,9 +1165,9 @@ Base your response on the actual insights provided, not generic assumptions.`
                These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
              </div>
             
-            <!-- Three Charts Stacked Vertically -->
+            <!-- Comparison Table -->
             <div style="margin-top:16px;">
-                ${await generateChartsHTML(topRecommendations.slice(0, 3), selectedCriteria, userRankings)}
+                ${await generateComparisonTableHTML(topRecommendations.slice(0, 3), selectedCriteria, userRankings)}
             </div>
             
           </td>

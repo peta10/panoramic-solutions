@@ -37,15 +37,15 @@ export class AIAnalysisService {
           messages: [
             {
               role: 'system',
-              content: `You are a seasoned Project Portfolio Management consultant with 15+ years of experience helping organizations select the right PPM tools. Your writing style is professional yet conversational, insightful, and avoids jargon. You provide actionable insights that help decision-makers understand not just what the data shows, but why it matters for their organization.`
+              content: `You are a seasoned Project Portfolio Management consultant. Write EXTREMELY concisely - maximum 3-4 short sentences. Always bold tool names using **ToolName** format. Be direct and specific, no fluff. Focus on key differentiators and scores. Every word must add value.`
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          max_tokens: 600,
-          temperature: 0.4,
+          max_tokens: 200,
+          temperature: 0.6,
         }),
       });
 
@@ -79,12 +79,63 @@ export class AIAnalysisService {
       .slice(0, 3);
 
     const toolsData = top3.map((tool, index) => {
-      const totalScore = Object.entries(criteriaWeights).reduce((sum, [criterion, weight]) => {
-        const rating = tool.ratings[criterion as keyof typeof tool.ratings] || 0;
-        return sum + (rating * weight);
-      }, 0);
+      // Use the EXACT same scoring algorithm as the email route
+      let totalScore = 0;
+      let criteriaCount = 0;
+
+      Object.entries(criteriaWeights).forEach(([criterion, weight]) => {
+        // Get tool rating using the same logic as email route
+        let toolRating = 0;
+        
+        // First try to find in criteria array (using 'ranking' field)
+        if (Array.isArray(tool.criteria)) {
+          const criterionData = tool.criteria.find((c: any) => 
+            c.name === criterion || 
+            c.id === criterion ||
+            c.name?.toLowerCase() === criterion.toLowerCase()
+          );
+          if (criterionData && typeof criterionData.ranking === 'number') {
+            toolRating = criterionData.ranking;
+          }
+        }
+        
+        // Fallback: check tool.ratings object
+        if (toolRating === 0 && tool.ratings && typeof tool.ratings === 'object') {
+          toolRating = tool.ratings[criterion] || 
+                      tool.ratings[criterion.toLowerCase()] || 
+                      tool.ratings[criterion.replace(/\s+/g, '_')] || 0;
+        }
+        
+        // Convert weight (0-1 decimal) back to user rating (1-5 scale)
+        const userRating = Math.round(weight * 5) || 3;
+        
+        // Apply the EXACT frontend scoring algorithm
+        if (toolRating >= userRating) {
+          // Tool meets or exceeds requirement
+          // Base score of 8 points + bonus for exceeding (max 2 bonus points)
+          const excess = Math.min(toolRating - userRating, 2);
+          totalScore += 8 + excess;
+        } else {
+          // Tool falls short of requirement
+          // Steeper penalty for not meeting requirements
+          const shortfall = userRating - toolRating;
+          totalScore += Math.max(0, 7 - shortfall * 2);
+        }
+        
+        criteriaCount++;
+        console.log(`Tool: ${tool.name}, Criterion: ${criterion}, ToolRating: ${toolRating}, UserRating: ${userRating}, Weight: ${weight}`);
+      });
+
+      // Calculate final score using exact same logic as email route
+      let finalScore = criteriaCount > 0 ? totalScore / criteriaCount : 0;
       
-      const percentage = Math.round(totalScore);
+      // Only give perfect score if the calculated score is already very high
+      if (finalScore >= 9.8) {
+        finalScore = 10;
+      }
+      
+      // Convert to percentage for display (0-10 scale to 0-100%)
+      const percentage = Math.round((finalScore / 10) * 100);
       
       // Get unique strengths for each tool to avoid overlap
       const allStrengths = this.getToolStrengths(tool, criteriaWeights);
@@ -129,24 +180,19 @@ USER'S KEY PRIORITIES (weighted by importance):
 ${sortedCriteria.map(([criterion, weight]) => `• ${criterion}: ${Math.round(weight * 100)}% weight`).join('\n')}
 
 ANALYSIS REQUIREMENTS:
-1. Use the ACTUAL tool insights provided above (not generic assumptions)
-2. Explain WHY the ranking turned out this way based on user priorities
-3. Highlight what makes each tool DIFFERENT using real differentiators
-4. Comment on the competitive closeness/gaps between tools
-5. Give specific insights about tool selection factors based on actual capabilities
+Write EXACTLY 3-4 concise sentences maximum. Each sentence should be impactful and specific.
 
-CRITICAL: 
-- Use the actual insights provided, not generic "strong in X" statements
-- Each tool must have DIFFERENT differentiators based on real data
-- Transform technical insights into business value
+CRITICAL FORMATTING RULES:
+- ALWAYS use **ToolName** format for bolding (exactly like this: **Smartsheet**, **Monday.com**, **Airtable**)
+- Maximum 3-4 sentences total - be extremely concise
+- Each tool gets ONE brief mention with its key differentiator
+- Use specific percentages/scores in the analysis
+- No fluff words or lengthy explanations
 
-Format response as:
-SUMMARY: [2-3 sentences explaining the ranking and competitive dynamics using actual insights]
-KEY_INSIGHT_1: [Specific insight about the winner's advantage based on real data]
-KEY_INSIGHT_2: [Specific insight about an important differentiator between tools using actual insights]
-RECOMMENDATION: [Actionable guidance for tool selection based on real capabilities]
+EXAMPLE LENGTH (do NOT copy content, just match the brevity):
+"**Smartsheet** leads at 78% with enterprise-grade security features that align with your compliance priorities. **Monday.com** follows at 72% through its intuitive interface that ensures quick team adoption. **Airtable** rounds out the top three at 69% by offering unique database flexibility for complex reporting needs."
 
-Use executive language. Be specific, not generic. Base everything on the actual insights provided.`;
+Write EXACTLY like this - short, punchy, specific. Do NOT exceed 4 sentences.`;
   }
 
   private static getToolStrengths(tool: Tool, criteriaWeights: Record<string, number>): string[] {
