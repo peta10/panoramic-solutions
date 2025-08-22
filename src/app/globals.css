@@ -531,4 +531,11 @@
     height: 100vh;
     height: 100dvh;
   }
+
+  /* Product Bumper blur effects */
+  body.product-bumper-active header {
+    transition: all 0.3s ease;
+    filter: blur(2px);
+    opacity: 0.75;
+  }
 }

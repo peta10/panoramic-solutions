@@ -22,6 +22,7 @@ interface NavigationToggleProps {
   selectedCriteria?: Criterion[];
   onAnimationTrigger?: () => void;
   onShowHowItWorks?: () => void;
+  isProductBumperVisible?: boolean;
 }
 
 export const NavigationToggle: React.FC<NavigationToggleProps> = ({
@@ -31,7 +32,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
   selectedTools = [],
   selectedCriteria = [],
   onAnimationTrigger,
-  onShowHowItWorks
+  onShowHowItWorks,
+  isProductBumperVisible = false
 }) => {
   const { isMobile } = useFullscreen();
   const [isChartGlowing, setIsChartGlowing] = useState(false);
@@ -97,7 +99,10 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
 
   return (
     <nav 
-      className="fixed w-full bg-white shadow-lg z-50"
+      className={cn(
+        "fixed w-full bg-white shadow-lg z-50 transition-all duration-300",
+        isProductBumperVisible && "blur-sm opacity-75"
+      )}
       style={{ 
         top: `${getHeaderHeight()}px`, // Position right below the header
         '--total-fixed-height': `${getTotalFixedHeight()}px` // Expose total height for content padding

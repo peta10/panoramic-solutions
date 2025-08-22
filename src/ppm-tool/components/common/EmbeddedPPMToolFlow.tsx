@@ -27,7 +27,8 @@ import {
   markInitialTimerComplete,
   recordMouseMovement,
   getTimingConstants,
-  resetProductBumperState
+  resetProductBumperState,
+  getProductBumperState
 } from '@/ppm-tool/shared/utils/productBumperState';
 
 interface EmbeddedPPMToolFlowProps {
@@ -96,10 +97,6 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     showProductBumper, 
     closeProductBumper, 
     triggerProductBumper,
-    mouseTrackingEnabled,
-    delayTimerActive,
-    startDelayTimer,
-    isDelayComplete,
     hasShownProductBumper
   } = useGuidance();
 
@@ -107,12 +104,27 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   useEffect(() => {
     console.log('🔍 EmbeddedPPMToolFlow guidance state changed:', {
       showProductBumper,
-      mouseTrackingEnabled,
-      delayTimerActive,
-      isDelayComplete,
       hasShownProductBumper
     });
-  }, [showProductBumper, mouseTrackingEnabled, delayTimerActive, isDelayComplete, hasShownProductBumper]);
+  }, [showProductBumper, hasShownProductBumper]);
+
+  // Add global class to body when ProductBumper is visible
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (showProductBumper) {
+        document.body.classList.add('product-bumper-active');
+      } else {
+        document.body.classList.remove('product-bumper-active');
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (typeof window !== 'undefined') {
+        document.body.classList.remove('product-bumper-active');
+      }
+    };
+  }, [showProductBumper]);
   // Set initial step based on mobile/desktop view
   const [currentStep, setCurrentStep] = useState(isMobile ? 'criteria' : 'criteria-tools');
   const [criteria, setCriteria] = useState<Criterion[]>([]);
@@ -346,18 +358,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     fetchTools();
   }, []);
 
-  // Start the delay timer when component mounts
-  useEffect(() => {
-    startDelayTimer();
-    
-    // Debug: Test ProductBumper trigger after 5 seconds (for testing)
-    // setTimeout(() => {
-    //   console.log('🧪 Testing ProductBumper trigger...');
-    //   triggerProductBumper();
-    // }, 5000);
-  }, [startDelayTimer]);
-
-  // New timing strategy: 8s initial timer + 3s mouse movement timer
+  // Product bumper timing strategy: 8s initial timer + 3s mouse movement timer
   useEffect(() => {
     const { INITIAL_TIMER_MS, MOUSE_MOVEMENT_TIMER_MS } = getTimingConstants();
     let initialTimer: NodeJS.Timeout;
@@ -382,10 +383,33 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       // Start 3-second timer for mouse movement
       mouseMovementTimer = setTimeout(() => {
         console.log('🖱️ 3 seconds after mouse movement - checking if should show ProductBumper');
-        if (shouldShowProductBumper() && !showProductBumper) {
-          console.log('🎯 Triggering ProductBumper after mouse movement timer');
+        const state = getProductBumperState();
+        console.log('📊 ProductBumper state check:', {
+          dismissed: state.dismissed,
+          initialTimerComplete: state.initialTimerComplete,
+          mouseMovementDetected: state.mouseMovementDetected,
+          showProductBumper: showProductBumper
+        });
+        
+        // Check if we should show the ProductBumper
+        const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
+                                 (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+        
+        const shouldShow = isDevelopmentMode ? 
+          (state.initialTimerComplete && !showProductBumper) : 
+          (!state.dismissed && state.initialTimerComplete && !showProductBumper);
+        
+        if (shouldShow) {
+          console.log('🎯 Triggering ProductBumper after mouse movement timer' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
           incrementShowCount();
           triggerProductBumper();
+        } else {
+          console.log('⚠️ ProductBumper not triggered:', {
+            dismissed: state.dismissed,
+            initialTimerComplete: state.initialTimerComplete,
+            alreadyShowing: showProductBumper,
+            developmentMode: isDevelopmentMode
+          });
         }
       }, MOUSE_MOVEMENT_TIMER_MS);
     };
@@ -630,6 +654,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             selectedTools={selectedTools}
             selectedCriteria={criteria}
             onShowHowItWorks={onShowHowItWorks}
+            isProductBumperVisible={showProductBumper}
           />
           <main 
             className={cn(

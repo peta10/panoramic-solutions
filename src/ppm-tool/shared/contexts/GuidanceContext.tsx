@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { getProductBumperState, dismissProductBumper } from '@/ppm-tool/shared/utils/productBumperState';
 
 interface GuidanceContextType {
   showManualGuidance: boolean;
@@ -11,10 +12,6 @@ interface GuidanceContextType {
   triggerProductBumper: () => void;
   closeProductBumper: () => void;
   hasShownProductBumper: boolean;
-  mouseTrackingEnabled: boolean;
-  delayTimerActive: boolean;
-  startDelayTimer: () => void;
-  isDelayComplete: boolean;
 }
 
 const GuidanceContext = createContext<GuidanceContextType | undefined>(undefined);
@@ -25,20 +22,19 @@ interface GuidanceProviderProps {
 }
 
 export const GuidanceProvider = ({ children, showProductBumper: externalShowProductBumper }: GuidanceProviderProps) => {
-  // Check localStorage for ProductBumper interaction
+  // Manual guidance state
   const [showManualGuidance, setShowManualGuidance] = useState(false);
   const [hasShownManualGuidance, setHasShownManualGuidance] = useState(false);
+  
+  // Product bumper state
   const [internalShowProductBumper, setInternalShowProductBumper] = useState(false);
   const [hasShownProductBumper, setHasShownProductBumper] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('productBumperDismissed') === 'true';
+      const state = getProductBumperState();
+      return state.dismissed;
     }
     return false;
   });
-  const [mouseTrackingEnabled, setMouseTrackingEnabled] = useState(false);
-  const [delayTimerActive, setDelayTimerActive] = useState(false);
-  const [isDelayComplete, setIsDelayComplete] = useState(false);
-  const [timerStarted, setTimerStarted] = useState(false);
 
   // Use external state if provided, otherwise use internal state
   const showProductBumper = externalShowProductBumper !== undefined ? externalShowProductBumper : internalShowProductBumper;
@@ -57,60 +53,52 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
   const triggerProductBumper = () => {
     console.log('🎯 triggerProductBumper called - current state:', { internalShowProductBumper, hasShownProductBumper });
     
-    // Check localStorage first
-    if (typeof window !== 'undefined' && localStorage.getItem('productBumperDismissed') === 'true') {
-      console.log('⛔ ProductBumper permanently dismissed via localStorage');
-      return;
+    // Check if we're in development mode
+    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
+                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+    
+    // Check state using utility function (but bypass dismissal in dev mode)
+    if (typeof window !== 'undefined' && !isDevelopmentMode) {
+      const state = getProductBumperState();
+      if (state.dismissed) {
+        console.log('⛔ ProductBumper permanently dismissed via localStorage');
+        return;
+      }
     }
     
-    if (!internalShowProductBumper && !hasShownProductBumper) {
-      console.log('✅ Showing ProductBumper');
+    // In development mode, always allow showing (ignore hasShownProductBumper)
+    const canShow = isDevelopmentMode ? !internalShowProductBumper : (!internalShowProductBumper && !hasShownProductBumper);
+    
+    if (canShow) {
+      console.log('✅ Showing ProductBumper' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
       setInternalShowProductBumper(true);
-      setHasShownProductBumper(true);
+      if (!isDevelopmentMode) {
+        setHasShownProductBumper(true);
+      }
     } else {
-      console.log('⚠️ ProductBumper already shown or visible, skipping...');
+      console.log('⚠️ ProductBumper already shown or visible, skipping...' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
     }
   };
 
   const closeProductBumper = () => {
+    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
+                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+    
     setInternalShowProductBumper(false);
-    // Mark as permanently dismissed in localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('productBumperDismissed', 'true');
+    
+    if (!isDevelopmentMode) {
+      // Use utility function to dismiss (only in production)
+      dismissProductBumper();
       console.log('💾 ProductBumper permanently dismissed - saved to localStorage');
+      setHasShownProductBumper(true);
+    } else {
+      // In development mode, reset the hasShownProductBumper so it can show again
+      setHasShownProductBumper(false);
+      console.log('🔄 ProductBumper closed [DEV MODE] - reset for next show');
     }
-    setHasShownProductBumper(true);
   };
 
-  const startDelayTimer = useCallback(() => {
-    console.log('🔍 startDelayTimer called - current state:', { 
-      timerStarted, 
-      dismissed: typeof window !== 'undefined' ? localStorage.getItem('productBumperDismissed') : 'unknown' 
-    });
-    
-    if (timerStarted) {
-      console.log('⚠️ Timer already started, skipping...');
-      return;
-    }
-    
-    // Check if ProductBumper is permanently dismissed
-    if (typeof window !== 'undefined' && localStorage.getItem('productBumperDismissed') === 'true') {
-      console.log('⛔ ProductBumper permanently dismissed - skipping timer');
-      return;
-    }
-    
-    console.log('🕐 Starting 30-second delay timer before mouse tracking');
-    setTimerStarted(true);
-    setDelayTimerActive(true);
-    setIsDelayComplete(false);
-    
-    setTimeout(() => {
-      console.log('✅ 30-second delay complete - mouse tracking now enabled');
-      setDelayTimerActive(false);
-      setIsDelayComplete(true);
-      setMouseTrackingEnabled(true);
-    }, 30000); // 30 seconds
-  }, [timerStarted]);
+
 
   return (
     <GuidanceContext.Provider value={{
@@ -121,11 +109,7 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       showProductBumper,
       triggerProductBumper,
       closeProductBumper,
-      hasShownProductBumper,
-      mouseTrackingEnabled,
-      delayTimerActive,
-      startDelayTimer,
-      isDelayComplete
+      hasShownProductBumper
     }}>
       {children}
     </GuidanceContext.Provider>
