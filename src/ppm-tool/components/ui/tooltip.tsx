@@ -48,12 +48,11 @@ const Tooltip = React.forwardRef<
 const TooltipTrigger = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>
->(({ onClick, asChild, children, ...props }, ref) => {
+>(({ onClick, asChild, children, className, ...props }, ref) => {
   const isTouchDevice = useTouchDevice();
 
   const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    // On touch devices, don't prevent the default click behavior
-    // Let Radix handle opening/closing the tooltip
+    // On touch devices, let Radix handle the tooltip toggle naturally
     onClick?.(event);
   }, [onClick]);
 
@@ -62,15 +61,14 @@ const TooltipTrigger = React.forwardRef<
       ref={ref}
       onClick={handleClick}
       asChild={asChild}
-      // For touch devices, ensure proper touch targets and behavior
+      className={cn(
+        // Base mobile-friendly touch target styles
+        isTouchDevice && !asChild && "min-h-[44px] min-w-[44px] flex items-center justify-center",
+        className
+      )}
       style={isTouchDevice ? { 
         touchAction: 'manipulation',
         WebkitTapHighlightColor: 'rgba(59, 130, 246, 0.1)',
-        minHeight: '44px',
-        minWidth: '44px',
-        display: asChild ? undefined : 'flex',
-        alignItems: asChild ? undefined : 'center',
-        justifyContent: asChild ? undefined : 'center'
       } : undefined}
       {...props}
     >

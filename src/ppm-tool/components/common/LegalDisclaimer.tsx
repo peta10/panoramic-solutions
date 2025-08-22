@@ -1,8 +1,11 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ppm-tool/components/ui/tooltip';
+import { useTouchDevice } from '@/ppm-tool/shared/hooks/useTouchDevice';
 
 export const LegalDisclaimer: React.FC = () => {
+  const isTouchDevice = useTouchDevice();
+  
   const detailedDisclaimer = `The information is:
 
 • Based on user-provided criteria, publicly available information & independent research
@@ -25,17 +28,25 @@ Tool rankings and features may vary based on version, implementation, and specif
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-sm text-gray-700 cursor-help">
+                <div 
+                  className={`text-sm text-gray-700 cursor-help ${
+                    isTouchDevice ? 'touch-manipulation' : ''
+                  }`}
+                  style={isTouchDevice ? { touchAction: 'manipulation' } : undefined}
+                >
                   <span className="font-medium">Disclaimer:</span> The recommendations and match scores provided are for informational purposes only and do not constitute professional advice.{' '}
                   <span className="underline decoration-dotted underline-offset-2">
-                    Click or hover for additional details
+                    {isTouchDevice ? 'Tap' : 'Click or hover'} for additional details
                   </span>
-                </p>
+                </div>
               </TooltipTrigger>
               <TooltipContent 
                 side="top" 
                 align="start"
                 className="max-w-md p-4 text-sm bg-gray-900 text-white rounded-lg shadow-lg"
+                sideOffset={8}
+                avoidCollisions={true}
+                collisionPadding={isTouchDevice ? 16 : 8}
               >
                 <div className="whitespace-pre-line">{detailedDisclaimer}</div>
               </TooltipContent>
