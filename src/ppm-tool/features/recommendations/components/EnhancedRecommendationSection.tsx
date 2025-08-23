@@ -9,7 +9,7 @@ import { Button } from '@/ppm-tool/components/ui/button';
 import { Progress } from '@/ppm-tool/components/ui/progress';
 import { Separator } from '@/ppm-tool/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ppm-tool/components/ui/accordion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ppm-tool/components/ui/tooltip';
+import { MobileTooltip } from '@/ppm-tool/components/ui/mobile-tooltip';
 import { calculateScore, getCriteriaMatchCount, roundMatchScore } from '@/ppm-tool/shared/utils/toolRating';
 import { MethodologyTags } from '@/ppm-tool/components/common/MethodologyTags';
 import { useShuffleAnimation, useToolOrderShuffle } from '@/ppm-tool/hooks/useShuffleAnimation';
@@ -290,26 +290,23 @@ export const EnhancedRecommendationSection: React.FC<RecommendationSectionProps>
                  {/* Enhanced Action Buttons - Mobile Optimized */}
                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                    {hasFreeTrial(tool.name) && (
-                     <TooltipProvider>
-                       <Tooltip>
-                         <TooltipTrigger asChild>
-                           <Button size="sm" className="flex-1 sm:flex-initial bg-alpine-blue-500 hover:bg-alpine-blue-600" asChild>
-                             <a 
-                               href={getTrialUrl(tool.name)} 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               className="flex items-center justify-center space-x-2"
-                             >
-                               <ExternalLink className="w-4 h-4" />
-                               <span>Try Free Trial</span>
-                             </a>
-                           </Button>
-                         </TooltipTrigger>
-                         <TooltipContent>
-                           <p>Start a free trial of {tool.name}</p>
-                         </TooltipContent>
-                       </Tooltip>
-                     </TooltipProvider>
+                     <MobileTooltip 
+                       content={<p>Start a free trial of {tool.name}</p>}
+                       side="top"
+                       align="center"
+                     >
+                       <Button size="sm" className="flex-1 sm:flex-initial bg-alpine-blue-500 hover:bg-alpine-blue-600" asChild>
+                         <a 
+                           href={getTrialUrl(tool.name)} 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           className="flex items-center justify-center space-x-2"
+                         >
+                           <ExternalLink className="w-4 h-4" />
+                           <span>Try Free Trial</span>
+                         </a>
+                       </Button>
+                     </MobileTooltip>
                    )}
                    
                    <Button variant="outline" size="sm" className="flex-1 sm:flex-initial border-alpine-blue-200 text-alpine-blue-600 hover:bg-alpine-blue-50">

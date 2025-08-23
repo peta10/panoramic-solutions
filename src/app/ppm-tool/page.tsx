@@ -58,11 +58,9 @@ export default function PPMToolPage() {
               onManualRanking={handleManualRanking}
               onClose={() => setShowHowItWorks(false)}
             />
-          </div>
 
-          {/* Legal Disclaimer - Outside the PPM tool container */}
-          <div className="bg-gray-50 py-6">
-            <div className="container mx-auto px-4">
+            {/* Legal Disclaimer - Inside the PPM tool container */}
+            <div className="container mx-auto px-4 pb-6">
               <LegalDisclaimer />
             </div>
           </div>

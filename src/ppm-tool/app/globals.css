@@ -39,6 +39,45 @@
     }
   }
   
+  /* Mobile safe area handling */
+  @media (max-width: 768px) {
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+    }
+    
+    /* Ensure proper viewport height on mobile */
+    html, body {
+      height: 100vh;
+      height: 100dvh; /* Dynamic viewport height for mobile */
+    }
+    
+    /* Add safe area padding to header */
+    header {
+      padding-top: var(--sat);
+    }
+    
+    /* Ensure main content has proper spacing */
+    main {
+      padding-top: var(--total-fixed-height, 240px) !important;
+    }
+    
+    /* Prevent content from being cut off */
+    .container {
+      padding-left: max(1rem, var(--sal));
+      padding-right: max(1rem, var(--sar));
+    }
+  }
+  
+  /* Desktop spacing */
+  @media (min-width: 769px) {
+    main {
+      padding-top: var(--total-fixed-height, 180px) !important;
+    }
+  }
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 20 14.3% 4.1%;
@@ -942,6 +981,17 @@
     .section-scroll {
       @apply overflow-y-auto;
       -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure proper spacing for mobile content */
+    .container {
+      padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+      padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+    }
+    
+    /* Prevent content from being cut off at the top */
+    main {
+      padding-top: var(--total-fixed-height, 160px) !important;
     }
   }
 

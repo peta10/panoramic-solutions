@@ -2,7 +2,7 @@ import React from 'react';
 import { Tool, Criterion } from '../../../shared/types';
 import { getToolRating } from '../../../shared/utils/toolRating';
 import { HelpCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
+import { MobileTooltip } from '../../../components/ui/mobile-tooltip';
 
 interface CriteriaDetailsProps {
   tool: Tool;
@@ -14,8 +14,7 @@ export const CriteriaDetails: React.FC<CriteriaDetailsProps> = ({
   selectedCriteria,
 }) => {
   return (
-    <TooltipProvider>
-      <div className="space-y-3">
+    <div className="space-y-3">
         {selectedCriteria.map((criterion) => {
           const rating = getToolRating(tool, criterion);
           
@@ -33,29 +32,24 @@ export const CriteriaDetails: React.FC<CriteriaDetailsProps> = ({
                     {criterion.name}
                   </span>
                   {criterion.tooltipDescription && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button 
-                          type="button"
-                          className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
-                          aria-label={`More information about ${criterion.name}`}
-                        >
-                          <HelpCircle className="w-3 h-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent 
-                        side="top" 
-                        align="center"
-                        className="max-w-xs text-sm bg-gray-900 text-white p-3 rounded-lg shadow-lg z-[100] border border-gray-700"
-                        sideOffset={12}
-                        avoidCollisions={true}
-                        collisionPadding={16}
-                      >
+                    <MobileTooltip 
+                      content={
                         <div className="break-words">
                           {criterion.tooltipDescription}
                         </div>
-                      </TooltipContent>
-                    </Tooltip>
+                      }
+                      side="top"
+                      align="center"
+                      className="max-w-xs text-sm"
+                    >
+                      <button 
+                        type="button"
+                        className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
+                        aria-label={`More information about ${criterion.name}`}
+                      >
+                        <HelpCircle className="w-3 h-3" />
+                      </button>
+                    </MobileTooltip>
                   )}
                 </div>
                 <span
@@ -75,6 +69,5 @@ export const CriteriaDetails: React.FC<CriteriaDetailsProps> = ({
           );
         })}
       </div>
-    </TooltipProvider>
   );
 };

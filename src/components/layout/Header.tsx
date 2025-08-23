@@ -50,7 +50,10 @@ export function Header() {
 
   return (
     <header
-      className="fixed top-0 w-full z-50 bg-white shadow-lg py-2"
+      className="fixed top-0 w-full z-50 bg-white shadow-lg py-2 md:py-2"
+      style={{
+        paddingTop: 'max(12px, env(safe-area-inset-top, 12px))' // Increased minimum padding from 8px to 12px
+      }}
     >
       <nav className="container px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}

@@ -6,12 +6,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface ToolCompareAnimationProps {
   isAnimating: boolean;
   startPosition: { x: number; y: number };
+  targetPosition: { x: number; y: number };
   onComplete: () => void;
 }
 
 export const ToolCompareAnimation: React.FC<ToolCompareAnimationProps> = ({
   isAnimating,
   startPosition,
+  targetPosition,
   onComplete
 }) => {
   const handleAnimationComplete = () => {
@@ -33,11 +35,11 @@ export const ToolCompareAnimation: React.FC<ToolCompareAnimationProps> = ({
           animate={{ 
             opacity: [1, 0.8, 0],
             scale: [1, 0.5, 0.3],
-            x: window.innerWidth / 2,
-            y: 40 // Approximate position of the Chart toggle
+            x: targetPosition.x + 40, // Offset to top-right corner (button width ~80px)
+            y: targetPosition.y - 15  // Offset to top of button (button height ~30px)
           }}
           transition={{ 
-            duration: 0.5,
+            duration: 0.8, // Slowed down from 0.5s to 0.8s
             ease: "easeInOut"
           }}
           onAnimationComplete={handleAnimationComplete}

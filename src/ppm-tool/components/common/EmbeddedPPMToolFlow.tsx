@@ -135,6 +135,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   const [filterMode, setFilterMode] = useState<'AND' | 'OR'>('AND');
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [comparedTools, setComparedTools] = useState<Set<string>>(new Set());
+  const [chartButtonPosition, setChartButtonPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Add state for guided ranking answers and personalization data
   const [guidedRankingAnswers, setGuidedRankingAnswers] = useState<Record<string, GuidedRankingAnswer>>({});
@@ -358,15 +359,23 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     fetchTools();
   }, []);
 
-  // Product bumper timing strategy: 8s initial timer + 3s mouse movement timer
+  // Product bumper timing strategy: 23s initial timer + 3s mouse movement timer (only on first page)
   useEffect(() => {
     const { INITIAL_TIMER_MS, MOUSE_MOVEMENT_TIMER_MS } = getTimingConstants();
     let initialTimer: NodeJS.Timeout;
     let mouseMovementTimer: NodeJS.Timeout;
     
-    // Start 8-second initial timer immediately when component mounts
+    // Only show ProductBumper on the first page (not on chart comparison page)
+    const isFirstPage = currentStep === 'criteria' || currentStep === 'criteria-tools';
+    
+    if (!isFirstPage) {
+      console.log('📄 Not on first page - ProductBumper disabled');
+      return;
+    }
+    
+    // Start 23-second initial timer immediately when component mounts
     initialTimer = setTimeout(() => {
-      console.log('🕐 Initial 8-second timer complete - marking timer complete');
+      console.log('🕐 Initial 23-second timer complete - marking timer complete');
       markInitialTimerComplete();
     }, INITIAL_TIMER_MS);
 
@@ -388,7 +397,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           dismissed: state.dismissed,
           initialTimerComplete: state.initialTimerComplete,
           mouseMovementDetected: state.mouseMovementDetected,
-          showProductBumper: showProductBumper
+          showProductBumper: showProductBumper,
+          currentStep: currentStep
         });
         
         // Check if we should show the ProductBumper
@@ -408,7 +418,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             dismissed: state.dismissed,
             initialTimerComplete: state.initialTimerComplete,
             alreadyShowing: showProductBumper,
-            developmentMode: isDevelopmentMode
+            developmentMode: isDevelopmentMode,
+            currentStep: currentStep
           });
         }
       }, MOUSE_MOVEMENT_TIMER_MS);
@@ -427,7 +438,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     document.addEventListener('mousemove', trackMouseMovement);
     document.addEventListener('click', testProductBumperClick);
 
-    console.log('🕐 ProductBumper: Starting 8-second initial timer...');
+    console.log('🕐 ProductBumper: Starting 23-second initial timer (first page only)...');
     console.log('🧪 To test ProductBumper: Shift+Click anywhere');
 
     return () => {
@@ -436,7 +447,16 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       if (initialTimer) clearTimeout(initialTimer);
       if (mouseMovementTimer) clearTimeout(mouseMovementTimer);
     };
-  }, [triggerProductBumper, showProductBumper]);
+  }, [triggerProductBumper, showProductBumper, currentStep]);
+
+  // Close ProductBumper when navigating away from first page
+  useEffect(() => {
+    const isFirstPage = currentStep === 'criteria' || currentStep === 'criteria-tools';
+    if (!isFirstPage && showProductBumper) {
+      console.log('📄 Navigating away from first page - closing ProductBumper');
+      closeProductBumper();
+    }
+  }, [currentStep, showProductBumper, closeProductBumper]);
 
   const filteredTools = filterTools(selectedTools, filterConditions, filterMode);
 
@@ -581,6 +601,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
                 onRestoreAll={handleRestoreAllTools}
                 onCompare={handleCompare}
                 comparedTools={comparedTools}
+                chartButtonPosition={chartButtonPosition}
               />
             </div>
           );
@@ -621,6 +642,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             comparedTools={comparedTools}
             guidedButtonRef={guidedButtonRef}
             onOpenGuidedRanking={onOpenGuidedRanking}
+            chartButtonPosition={chartButtonPosition}
           />
         );
       case 'chart':
@@ -643,7 +665,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       <FullscreenProvider>
         {/* PPM Tool Embedded Application */}
         <div 
-          className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
+          className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 rounded-lg"
           role="application"
           aria-label="PPM Tool Finder"
         >
@@ -653,8 +675,10 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             compareCount={comparedTools.size}
             selectedTools={selectedTools}
             selectedCriteria={criteria}
+            filteredTools={filteredTools}
             onShowHowItWorks={onShowHowItWorks}
             isProductBumperVisible={showProductBumper}
+            onChartButtonPosition={setChartButtonPosition}
           />
           <main 
             className={cn(
@@ -662,7 +686,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
               isMobile && "pb-28" // Increased padding to accommodate the action buttons
             )}
             style={{
-              paddingTop: "140px" // Adjusted for smaller py-2 containers
+              paddingTop: isMobile ? "var(--total-fixed-height, 240px)" : "var(--total-fixed-height, 180px)" // Increased fallbacks: mobile from 220px to 240px, desktop from 160px to 180px
             }}
           >
             {renderContent()}
@@ -671,6 +695,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             <ActionButtons 
               selectedTools={selectedTools} 
               selectedCriteria={criteria}
+              filteredTools={filteredTools}
               onShowHowItWorks={onShowHowItWorks}
             />
           )}

@@ -633,7 +633,7 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
               ${criterion.name}
             </div>
             <div style="color: #4a5568; font-size: 11px;">
-              Your Rating: ${criterion.userRating}/5
+              Your Ranking: ${criterion.userRating}/5
             </div>
           </td>
           ${tools.map(tool => {

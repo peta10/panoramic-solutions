@@ -9,7 +9,7 @@ import { defaultCriteria } from '@/ppm-tool/data/criteria';
 
 import { CriteriaGuidance } from '@/ppm-tool/components/overlays/CriteriaGuidance';
 import { Slider } from '@/ppm-tool/components/ui/slider';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ppm-tool/components/ui/tooltip';
+import { MobileTooltip } from '@/ppm-tool/components/ui/mobile-tooltip';
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
 
 interface CriteriaSectionProps {
@@ -64,7 +64,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
   };
 
   return (
-    <TooltipProvider>
+    <>
       {/* Guidance Popup - Moved OUTSIDE the overflow-hidden container */}
       <CriteriaGuidance
         isVisible={showManualGuidance}
@@ -75,12 +75,12 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
       <div 
         ref={sectionRef}
         id="criteria-section" 
-        className={`bg-white rounded-lg shadow-lg flex flex-col h-full relative`}
+        className={`bg-white rounded-lg shadow-lg flex flex-col h-full relative border border-gray-200`}
         style={{ overflow: 'visible' }}
       >
         <div className="flex flex-col h-full min-h-0">
           {/* Header */}
-          <div className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 pb-3 md:pb-4 border-b bg-white">
+          <div className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 pb-3 md:pb-4 border-b bg-white rounded-t-lg">
             <div className="flex items-center">
               <Sliders className="w-5 h-5 md:w-6 md:h-6 mr-2 text-alpine-blue-400" />
               <div className="flex items-center">
@@ -94,7 +94,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
               <button
                 ref={guidedButtonRef}
                 onClick={handleGuidedRankingsClick}
-                data-guided-rankings-button
+                
                 className={`flex items-center gap-1 px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-medium text-white bg-alpine-blue-400 hover:bg-alpine-blue-500 rounded-lg transition-all duration-300 ${
                   showProductBumper 
                     ? 'ring-4 ring-alpine-blue-400 ring-opacity-50 shadow-lg scale-105 relative z-50' 
@@ -133,29 +133,24 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                           <h3 className="text-lg font-semibold text-gray-900">
                             {criterion.name}
                           </h3>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button 
-                                type="button"
-                                className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
-                                aria-label={`More information about ${criterion.name}`}
-                              >
-                                <HelpCircle className="w-4 h-4" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent 
-                              side="top" 
-                              align="center"
-                              className="max-w-xs text-sm bg-gray-900 text-white p-3 rounded-lg shadow-lg border border-gray-700"
-                              sideOffset={12}
-                              avoidCollisions={true}
-                              collisionPadding={16}
-                            >
+                          <MobileTooltip 
+                            content={
                               <div className="break-words">
                                 {getTooltipDescription(criterion)}
                               </div>
-                            </TooltipContent>
-                          </Tooltip>
+                            }
+                            side="top"
+                            align="center"
+                            className="max-w-xs text-sm"
+                          >
+                            <button 
+                              type="button"
+                              className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
+                              aria-label={`More information about ${criterion.name}`}
+                            >
+                              <HelpCircle className="w-4 h-4" />
+                            </button>
+                          </MobileTooltip>
                         </div>
                       </div>
                       <div data-lenis-prevent>
@@ -195,6 +190,6 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
 
         </div>
       </div>
-    </TooltipProvider>
+    </>
   );
 };

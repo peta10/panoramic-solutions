@@ -24,6 +24,7 @@ interface SplitViewProps {
   comparedTools?: Set<string>;
   guidedButtonRef?: React.RefObject<HTMLButtonElement>;
   onOpenGuidedRanking?: () => void;
+  chartButtonPosition?: { x: number; y: number };
 }
 
 export const SplitView: React.FC<SplitViewProps> = ({
@@ -44,12 +45,13 @@ export const SplitView: React.FC<SplitViewProps> = ({
   onCompare,
   comparedTools,
   guidedButtonRef,
-  onOpenGuidedRanking
+  onOpenGuidedRanking,
+  chartButtonPosition
 }) => {
   const { isMobile } = useFullscreen();
 
   return (
-    <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'} h-[calc(100vh-180px)] overflow-hidden`}>
+    <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'} h-[calc(100vh-180px)] overflow-hidden rounded-lg bg-white shadow-sm`}>
       {/* Criteria Section */}
       <div className="h-full min-h-0">
         <CriteriaSection
@@ -79,6 +81,7 @@ export const SplitView: React.FC<SplitViewProps> = ({
           onRestoreAll={onRestoreAllTools}
           onCompare={onCompare}
           comparedTools={comparedTools}
+          chartButtonPosition={chartButtonPosition}
         />
       </div>
     </div>

@@ -36,6 +36,7 @@ interface ToolSectionProps {
   isSubmitting?: boolean;
   onCompare?: (tool: Tool) => void;
   comparedTools?: Set<string>;
+  chartButtonPosition?: { x: number; y: number };
 }
 
 // Use the unified calculateScore function
@@ -58,7 +59,8 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
   onContinue,
   isSubmitting,
   onCompare,
-  comparedTools = new Set()
+  comparedTools = new Set(),
+  chartButtonPosition
 }) => {
   const { isMobile } = useFullscreen();
 
@@ -158,15 +160,21 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
   const showRemovedToolsMenu = removedTools.length > 0;
 
   const handleCompare = (tool: Tool, event: React.MouseEvent) => {
-    // Get the button's position for the animation
-    const button = event.currentTarget;
-    const rect = button.getBoundingClientRect();
+    // Check if tool is currently being compared
+    const isCurrentlyCompared = comparedTools.has(tool.id);
     
-    // Set the animating tool state
-    setAnimatingTool({
-      id: tool.id,
-      position: { x: rect.left, y: rect.top }
-    });
+    // Only trigger animation when ADDING a tool to compare (not when removing)
+    if (!isCurrentlyCompared) {
+      // Get the button's position for the animation
+      const button = event.currentTarget;
+      const rect = button.getBoundingClientRect();
+      
+      // Set the animating tool state
+      setAnimatingTool({
+        id: tool.id,
+        position: { x: rect.left, y: rect.top }
+      });
+    }
 
     // Call the compare handler
     onCompare?.(tool);
@@ -196,9 +204,9 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
   );
 
   return (
-    <div id="tools-section" className="bg-white rounded-lg shadow-lg flex flex-col h-full overflow-hidden min-h-0">
+    <div id="tools-section" className="bg-white rounded-lg shadow-lg flex flex-col h-full overflow-hidden min-h-0 border border-gray-200">
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 pb-3 md:pb-4 border-b bg-white">
+      <div className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 pb-3 md:pb-4 border-b bg-white rounded-t-lg">
         <div className="flex items-center">
           <Award className="w-5 h-5 md:w-6 md:h-6 mr-2 text-alpine-blue-400" />
           <div className="flex items-center">
@@ -368,6 +376,7 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
         <ToolCompareAnimation
           isAnimating={true}
           startPosition={animatingTool.position}
+          targetPosition={chartButtonPosition || { x: 0, y: 0 }}
           onComplete={handleAnimationComplete}
         />
       )}

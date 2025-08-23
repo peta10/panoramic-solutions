@@ -572,18 +572,19 @@ Base your response on the actual insights provided, not generic assumptions.`
               content: `You are creating concise insights for an email comparison table. Transform technical database insights into executive-friendly explanations.
 
 RULES:
-1. Maximum 60 characters for email table display
+1. Maximum 80 characters for email table display
 2. Focus on business value, not technical features
 3. Use action-oriented language
 4. Be specific about HOW the tool delivers value
 5. Consider the user's rating vs tool's rating
+6. Leverage the database insight provided
 
 COMPARISON CONTEXT:
 - If tool rating > user rating: Emphasize "exceeds needs" 
 - If tool rating = user rating: Focus on "perfect fit"
 - If tool rating < user rating: Highlight "basic coverage"
 
-OUTPUT: Single phrase, business-focused, under 60 characters.`
+OUTPUT: Single phrase, business-focused, under 80 characters.`
             },
             {
               role: 'user',
@@ -593,7 +594,7 @@ Tool Rating: ${toolRating}/5
 User Rating: ${userRating}/5
 Database Insight: ${databaseInsight || 'Standard capabilities available'}
 
-Create a concise business insight (max 60 chars) that explains the VALUE this tool provides for this criterion.`
+Create a concise business insight (max 80 chars) that explains the VALUE this tool provides for this criterion. Use the database insight to make it specific and meaningful.`
             }
           ],
           max_tokens: 30,
@@ -605,7 +606,7 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
         const data = await response.json();
         const insight = data.choices[0]?.message?.content?.trim();
         
-        if (insight && insight.length <= 60) {
+        if (insight && insight.length <= 80) {
           return insight.replace(/["""]/g, '');
         }
       }
@@ -652,22 +653,33 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
     userRating: number,
     databaseInsight: string
   ): string => {
-    // Use database insight if available, truncate to 60 chars
+    // Use database insight if available, truncate to 80 chars
     if (databaseInsight && databaseInsight.trim().length > 0) {
       const truncated = databaseInsight.trim();
-      return truncated.length > 60 ? truncated.substring(0, 57) + '...' : truncated;
+      return truncated.length > 80 ? truncated.substring(0, 77) + '...' : truncated;
     }
 
-    // Generate basic insight based on ratings
-    const comparison = toolRating >= userRating ? 'Strong' : 'Basic';
-    const performance = toolRating >= 4 ? 'excellent' : toolRating >= 3 ? 'good' : 'standard';
-    
-    return `${comparison} ${performance} ${criterionName.toLowerCase()} capabilities`;
+    // Generate more descriptive basic insight based on ratings
+    if (toolRating >= 4) {
+      if (toolRating > userRating) {
+        return 'Exceeds your needs with strong capabilities';
+      } else {
+        return 'Perfect fit for your requirements';
+      }
+    } else if (toolRating >= 3) {
+      if (toolRating >= userRating) {
+        return 'Meets your needs with good coverage';
+      } else {
+        return 'Good coverage but may need supplements';
+      }
+    } else {
+      return 'Basic coverage - consider alternatives';
+    }
   };
 
   // Generate the HTML table
   const generateTableHTML = (tools: any[], topCriteria: any[], enhancedInsights: Record<string, Record<string, string>>, userRankings: any): string => {
-    const toolsSlice = tools.slice(0, 3); // Ensure max 3 tools
+    const toolsSlice = tools.slice(0, Math.min(tools.length, 3)); // Dynamic number of tools, max 3
     
     // Helper function to get star rating display
     const getStarRating = (rating: number): string => {
@@ -704,8 +716,8 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
           border: none;
           width: 25%;
         ">
-          Your Criteria<br/>
-          <span style="font-size: 11px; opacity: 0.9;">(Your Priority)</span>
+          Criteria<br/>
+          <span style="font-size: 11px; opacity: 0.9;">(Your Ranking)</span>
         </th>
         ${toolsSlice.map((recommendation: any, index: number) => `
           <th style="
@@ -718,8 +730,7 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
             border: none;
             width: 25%;
           ">
-            ${getRankingNumber(index)} ${recommendation.tool.name}<br/>
-            <span style="font-size: 11px; opacity: 0.9;">${Math.round(recommendation.overallScore || 0)}% Match</span>
+            ${getRankingNumber(index)} ${recommendation.tool.name}
           </th>
         `).join('')}
       </tr>
@@ -741,7 +752,7 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
               ${criterion.name}
             </div>
             <div style="color: #4a5568; font-size: 11px;">
-              Your Rating: ${criterion.userRating || 3}/5
+              Your Ranking: ${criterion.userRating || 3}/5
             </div>
           </td>
           ${toolsSlice.map((recommendation: any) => {
@@ -772,7 +783,7 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
                 <div style="font-weight: bold; color: ${textColor}; margin-bottom: 4px;">
                   (${toolRating}/5)
                 </div>
-                <div style="color: #4a5568; font-size: 11px; line-height: 1.3;">
+                <div style="color: #4a5568; font-size: 11px; line-height: 1.4; word-wrap: break-word; max-width: 200px;">
                   ${insight}
                 </div>
               </td>
@@ -784,20 +795,19 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
 
     return `
       <div style="margin: 40px 0;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h3 style="margin: 0 0 10px 0; color: #1a202c; font-size: 24px; font-weight: bold;">
-            Tool Comparison Analysis
-          </h3>
-          <p style="margin: 0; color: #4a5568; font-size: 16px;">
-            Your top criteria vs. our recommended tools with AI-enhanced insights
-          </p>
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="display: inline-block; background-color: #f8fafc; padding: 12px 20px; border-radius: 6px; font-size: 12px; color: #4a5568;">
+            <span style="color: #065f46;">■ Exceeds your needs</span>
+            <span style="margin: 0 15px; color: #1e40af;">■ Meets your needs</span>
+            <span style="color: #9a3412;">■ Basic coverage</span>
+          </div>
         </div>
         
         <div style="overflow-x: auto; margin: 0 -15px;">
           <table style="
             width: 100%;
             max-width: 100%;
-            min-width: 600px;
+            min-width: 800px;
             border-collapse: collapse;
             background-color: white;
             border-radius: 8px;
@@ -809,14 +819,6 @@ Create a concise business insight (max 60 chars) that explains the VALUE this to
             ${criteriaRows}
           </table>
         </div>
-        
-                  <div style="margin-top: 20px; text-align: center;">
-            <div style="display: inline-block; background-color: #f8fafc; padding: 12px 20px; border-radius: 6px; font-size: 12px; color: #4a5568;">
-              <span style="color: #065f46;">■ Exceeds your needs</span>
-              <span style="margin: 0 15px; color: #1e40af;">■ Meets your needs</span>
-              <span style="color: #9a3412;">■ Basic coverage</span>
-            </div>
-          </div>
       </div>
     `;
   };
@@ -1073,7 +1075,7 @@ Create a unique, varied description for ${tool.name} that stands out from other 
           <td style="padding:28px 28px 16px 28px;font-family:Arial,Helvetica,sans-serif;background:#ffffff;">
             <div style="font-size:20px;font-weight:700;margin:0 0 8px 0;color:#2c3e50;">Your Personalized PPM Tool Analysis Report</div>
             <div style="font-size:14px;color:#444;margin:0 0 20px 0;">
-              Here is how the leading tools stack up based on <strong>your ranked criteria</strong> and our <strong>research-backed evaluation</strong>.
+              These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
             </div>
             
             <!-- Value Propositions Section -->
@@ -1106,7 +1108,8 @@ Create a unique, varied description for ${tool.name} that stands out from other 
             <!-- Process cue -->
             <div style="font-size:12px;color:#666;line-height:1.5;margin-top:16px;">
               You ranked your priorities using our guided method across the following <strong>Project Portfolio Management (PPM)</strong> criteria:
-              ${selectedCriteria.map((c: any) => c.name).join(', ')}.
+              ${selectedCriteria.map((c: any) => c.name).join(', ')}. 
+              ${selectedTools.length < 10 ? `Analysis includes ${selectedTools.length} ${selectedTools.length === 1 ? 'tool' : 'tools'} matching your current filters.` : ''}
             </div>
           </td>
         </tr>
@@ -1114,7 +1117,7 @@ Create a unique, varied description for ${tool.name} that stands out from other 
                  <!-- Results Overview - Light Blue Background -->
          <tr>
            <td style="padding:20px 28px;font-family:Arial,Helvetica,sans-serif;background:#e3f2fd;">
-             <div style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#1565c0;">Top 3 Tools for your Project Portfolio Management Use Case</div>
+             <div style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#1565c0;">Top ${Math.min(selectedTools.length, 3)} Tools for your Project Portfolio Management Use Case</div>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
               <thead>
                 <tr style="background:#e9ecef;">
@@ -1134,7 +1137,7 @@ Create a unique, varied description for ${tool.name} that stands out from other 
               </tbody>
             </table>
             <div style="font-size:12px;color:#6c757d;margin-top:8px;font-style:italic;">
-              These are the three best-fit tools based on your weighted priorities.
+              These are the ${Math.min(selectedTools.length, 3)} best-fit tools based on your weighted priorities.
             </div>
           </td>
         </tr>
@@ -1148,10 +1151,12 @@ Create a unique, varied description for ${tool.name} that stands out from other 
               ${insights.tieNote ? `<div style="font-size:12px;color:#6c757d;margin-top:6px;"><strong>Note:</strong> ${insights.tieNote}</div>` : ''}
             </div>
             
+            ${selectedTools.length > 3 ? `
             <div style="font-size:14px;font-weight:700;margin:0 0 8px 0;color:#2c3e50;">Additional Considerations</div>
             <ul style="margin:0;padding-left:20px;font-size:13px;color:#2c3e50;line-height:1.6;">
               ${insights.honorableMentions.map(hm => `<li style="margin-bottom:4px;"><strong>${hm.name}</strong> - ${hm.highlight}</li>`).join('')}
             </ul>
+            ` : ''}
           </td>
         </tr>
 
@@ -1162,12 +1167,12 @@ Create a unique, varied description for ${tool.name} that stands out from other 
 
 
              <div style="font-size:12px;color:#1565c0;line-height:1.6;margin:0 0 16px 0;">
-               These results combine <strong>your ranked criteria</strong> with our <strong>independent research and real-world implementation experience</strong>, helping you set a foundation for <strong>lasting project portfolio success</strong>.
+               This table shows how your ranked criteria relates to each leader's research-backed rankings.
              </div>
             
             <!-- Comparison Table -->
             <div style="margin-top:16px;">
-                ${await generateComparisonTableHTML(topRecommendations.slice(0, 3), selectedCriteria, userRankings)}
+                ${await generateComparisonTableHTML(topRecommendations.slice(0, Math.min(selectedTools.length, 3)), selectedCriteria, userRankings)}
             </div>
             
           </td>
@@ -1176,7 +1181,7 @@ Create a unique, varied description for ${tool.name} that stands out from other 
         <!-- Signature - White Background -->
         <tr>
           <td style="padding:24px 28px 28px 28px;font-family:Arial,Helvetica,sans-serif;background:#ffffff;">
-            <div style="font-size:12px;color:#2c3e50;line-height:1.6;margin:0 0 16px 0;">
+            <div style="font-size:16px;font-weight:600;color:#2c3e50;line-height:1.6;margin:0 0 16px 0;">
               We're glad you took the time to explore your priorities through this process. These insights serve as a launch point to accelerate progress toward successful PPM adoption.
             </div>
             <div style="font-size:12px;color:#2c3e50;margin:0 0 16px 0;">Regards,</div>

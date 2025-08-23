@@ -57,8 +57,8 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
     const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
                              (typeof window !== 'undefined' && window.location.hostname === 'localhost');
     
-    // Check state using utility function (but bypass dismissal in dev mode)
-    if (typeof window !== 'undefined' && !isDevelopmentMode) {
+    // Always check localStorage for dismissed state
+    if (typeof window !== 'undefined') {
       const state = getProductBumperState();
       if (state.dismissed) {
         console.log('⛔ ProductBumper permanently dismissed via localStorage');
@@ -66,17 +66,15 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       }
     }
     
-    // In development mode, always allow showing (ignore hasShownProductBumper)
-    const canShow = isDevelopmentMode ? !internalShowProductBumper : (!internalShowProductBumper && !hasShownProductBumper);
+    // Check if already showing or has been shown
+    const canShow = !internalShowProductBumper && !hasShownProductBumper;
     
     if (canShow) {
-      console.log('✅ Showing ProductBumper' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
+      console.log('✅ Showing ProductBumper');
       setInternalShowProductBumper(true);
-      if (!isDevelopmentMode) {
-        setHasShownProductBumper(true);
-      }
+      setHasShownProductBumper(true);
     } else {
-      console.log('⚠️ ProductBumper already shown or visible, skipping...' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
+      console.log('⚠️ ProductBumper already shown or visible, skipping...');
     }
   };
 
@@ -86,15 +84,13 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
     
     setInternalShowProductBumper(false);
     
-    if (!isDevelopmentMode) {
-      // Use utility function to dismiss (only in production)
-      dismissProductBumper();
-      console.log('💾 ProductBumper permanently dismissed - saved to localStorage');
-      setHasShownProductBumper(true);
-    } else {
-      // In development mode, reset the hasShownProductBumper so it can show again
-      setHasShownProductBumper(false);
-      console.log('🔄 ProductBumper closed [DEV MODE] - reset for next show');
+    // Always dismiss to localStorage for persistence
+    dismissProductBumper();
+    console.log('💾 ProductBumper dismissed - saved to localStorage');
+    setHasShownProductBumper(true);
+    
+    if (isDevelopmentMode) {
+      console.log('🔄 ProductBumper closed [DEV MODE] - but still dismissed in localStorage');
     }
   };
 
