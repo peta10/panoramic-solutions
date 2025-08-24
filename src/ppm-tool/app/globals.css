@@ -73,7 +73,7 @@
     
     /* Ensure main content has proper spacing */
     main {
-      padding-top: var(--total-fixed-height, 240px) !important;
+      padding-top: var(--total-fixed-height, 120px) !important;
     }
     
     /* Prevent content from being cut off */
@@ -86,7 +86,7 @@
   /* Desktop spacing */
   @media (min-width: 769px) {
     main {
-      padding-top: var(--total-fixed-height, 180px) !important;
+      padding-top: var(--total-fixed-height, 80px) !important;
     }
   }
   
@@ -1003,7 +1003,7 @@
     
     /* Prevent content from being cut off at the top */
     main {
-      padding-top: var(--total-fixed-height, 160px) !important;
+      padding-top: var(--total-fixed-height, 120px) !important;
     }
   }
 

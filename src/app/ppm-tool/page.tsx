@@ -42,8 +42,8 @@ export default function PPMToolPage() {
     <ErrorBoundary>
       <FullscreenProvider>
         <GuidanceProvider>
-          {/* PPM Tool Section */}
-          <div className="min-h-screen" style={{ backgroundColor: '#F0F4FE' }}>
+          {/* PPM Tool Section - Full Height */}
+          <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
             <EmbeddedPPMToolFlow 
               onOpenGuidedRanking={handleOpenGuidedRanking}
               guidedButtonRef={guidedButtonRef}
@@ -59,8 +59,8 @@ export default function PPMToolPage() {
               onClose={() => setShowHowItWorks(false)}
             />
 
-            {/* Legal Disclaimer - Inside the PPM tool container */}
-            <div className="container mx-auto px-4 pb-6">
+            {/* Legal Disclaimer - Positioned at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 container mx-auto px-4 pb-4">
               <LegalDisclaimer />
             </div>
           </div>
