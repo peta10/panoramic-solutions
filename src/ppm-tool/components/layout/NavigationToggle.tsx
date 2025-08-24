@@ -121,18 +121,37 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
 
   // Calculate header height (fixed - no scroll changes)
   const getHeaderHeight = () => {
-    // No header height calculation for PPM tool - it uses its own layout
-    return 0;
+    // Header uses py-2 (16px padding) consistently
+    // Logo height: h-8 (32px) on mobile, h-10 (40px) on desktop
+    const padding = 16; // py-2 = 16px (fixed)
+    const logoHeight = isMobile ? 32 : 40; // h-8 = 32px, h-10 = 40px
+    
+    // Add safe area inset for mobile devices
+    if (isMobile && typeof window !== 'undefined') {
+      // Use CSS custom property or fallback to 0
+      const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat') || '0');
+      // Add extra padding for mobile to ensure content isn't cut off
+      const mobileExtraPadding = 24; // Increased from 16 to 24px for more space
+      return padding + logoHeight + safeAreaTop + mobileExtraPadding;
+    }
+    
+    return padding + logoHeight;
   };
 
   // Calculate navigation height (fixed - no scroll changes)
   const getNavigationHeight = () => {
-    // Simplified navigation height calculation
-    const baseHeight = 56; // Base nav height
-    const mobileLogoHeight = isMobile ? 48 : 0; // Reduced mobile logo section
-    const padding = 16; // Standard padding
+    // Navigation uses py-2 (16px padding) consistently
+    // Plus content height ~40px
+    const padding = 16; // py-2 = 16px (fixed)
+    const contentHeight = 40; // Approximate content height
     
-    return baseHeight + mobileLogoHeight + padding;
+    // Add extra height for mobile logo section
+    const mobileLogoHeight = isMobile ? 60 : 0; // Logo + border + padding
+    
+    // Add extra spacing between navigation and main content
+    const extraSpacing = isMobile ? 32 : 48; // Increased spacing: mobile from 24 to 32px, desktop from 32 to 48px
+    
+    return padding + contentHeight + mobileLogoHeight + extraSpacing;
   };
 
   // Total combined height for content offset
@@ -159,7 +178,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
       )}
       style={{ 
         backgroundColor: '#F0F4FE',
-        top: '0px', // Position at top for PPM tool layout
+        top: `${getHeaderHeight()}px`, // Position right below the header
         '--total-fixed-height': `${getTotalFixedHeight()}px` // Expose total height for content padding
       } as React.CSSProperties}
       aria-label="PPM Tool Navigation"

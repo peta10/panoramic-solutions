@@ -741,7 +741,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         switch (currentStep) {
           case 'criteria':
             return (
-              <div className="h-full overflow-y-auto bg-white rounded-lg shadow-sm border">
+              <div className="mobile-height-fix overflow-y-auto bg-white rounded-lg shadow-sm border">
                 <CriteriaSection
                   criteria={criteria}
                   onCriteriaChange={handleCriteriaChange}
@@ -753,7 +753,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             );
                   case 'tools':
             return (
-              <div className="h-full overflow-y-auto bg-white rounded-lg shadow-sm border">
+              <div className="mobile-height-fix overflow-y-auto bg-white rounded-lg shadow-sm border">
                 <ToolSection
                   tools={defaultTools}
                   selectedTools={filteredTools}
@@ -776,7 +776,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             );
         case 'chart':
           return (
-            <div className="h-full overflow-y-auto bg-white rounded-lg shadow-sm border">
+            <div className="mobile-height-fix overflow-y-auto bg-white rounded-lg shadow-sm border">
               <ComparisonChart
                 tools={filteredTools}
                 criteria={criteria}
@@ -816,7 +816,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         );
       case 'chart':
         return (
-          <div className="h-full overflow-y-auto bg-white rounded-lg shadow-sm border">
+          <div className="h-[calc(100dvh-120px)] min-h-[400px] max-h-[800px] overflow-y-auto bg-white rounded-lg shadow-sm border">
             <ComparisonChart
               tools={filteredTools}
               criteria={criteria}
@@ -947,7 +947,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       <FullscreenProvider>
         {/* PPM Tool Embedded Application */}
         <div 
-          className="h-screen w-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden"
+          className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 rounded-lg"
           role="application"
           aria-label="PPM Tool Finder"
         >
@@ -964,12 +964,11 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           />
           <main 
             className={cn(
-              "container mx-auto px-4 py-2 h-full overflow-hidden",
+              "container mx-auto px-4 py-6",
               isMobile && "pb-28" // Increased padding to accommodate the action buttons
             )}
             style={{
-              paddingTop: isMobile ? "var(--total-fixed-height, 120px)" : "var(--total-fixed-height, 80px)", // Reduced padding significantly
-              height: "calc(100vh - var(--total-fixed-height, 120px))" // Ensure proper height calculation
+              paddingTop: isMobile ? "var(--total-fixed-height, 240px)" : "var(--total-fixed-height, 180px)" // Increased fallbacks: mobile from 220px to 240px, desktop from 160px to 180px
             }}
           >
             {renderContent()}
