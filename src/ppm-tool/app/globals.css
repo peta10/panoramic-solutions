@@ -46,6 +46,9 @@
       --sab: env(safe-area-inset-bottom, 0px);
       --sal: env(safe-area-inset-left, 0px);
       --sar: env(safe-area-inset-right, 0px);
+      --header-height-mobile: 15rem;     /* 240px equivalent */
+      --header-height-desktop: 11.25rem; /* 180px equivalent */
+      --touch-target-size: 2.75rem;      /* 44px equivalent */
     }
     
     /* Ensure proper viewport height on mobile with fallbacks */
@@ -73,7 +76,7 @@
     
     /* Ensure main content has proper spacing */
     main {
-      padding-top: var(--total-fixed-height, 240px) !important;
+      padding-top: var(--total-fixed-height, var(--header-height-mobile)) !important;
     }
     
     /* Prevent content from being cut off */
@@ -85,12 +88,22 @@
   
   /* Desktop spacing */
   @media (min-width: 769px) {
+    :root {
+      --header-height-desktop: 11.25rem; /* 180px equivalent */
+    }
     main {
-      padding-top: var(--total-fixed-height, 180px) !important;
+      padding-top: var(--total-fixed-height, var(--header-height-desktop)) !important;
     }
   }
   
   :root {
+    /* Consistent spacing variables */
+    --header-height-mobile: 15rem;     /* 240px equivalent */
+    --header-height-desktop: 11.25rem; /* 180px equivalent */
+    --touch-target-size: 2.75rem;      /* 44px equivalent */
+    --safe-padding: 1rem;              /* 16px equivalent */
+    
+    /* Color variables */
     --background: 0 0% 100%;
     --foreground: 20 14.3% 4.1%;
     --card: 0 0% 100%;
@@ -175,8 +188,8 @@
     
     /* Mobile action buttons */
     .mobile-action-button {
-      min-height: 44px;
-      min-width: 44px;
+      min-height: var(--touch-target-size);
+      min-width: var(--touch-target-size);
       touch-action: manipulation;
     }
     
@@ -212,7 +225,7 @@
     
     /* Mobile button styles */
     .mobile-button {
-      min-height: 44px;
+      min-height: var(--touch-target-size);
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
@@ -809,7 +822,7 @@
     }
 
     .mobile-view .container {
-      @apply px-0;
+      @apply px-4;
     }
 
     .mobile-view .header {
@@ -872,7 +885,7 @@
   input[type="button"],
   input[type="submit"],
   input[type="reset"] {
-    @apply min-h-[44px] min-w-[44px];
+    @apply min-h-[2.75rem] min-w-[2.75rem];
   }
 
   /* Form elements */
@@ -1003,7 +1016,7 @@
     
     /* Prevent content from being cut off at the top */
     main {
-      padding-top: var(--total-fixed-height, 160px) !important;
+      padding-top: var(--total-fixed-height, 10rem) !important;
     }
   }
 

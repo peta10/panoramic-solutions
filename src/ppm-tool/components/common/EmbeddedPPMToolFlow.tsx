@@ -840,7 +840,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       }
       
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-8 bg-white rounded-lg shadow-sm border">
+        <div className="min-h-[25rem] flex items-center justify-center p-8 bg-white rounded-lg shadow-sm border">
           <div className="text-center max-w-md">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Issue</h3>
             <p className="text-gray-600 mb-4">
@@ -968,7 +968,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
               isMobile && "pb-28" // Increased padding to accommodate the action buttons
             )}
             style={{
-              paddingTop: isMobile ? "var(--total-fixed-height, 240px)" : "var(--total-fixed-height, 180px)" // Increased fallbacks: mobile from 220px to 240px, desktop from 160px to 180px
+              paddingTop: isMobile ? "var(--total-fixed-height, var(--header-height-mobile, 15rem))" : "var(--total-fixed-height, var(--header-height-desktop, 11.25rem))" // Using REM equivalents: 240px=15rem, 180px=11.25rem
             }}
           >
             {renderContent()}
