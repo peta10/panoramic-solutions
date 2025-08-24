@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { PPMToolEmbed } from '@/features/ppm-integration/components/PPMToolEmbed'
+import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
   title: 'PPM Tool Finder - Interactive Tool',
@@ -10,10 +10,7 @@ export const metadata: Metadata = {
   },
 }
 
+// This route redirects to the actual PPM tool
 export default function PPMToolEmbedPage() {
-  return (
-    <div className="min-h-screen">
-      <PPMToolEmbed />
-    </div>
-  )
+  redirect('/ppm-tool')
 }

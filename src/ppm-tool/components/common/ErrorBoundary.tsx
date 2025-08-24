@@ -32,6 +32,35 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Error Boundary caught an error:', error, errorInfo);
+    
+    // Track errors for mobile recovery system
+    try {
+      if (typeof window !== 'undefined' && localStorage) {
+        // Store the error for diagnostics
+        const errorData = {
+          message: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        };
+        
+        localStorage.setItem('lastPPMError', JSON.stringify(errorData));
+        
+        // Increment error count
+        const currentCount = parseInt(localStorage.getItem('ppmErrorCount') || '0');
+        localStorage.setItem('ppmErrorCount', (currentCount + 1).toString());
+        
+        console.log('📊 Error tracking updated:', {
+          errorCount: currentCount + 1,
+          error: error.message
+        });
+      }
+    } catch (trackingError) {
+      console.warn('Failed to track error:', trackingError);
+    }
+    
     this.setState({
       error,
       errorInfo

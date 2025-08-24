@@ -6,6 +6,20 @@ interface MobileDiagnosticsProps {
   isVisible?: boolean;
 }
 
+const getBrowserName = (): string => {
+  try {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes('Chrome')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+    if (userAgent.includes('Edge')) return 'Edge';
+    if (userAgent.includes('Opera')) return 'Opera';
+    return 'Unknown';
+  } catch (e) {
+    return 'Error detecting browser';
+  }
+};
+
 export const MobileDiagnostics: React.FC<MobileDiagnosticsProps> = ({ 
   isVisible = process.env.NODE_ENV === 'development' 
 }) => {
@@ -63,8 +77,24 @@ export const MobileDiagnostics: React.FC<MobileDiagnosticsProps> = ({
           // Performance
           connectionType: (navigator as any).connection?.effectiveType || 'unknown',
           
-          // Errors
+          // Errors and debugging
           lastError: window.localStorage?.getItem('lastPPMError') || 'none',
+          
+          // Browser info
+          browserName: getBrowserName(),
+          isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+          isInFrame: window !== window.top,
+          
+          // Viewport debugging
+          documentReadyState: document.readyState,
+          hasTouch: 'ontouchstart' in document.documentElement,
+          
+          // Performance
+          memoryInfo: (performance as any).memory ? {
+            used: Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024),
+            total: Math.round((performance as any).memory.totalJSHeapSize / 1024 / 1024),
+            limit: Math.round((performance as any).memory.jsHeapSizeLimit / 1024 / 1024)
+          } : 'not available',
           
           timestamp: new Date().toISOString()
         };

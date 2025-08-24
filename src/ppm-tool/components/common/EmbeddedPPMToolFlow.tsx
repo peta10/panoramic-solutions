@@ -31,6 +31,7 @@ import {
   getProductBumperState
 } from '@/ppm-tool/shared/utils/productBumperState';
 import { MobileDiagnostics } from './MobileDiagnostics';
+import { MobileRecoverySystem } from './MobileRecoverySystem';
 
 interface EmbeddedPPMToolFlowProps {
   showGuidedRanking?: boolean;
@@ -88,21 +89,49 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
 }) => {
   const { isMobile: fullscreenIsMobile } = useFullscreen();
   
-  // Add fallback mobile detection with error handling
+  // Enhanced mobile detection with browser compatibility
   const isMobile = React.useMemo(() => {
     try {
       if (typeof window === 'undefined') return false;
       
-      // Multiple mobile detection methods for reliability
+      // Multiple mobile detection methods for maximum compatibility
       const userAgent = navigator.userAgent || '';
-      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(userAgent);
       const isMobileScreen = window.innerWidth <= 768;
-      const isTouchDevice = 'ontouchstart' in window;
+      const isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+      const isSmallScreen = window.screen && window.screen.width <= 768;
       
-      return fullscreenIsMobile || isMobileUserAgent || (isMobileScreen && isTouchDevice);
+      // Check for mobile-specific features
+      const hasMobileFeatures = !!(
+        'orientation' in window ||
+        'ontouchstart' in document.documentElement ||
+        navigator.maxTouchPoints > 0 ||
+        (navigator as any).msMaxTouchPoints > 0
+      );
+      
+      const result = fullscreenIsMobile || isMobileUserAgent || (isMobileScreen && isTouchDevice) || (isSmallScreen && hasMobileFeatures);
+      
+      console.log('Mobile detection result:', {
+        result,
+        fullscreenIsMobile,
+        isMobileUserAgent,
+        isMobileScreen,
+        isTouchDevice,
+        isSmallScreen,
+        hasMobileFeatures,
+        userAgent: userAgent.substring(0, 50) + '...'
+      });
+      
+      return result;
     } catch (error) {
-      console.warn('Error detecting mobile device, defaulting to desktop:', error);
-      return false;
+      console.error('Error detecting mobile device, defaulting to screen size:', error);
+      // Fallback to simple screen size check
+      try {
+        return typeof window !== 'undefined' && window.innerWidth <= 768;
+      } catch (fallbackError) {
+        console.error('Fallback mobile detection failed:', fallbackError);
+        return false;
+      }
     }
   }, [fullscreenIsMobile]);
   
@@ -169,20 +198,56 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     timestamp: new Date().toISOString()
   });
 
-  // Load saved answers and personalization data from localStorage on mount
+  // Enhanced localStorage handling with cross-browser compatibility
   useEffect(() => {
     try {
+      // Check if localStorage is available and working
+      if (typeof window === 'undefined' || typeof Storage === 'undefined') {
+        console.warn('localStorage not available');
+        return;
+      }
+      
+      // Test localStorage functionality
+      try {
+        const testKey = '__ppm_tool_test__';
+        localStorage.setItem(testKey, 'test');
+        localStorage.removeItem(testKey);
+      } catch (storageError) {
+        console.warn('localStorage not working properly:', storageError);
+        return;
+      }
+      
       const savedAnswers = localStorage.getItem('guidedRankingAnswers');
       const savedPersonalization = localStorage.getItem('personalizationData');
       
       if (savedAnswers) {
-        setGuidedRankingAnswers(JSON.parse(savedAnswers));
+        try {
+          const parsedAnswers = JSON.parse(savedAnswers);
+          setGuidedRankingAnswers(parsedAnswers);
+        } catch (parseError) {
+          console.warn('Error parsing saved answers, clearing:', parseError);
+          localStorage.removeItem('guidedRankingAnswers');
+        }
       }
+      
       if (savedPersonalization) {
-        setPersonalizationData(JSON.parse(savedPersonalization));
+        try {
+          const parsedPersonalization = JSON.parse(savedPersonalization);
+          setPersonalizationData(parsedPersonalization);
+        } catch (parseError) {
+          console.warn('Error parsing saved personalization, clearing:', parseError);
+          localStorage.removeItem('personalizationData');
+        }
       }
     } catch (error) {
       console.error('Error loading saved guided ranking data:', error);
+      // Clear potentially corrupted data
+      try {
+        localStorage.removeItem('guidedRankingAnswers');
+        localStorage.removeItem('personalizationData');
+      } catch (clearError) {
+        console.error('Error clearing corrupted data:', clearError);
+      }
     }
   }, []);
 
@@ -296,10 +361,21 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     };
   };
 
-  // Fetch criteria from database
+  // Enhanced criteria fetching with mobile-friendly error handling
   useEffect(() => {
     const fetchCriteria = async () => {
       try {
+        // Check if supabase is available
+        if (!supabase) {
+          console.warn('Supabase not available, using default criteria');
+          const transformedDefaultCriteria: Criterion[] = defaultCriteria.map(item => ({
+            ...item,
+            description: item.tooltipDescription || 'No description available'
+          }));
+          setCriteria(transformedDefaultCriteria);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('criteria')
           .select('*');
@@ -308,8 +384,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           throw error;
         }
 
-        if (data) {
-          console.log('Fetched criteria from database:', data);
+        if (data && Array.isArray(data) && data.length > 0) {
+          console.log('✅ Fetched criteria from database:', data);
           // Transform database criteria to match Criterion type, using defaultCriteria for descriptions
           const transformedCriteria: Criterion[] = data.map((item: any) => {
             // Find matching default criterion for descriptions
@@ -342,29 +418,56 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             transformedCriteria.find(criterion => criterion.name === name)
           ).filter(Boolean) as Criterion[];
           
-          console.log('✅ Transformed criteria with tooltips:', sortedCriteria.length, 'items');
-          setCriteria(sortedCriteria);
+          if (sortedCriteria.length > 0) {
+            console.log('✅ Using database criteria:', sortedCriteria.length, 'items');
+            setCriteria(sortedCriteria);
+          } else {
+            throw new Error('No valid criteria found in database');
+          }
+        } else {
+          throw new Error('No criteria data received from database');
         }
       } catch (err) {
-        console.error('Error fetching criteria:', err);
-        // Fallback to default criteria if database fetch fails
-        // Transform defaultCriteria to match Criterion type
-        const transformedDefaultCriteria: Criterion[] = defaultCriteria.map(item => ({
-          ...item,
-          description: item.tooltipDescription || 'No description available'
-        }));
-        setCriteria(transformedDefaultCriteria);
+        console.error('Error fetching criteria, using defaults:', err);
+        setFetchError(null); // Clear any existing fetch errors for criteria
+        
+        // Fallback to default criteria
+        try {
+          const transformedDefaultCriteria: Criterion[] = defaultCriteria.map(item => ({
+            ...item,
+            description: item.tooltipDescription || 'No description available'
+          }));
+          
+          if (transformedDefaultCriteria.length > 0) {
+            console.log('✅ Using default criteria:', transformedDefaultCriteria.length, 'items');
+            setCriteria(transformedDefaultCriteria);
+          } else {
+            throw new Error('Default criteria is empty');
+          }
+        } catch (fallbackError) {
+          console.error('Critical error: Cannot load default criteria:', fallbackError);
+          setFetchError('Unable to load tool criteria. Please refresh the page.');
+        }
       }
     };
 
-    fetchCriteria();
+    // Delay execution slightly to allow mobile browsers to settle
+    const timeoutId = setTimeout(fetchCriteria, 100);
+    return () => clearTimeout(timeoutId);
   }, []);
 
-  // Fetch tools from database
+  // Enhanced tools fetching with mobile-friendly error handling
   useEffect(() => {
     const fetchTools = async () => {
       try {
         setFetchError(null);
+
+        // Check if supabase is available
+        if (!supabase) {
+          console.warn('Supabase not available, using default tools');
+          setSelectedTools(defaultTools);
+          return;
+        }
 
         const { data, error } = await supabase
           .from('tools_view')
@@ -376,18 +479,52 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           throw error;
         }
 
-        if (data) {
-          console.log('Fetched approved tools:', data.length, 'tools');
-          const transformedTools = data.map(transformDatabaseTool);
-          setSelectedTools(transformedTools);
+        if (data && Array.isArray(data)) {
+          console.log('✅ Fetched approved tools:', data.length, 'tools');
+          
+          if (data.length > 0) {
+            try {
+              const transformedTools = data.map(transformDatabaseTool).filter(tool => tool && tool.id);
+              
+              if (transformedTools.length > 0) {
+                console.log('✅ Using database tools:', transformedTools.length, 'items');
+                setSelectedTools(transformedTools);
+              } else {
+                throw new Error('No valid tools after transformation');
+              }
+            } catch (transformError) {
+              console.error('Error transforming tools, using defaults:', transformError);
+              setSelectedTools(defaultTools);
+            }
+          } else {
+            console.warn('No tools found in database, using defaults');
+            setSelectedTools(defaultTools);
+          }
+        } else {
+          throw new Error('No tools data received from database');
         }
       } catch (err) {
-        console.error('Error fetching tools:', err);
-        setFetchError('Failed to load tools. Please try again later.');
+        console.error('Error fetching tools, using defaults:', err);
+        
+        // Always have fallback tools available
+        try {
+          if (defaultTools && defaultTools.length > 0) {
+            console.log('✅ Using default tools:', defaultTools.length, 'items');
+            setSelectedTools(defaultTools);
+            setFetchError(null); // Don't show error if we have fallback data
+          } else {
+            throw new Error('No default tools available');
+          }
+        } catch (fallbackError) {
+          console.error('Critical error: No tools available:', fallbackError);
+          setFetchError('Unable to load tools. Please check your connection and refresh the page.');
+        }
       }
     };
 
-    fetchTools();
+    // Delay execution to allow mobile browsers to settle
+    const timeoutId = setTimeout(fetchTools, 200);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Product bumper timing strategy: 23s initial timer + 3s mouse movement timer (only on first page)
@@ -710,26 +847,86 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
               The tool is having trouble loading on your device. This might be due to viewport size issues on mobile devices.
             </p>
             <div className="space-y-2">
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Refresh Page
-              </button>
-              <button
-                onClick={() => {
-                  // Clear all localStorage and reload
+                          <button
+              onClick={() => {
+                try {
+                  console.log('Attempting to reload page...');
+                  window.location.reload();
+                } catch (reloadError) {
+                  console.error('Reload failed:', reloadError);
+                  window.location.href = window.location.href;
+                }
+              }}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mobile-button"
+            >
+              Refresh Page
+            </button>
+            <button
+              onClick={() => {
+                try {
+                  console.log('Clearing all data and reloading...');
+                  // Clear specific PPM tool data
+                  const keysToRemove = [
+                    'guidedRankingAnswers',
+                    'personalizationData',
+                    'lastPPMError',
+                    '__ppm_tool_test__'
+                  ];
+                  
+                  keysToRemove.forEach(key => {
+                    try {
+                      localStorage.removeItem(key);
+                    } catch (e) {
+                      console.warn(`Failed to remove ${key}:`, e);
+                    }
+                  });
+                  
+                  // Force reload
+                  setTimeout(() => {
+                    try {
+                      window.location.reload();
+                    } catch (reloadError) {
+                      window.location.href = '/ppm-tool';
+                    }
+                  }, 100);
+                  
+                } catch (e) {
+                  console.error('Clear data failed:', e);
                   try {
-                    localStorage.clear();
-                    window.location.reload();
-                  } catch (e) {
+                    window.location.href = '/ppm-tool';
+                  } catch (navError) {
                     window.location.reload();
                   }
+                }
+              }}
+              className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm mobile-button"
+            >
+              Clear Data & Reload
+            </button>
+            {isMobile && (
+              <button
+                onClick={() => {
+                  try {
+                    // Mobile-specific recovery
+                    console.log('Attempting mobile recovery...');
+                    
+                    // Try to navigate to desktop version
+                    const currentUrl = window.location.href;
+                    const desktopUrl = currentUrl.includes('?') 
+                      ? currentUrl + '&mobile=0' 
+                      : currentUrl + '?mobile=0';
+                    
+                    window.location.href = desktopUrl;
+                  } catch (e) {
+                    console.error('Mobile recovery failed:', e);
+                    window.location.href = '/';
+                  }
                 }}
-                className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm mobile-button"
               >
-                Clear Data & Reload
+                Try Desktop Version
               </button>
+            )}
             </div>
             {process.env.NODE_ENV === 'development' && (
               <details className="mt-4 text-left">
@@ -808,6 +1005,19 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
 
         {/* Mobile Diagnostics for debugging */}
         <MobileDiagnostics />
+
+        {/* Mobile Recovery System */}
+        {isMobile && (
+          <MobileRecoverySystem 
+            onRecovery={() => {
+              console.log('🔧 Mobile recovery initiated');
+              // Reset all state
+              setCriteria([]);
+              setSelectedTools([]);
+              setFetchError(null);
+            }}
+          />
+        )}
 
       </FullscreenProvider>
     </ErrorBoundary>
