@@ -74,10 +74,7 @@
       padding-top: var(--sat);
     }
     
-    /* Ensure main content has proper spacing */
-    main {
-      padding-top: var(--total-fixed-height, var(--header-height-mobile)) !important;
-    }
+    /* Mobile main spacing handled by inline styles */
     
     /* Prevent content from being cut off */
     .container {
@@ -91,9 +88,7 @@
     :root {
       --header-height-desktop: 11.25rem; /* 180px equivalent */
     }
-    main {
-      padding-top: var(--total-fixed-height, var(--header-height-desktop)) !important;
-    }
+    /* Desktop main spacing handled by inline styles */
   }
   
   :root {
@@ -1014,10 +1009,7 @@
       padding-right: max(1rem, env(safe-area-inset-right, 1rem));
     }
     
-    /* Prevent content from being cut off at the top */
-    main {
-      padding-top: var(--total-fixed-height, 10rem) !important;
-    }
+    /* Prevent content from being cut off at the top - removed conflicting padding */
   }
 
   /* Chart toggle glow effect */

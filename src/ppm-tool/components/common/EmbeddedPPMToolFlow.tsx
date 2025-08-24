@@ -968,7 +968,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
               isMobile && "pb-28" // Increased padding to accommodate the action buttons
             )}
             style={{
-              paddingTop: isMobile ? "var(--total-fixed-height, var(--header-height-mobile, 15rem))" : "var(--total-fixed-height, var(--header-height-desktop, 11.25rem))" // Using REM equivalents: 240px=15rem, 180px=11.25rem
+              paddingTop: isMobile ? "var(--header-height-mobile, 15rem)" : "var(--header-height-desktop, 11.25rem)" // Direct use of REM variables to avoid conflicts
             }}
           >
             {renderContent()}
