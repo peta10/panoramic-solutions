@@ -30,6 +30,7 @@ import {
   resetProductBumperState,
   getProductBumperState
 } from '@/ppm-tool/shared/utils/productBumperState';
+import { MobileDiagnostics } from './MobileDiagnostics';
 
 interface EmbeddedPPMToolFlowProps {
   showGuidedRanking?: boolean;
@@ -85,7 +86,25 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   onShowHowItWorks,
   guidedButtonRef
 }) => {
-  const { isMobile } = useFullscreen();
+  const { isMobile: fullscreenIsMobile } = useFullscreen();
+  
+  // Add fallback mobile detection with error handling
+  const isMobile = React.useMemo(() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      
+      // Multiple mobile detection methods for reliability
+      const userAgent = navigator.userAgent || '';
+      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isMobileScreen = window.innerWidth <= 768;
+      const isTouchDevice = 'ontouchstart' in window;
+      
+      return fullscreenIsMobile || isMobileUserAgent || (isMobileScreen && isTouchDevice);
+    } catch (error) {
+      console.warn('Error detecting mobile device, defaulting to desktop:', error);
+      return false;
+    }
+  }, [fullscreenIsMobile]);
   
   // Disable Lenis smooth scroll on mobile to prevent tooltip interference
   useLenis({
@@ -125,8 +144,15 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       }
     };
   }, [showProductBumper]);
-  // Set initial step based on mobile/desktop view
-  const [currentStep, setCurrentStep] = useState(isMobile ? 'criteria' : 'criteria-tools');
+  // Set initial step based on mobile/desktop view with safety check
+  const [currentStep, setCurrentStep] = useState(() => {
+    try {
+      return isMobile ? 'criteria' : 'criteria-tools';
+    } catch (error) {
+      console.warn('Error determining mobile state, defaulting to criteria-tools:', error);
+      return 'criteria-tools';
+    }
+  });
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [selectedTools, setSelectedTools] = useState<Tool[]>(defaultTools);
   const [removedCriteria, setRemovedCriteria] = useState<Criterion[]>([]);
@@ -199,12 +225,17 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     }
   };
 
-  // Update currentStep when mobile state changes
+  // Update currentStep when mobile state changes with error handling
   useEffect(() => {
-    if (isMobile && currentStep === 'criteria-tools') {
-      setCurrentStep('criteria');
-    } else if (!isMobile && ['criteria', 'tools'].includes(currentStep)) {
-      setCurrentStep('criteria-tools');
+    try {
+      if (isMobile && currentStep === 'criteria-tools') {
+        setCurrentStep('criteria');
+      } else if (!isMobile && ['criteria', 'tools'].includes(currentStep)) {
+        setCurrentStep('criteria-tools');
+      }
+    } catch (error) {
+      console.warn('Error updating step based on mobile state:', error);
+      // Keep current step if there's an error
     }
   }, [isMobile, currentStep]);
 
@@ -568,46 +599,47 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   }
 
   const renderContent = () => {
-    if (isMobile) {
-      switch (currentStep) {
-        case 'criteria':
-          return (
-            <div className="h-[calc(100vh-120px)] overflow-y-auto bg-white rounded-lg shadow-sm border">
-              <CriteriaSection
-                criteria={criteria}
-                onCriteriaChange={handleCriteriaChange}
-                startWithGuidedQuestions={false}
-                guidedButtonRef={guidedButtonRef}
-                onOpenGuidedRanking={onOpenGuidedRanking}
-              />
-            </div>
-          );
-        case 'tools':
-          return (
-            <div className="h-[calc(100vh-120px)] overflow-y-auto bg-white rounded-lg shadow-sm border">
-              <ToolSection
-                tools={defaultTools}
-                selectedTools={filteredTools}
-                removedTools={removedTools}
-                selectedCriteria={criteria}
-                filterConditions={filterConditions}
-                filterMode={filterMode}
-                onAddFilterCondition={handleAddFilterCondition}
-                onRemoveFilterCondition={handleRemoveFilterCondition}
-                onUpdateFilterCondition={handleUpdateFilterCondition}
-                onToggleFilterMode={handleToggleFilterMode}
-                onToolSelect={handleToolSelect}
-                onToolRemove={handleToolRemove}
-                onRestoreAll={handleRestoreAllTools}
-                onCompare={handleCompare}
-                comparedTools={comparedTools}
-                chartButtonPosition={chartButtonPosition}
-              />
-            </div>
-          );
+    try {
+      if (isMobile) {
+        switch (currentStep) {
+          case 'criteria':
+            return (
+              <div className="mobile-height-fix overflow-y-auto bg-white rounded-lg shadow-sm border">
+                <CriteriaSection
+                  criteria={criteria}
+                  onCriteriaChange={handleCriteriaChange}
+                  startWithGuidedQuestions={false}
+                  guidedButtonRef={guidedButtonRef}
+                  onOpenGuidedRanking={onOpenGuidedRanking}
+                />
+              </div>
+            );
+                  case 'tools':
+            return (
+              <div className="mobile-height-fix overflow-y-auto bg-white rounded-lg shadow-sm border">
+                <ToolSection
+                  tools={defaultTools}
+                  selectedTools={filteredTools}
+                  removedTools={removedTools}
+                  selectedCriteria={criteria}
+                  filterConditions={filterConditions}
+                  filterMode={filterMode}
+                  onAddFilterCondition={handleAddFilterCondition}
+                  onRemoveFilterCondition={handleRemoveFilterCondition}
+                  onUpdateFilterCondition={handleUpdateFilterCondition}
+                  onToggleFilterMode={handleToggleFilterMode}
+                  onToolSelect={handleToolSelect}
+                  onToolRemove={handleToolRemove}
+                  onRestoreAll={handleRestoreAllTools}
+                  onCompare={handleCompare}
+                  comparedTools={comparedTools}
+                  chartButtonPosition={chartButtonPosition}
+                />
+              </div>
+            );
         case 'chart':
           return (
-            <div className="h-[calc(100vh-120px)] overflow-y-auto bg-white rounded-lg shadow-sm border">
+            <div className="mobile-height-fix overflow-y-auto bg-white rounded-lg shadow-sm border">
               <ComparisonChart
                 tools={filteredTools}
                 criteria={criteria}
@@ -617,10 +649,10 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           );
         default:
           return null;
+        }
       }
-    }
 
-    switch (currentStep) {
+      switch (currentStep) {
       case 'criteria-tools':
         return (
           <SplitView
@@ -647,7 +679,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         );
       case 'chart':
         return (
-          <div className="h-[calc(100vh-120px)] overflow-y-auto bg-white rounded-lg shadow-sm border">
+          <div className="h-[calc(100dvh-120px)] min-h-[400px] max-h-[800px] overflow-y-auto bg-white rounded-lg shadow-sm border">
             <ComparisonChart
               tools={filteredTools}
               criteria={criteria}
@@ -657,6 +689,59 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         );
       default:
         return null;
+      }
+    } catch (error) {
+      console.error('Error rendering PPM Tool content:', error);
+      
+      // Store error for diagnostics
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('lastPPMError', `${error?.toString()} - ${new Date().toISOString()}`);
+        } catch (storageError) {
+          // Ignore storage errors
+        }
+      }
+      
+      return (
+        <div className="min-h-[400px] flex items-center justify-center p-8 bg-white rounded-lg shadow-sm border">
+          <div className="text-center max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Issue</h3>
+            <p className="text-gray-600 mb-4">
+              The tool is having trouble loading on your device. This might be due to viewport size issues on mobile devices.
+            </p>
+            <div className="space-y-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Refresh Page
+              </button>
+              <button
+                onClick={() => {
+                  // Clear all localStorage and reload
+                  try {
+                    localStorage.clear();
+                    window.location.reload();
+                  } catch (e) {
+                    window.location.reload();
+                  }
+                }}
+                className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+              >
+                Clear Data & Reload
+              </button>
+            </div>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="mt-4 text-left">
+                <summary className="cursor-pointer text-sm text-gray-500">Error Details</summary>
+                <pre className="text-xs bg-gray-100 p-2 rounded mt-2 overflow-auto">
+                  {error?.toString()}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
     }
   };
 
@@ -720,6 +805,9 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             onOpenGuidedRanking && onOpenGuidedRanking();
           }}
         />
+
+        {/* Mobile Diagnostics for debugging */}
+        <MobileDiagnostics />
 
       </FullscreenProvider>
     </ErrorBoundary>

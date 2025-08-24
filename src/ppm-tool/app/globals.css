@@ -48,10 +48,22 @@
       --sar: env(safe-area-inset-right, 0px);
     }
     
-    /* Ensure proper viewport height on mobile */
+    /* Ensure proper viewport height on mobile with fallbacks */
     html, body {
       height: 100vh;
       height: 100dvh; /* Dynamic viewport height for mobile */
+      height: -webkit-fill-available; /* Safari fallback */
+      min-height: 100vh; /* Fallback for older browsers */
+      min-height: 100dvh; /* Modern fallback */
+    }
+    
+    /* Prevent mobile viewport size calculation errors */
+    .mobile-height-fix {
+      height: 100vh;
+      height: 100dvh;
+      height: -webkit-fill-available;
+      min-height: 400px;
+      max-height: 800px;
     }
     
     /* Add safe area padding to header */
