@@ -903,7 +903,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     <ErrorBoundary>
         {/* PPM Tool Embedded Application */}
         <div 
-          className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 rounded-lg"
+          className="min-h-screen rounded-lg"
+          style={{ backgroundColor: '#F0F4FE' }}
           role="application"
           aria-label="PPM Tool Finder"
         >

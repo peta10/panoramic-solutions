@@ -42,6 +42,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
 }) => {
   const isMobile = useMobileDetection();
   const [isChartGlowing, setIsChartGlowing] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const chartButtonRef = useRef<HTMLButtonElement>(null);
 
   // Update chart button position when component mounts or layout changes
@@ -159,6 +160,24 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     };
   }, [isMobile, getTotalFixedHeight]);
 
+  // Handle scroll to show/hide shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      // Show shadow when scrolled more than 10px to avoid flickering
+      setIsScrolled(scrollTop > 10);
+    };
+
+    // Check initial scroll position
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   const steps: NavigationStep[] = isMobile 
     ? [
         { id: 'criteria', label: 'Rank Your Criteria', icon: Sliders, description: 'Set importance levels' },
@@ -174,7 +193,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     <nav 
       className={cn(
         "fixed w-full z-50 transition-all duration-300",
-        isProductBumperVisible && "blur-sm opacity-75"
+        isProductBumperVisible && "blur-sm opacity-75",
+        isScrolled && "shadow-md shadow-gray-300/70"
       )}
       style={{ 
         backgroundColor: '#F0F4FE',

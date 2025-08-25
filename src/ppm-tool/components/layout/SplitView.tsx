@@ -51,7 +51,7 @@ export const SplitView: React.FC<SplitViewProps> = ({
   const isMobile = useMobileDetection();
 
   return (
-    <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'} h-[calc(100dvh-180px)] min-h-[400px] max-h-[800px] overflow-hidden rounded-lg bg-white shadow-sm`}>
+    <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'} h-[calc(100dvh-180px)] min-h-[400px] max-h-[800px] overflow-hidden rounded-lg shadow-sm`} style={{ backgroundColor: '#F0F4FE' }}>
       {/* Criteria Section */}
       <div className="h-full min-h-0">
         <CriteriaSection
