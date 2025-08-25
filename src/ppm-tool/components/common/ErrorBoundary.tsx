@@ -94,7 +94,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             
             <p className="text-gray-600 mb-6">
-              We encountered an unexpected error. Don't worry - your progress is saved and you can continue where you left off.
+              We encountered an unexpected error. Don&apos;t worry - your progress is saved and you can continue where you left off.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">

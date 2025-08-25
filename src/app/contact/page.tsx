@@ -137,11 +137,11 @@ export default function ContactPage() {
             >
               <div className="mb-6 sm:mb-8">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-midnight mb-3 sm:mb-4">
-                  Let's Start Your <span className="text-midnight">Digital Transformation</span>
+                  Let&apos;s Start Your <span className="text-midnight">Digital Transformation</span>
                 </h1>
                 <p className="text-base sm:text-lg text-midnight/70">
                   Every successful transformation begins with understanding your unique operational challenges. 
-                  Let's have that conversation.
+                  Let&apos;s have that conversation.
                 </p>
               </div>
 

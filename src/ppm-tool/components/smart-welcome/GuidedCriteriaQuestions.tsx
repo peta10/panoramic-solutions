@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowRight, ArrowLeft, ToggleLeft, ToggleRight, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/ppm-tool/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -157,40 +157,7 @@ export const GuidedCriteriaQuestions: React.FC<GuidedCriteriaQuestionsProps> = (
     return defaults;
   });
 
-  // Update real-time rankings whenever answers change
-  useEffect(() => {
-    if (!isManualMode && Object.keys(answers).length > 0) {
-      const newRankings = calculateRankings();
-      setRealTimeRankings(newRankings);
-      // Call the real-time update callback to update background sliders
-      onRealTimeUpdate?.(newRankings);
-    }
-  }, [answers, isManualMode, userRole, manualRankings, onRealTimeUpdate]);
-
-  // Update real-time rankings when manual rankings change
-  useEffect(() => {
-    if (isManualMode) {
-      // Call the real-time update callback for manual mode too
-      onRealTimeUpdate?.(manualRankings);
-    }
-  }, [manualRankings, isManualMode, onRealTimeUpdate]);
-
-  const handleAnswer = (questionId: string, value: number) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
-    
-    // Auto-advance to next question after a short delay
-    setTimeout(() => {
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(prev => prev + 1);
-      }
-    }, 500);
-  };
-
-  const handleManualRankingChange = (criterionId: string, value: number) => {
-    setManualRankings(prev => ({ ...prev, [criterionId]: value }));
-  };
-
-  const calculateRankings = () => {
+  const calculateRankings = useCallback(() => {
     if (isManualMode) {
       return manualRankings;
     }
@@ -239,7 +206,42 @@ export const GuidedCriteriaQuestions: React.FC<GuidedCriteriaQuestionsProps> = (
     }
 
     return rankings;
+  }, [isManualMode, manualRankings, answers, userRole]);
+
+  // Update real-time rankings whenever answers change
+  useEffect(() => {
+    if (!isManualMode && Object.keys(answers).length > 0) {
+      const newRankings = calculateRankings();
+      setRealTimeRankings(newRankings);
+      // Call the real-time update callback to update background sliders
+      onRealTimeUpdate?.(newRankings);
+    }
+  }, [answers, isManualMode, userRole, manualRankings, onRealTimeUpdate, calculateRankings]);
+
+  // Update real-time rankings when manual rankings change
+  useEffect(() => {
+    if (isManualMode) {
+      // Call the real-time update callback for manual mode too
+      onRealTimeUpdate?.(manualRankings);
+    }
+  }, [manualRankings, isManualMode, onRealTimeUpdate]);
+
+  const handleAnswer = (questionId: string, value: number) => {
+    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    
+    // Auto-advance to next question after a short delay
+    setTimeout(() => {
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(prev => prev + 1);
+      }
+    }, 500);
   };
+
+  const handleManualRankingChange = (criterionId: string, value: number) => {
+    setManualRankings(prev => ({ ...prev, [criterionId]: value }));
+  };
+
+
 
   const handleComplete = () => {
     const rankings = calculateRankings();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, AlertCircle, Loader } from 'lucide-react';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
@@ -53,17 +53,15 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
 
   useClickOutside(formRef, onClose);
 
-  // Fetch critical data on initial load
-  useEffect(() => {
-    console.log("Tool being edited:", tool);
-    fetchCriteria();
-    fetchTagsAndTypes();
-  }, [tool.id]);
-
   // Fetch criteria from database
-  const fetchCriteria = async () => {
+  const fetchCriteria = useCallback(async () => {
     try {
       setIsLoadingCriteria(true);
+      
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
+      
       const { data, error } = await supabase
         .from('criteria')
         .select('*')
@@ -112,12 +110,16 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
     } finally {
       setIsLoadingCriteria(false);
     }
-  };
+  }, [tool]);
 
   // Fetch tags and tag types
-  const fetchTagsAndTypes = async () => {
+  const fetchTagsAndTypes = useCallback(async () => {
     try {
       setIsLoadingTags(true);
+      
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
       
       // First fetch tag types
       const { data: typeData, error: typeError } = await supabase
@@ -180,7 +182,14 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
     } finally {
       setIsLoadingTags(false);
     }
-  };
+  }, [tool]);
+
+  // Fetch critical data on initial load
+  useEffect(() => {
+    console.log("Tool being edited:", tool);
+    fetchCriteria();
+    fetchTagsAndTypes();
+  }, [tool.id, fetchCriteria, fetchTagsAndTypes, tool]);
 
   // Get tag IDs for update
   const getTagIds = (): string[] => {
@@ -250,6 +259,10 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
       setIsSubmitting(true);
       console.log('Starting tool update...');
       
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
+      
       // 1. First update the tool name
       console.log(`Updating tool name to: ${name}`);
       const { error: nameError } = await supabase
@@ -270,6 +283,10 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
         if (!rating) {
           console.warn(`Skipping criterion ${criterion.name} - no rating provided`);
           return true; // Not an error, just skipping
+        }
+        
+        if (!supabase) {
+          throw new Error('Supabase client not configured');
         }
         
         console.log(`Updating criterion ${criterion.name} with rating ${rating}...`);
@@ -448,7 +465,7 @@ export const EditToolForm: React.FC<EditToolFormProps> = ({
 
             {currentStep === 3 && (
               <div className="space-y-4">
-                <h4 className="text-lg font-medium text-gray-900">Rate the tool's capabilities</h4>
+                <h4 className="text-lg font-medium text-gray-900">Rate the tool&apos;s capabilities</h4>
                 <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
                   {dbCriteria.map(criterion => (
                     <div key={criterion.id}>

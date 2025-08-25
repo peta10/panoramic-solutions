@@ -55,6 +55,46 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     }
   }, [onChartButtonPosition]);
 
+  // Calculate header height (fixed - no scroll changes)
+  const getHeaderHeight = useCallback(() => {
+    // Header uses py-2 (16px padding) consistently
+    // Logo height: h-8 (32px) on mobile, h-10 (40px) on desktop
+    const padding = 16; // py-2 = 16px (fixed)
+    const logoHeight = isMobile ? 32 : 40; // h-8 = 32px, h-10 = 40px
+    
+    // Add safe area inset for mobile devices
+    if (isMobile && typeof window !== 'undefined') {
+      // SAFE: Use default safe area instead of getComputedStyle which can fail in Edge/Safari
+      const safeAreaTop = 0; // Safe default - CSS custom properties can cause crashes
+      // Add extra padding for mobile to ensure content isn't cut off
+      const mobileExtraPadding = 24; // Increased from 16 to 24px for more space
+      return padding + logoHeight + safeAreaTop + mobileExtraPadding;
+    }
+    
+    return padding + logoHeight;
+  }, [isMobile]);
+
+  // Calculate navigation height (fixed - no scroll changes)
+  const getNavigationHeight = useCallback(() => {
+    // Navigation uses py-2 (16px padding) consistently
+    // Plus content height ~40px
+    const padding = 16; // py-2 = 16px (fixed)
+    const contentHeight = 40; // Approximate content height
+    
+    // Add extra height for mobile logo section
+    const mobileLogoHeight = isMobile ? 60 : 0; // Logo + border + padding
+    
+    // Add extra spacing between navigation and main content
+    const extraSpacing = isMobile ? 32 : 48; // Increased spacing: mobile from 24 to 32px, desktop from 32 to 48px
+    
+    return padding + contentHeight + mobileLogoHeight + extraSpacing;
+  }, [isMobile]);
+
+  // Total combined height for content offset
+  const getTotalFixedHeight = useCallback(() => {
+    return getHeaderHeight() + getNavigationHeight();
+  }, [getHeaderHeight, getNavigationHeight]);
+
   // Update position on mount and when compare count changes (affects button size)
   useEffect(() => {
     updateChartButtonPosition();
@@ -83,7 +123,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
         window.removeEventListener('chartToggleGlow', handleAnimationTrigger);
       }
     };
-  }, []);
+  }, [isChartGlowing]);
 
   // Set chart button position for animation
   useEffect(() => {
@@ -99,7 +139,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
       const totalHeight = getTotalFixedHeight();
       document.documentElement.style.setProperty('--total-fixed-height', `${totalHeight}px`);
     }
-  }, [isMobile]); // Recalculate when mobile state changes
+  }, [isMobile, getTotalFixedHeight]); // Recalculate when mobile state changes
 
   // Handle resize and orientation changes
   useEffect(() => {
@@ -117,47 +157,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, [isMobile]);
-
-  // Calculate header height (fixed - no scroll changes)
-  const getHeaderHeight = () => {
-    // Header uses py-2 (16px padding) consistently
-    // Logo height: h-8 (32px) on mobile, h-10 (40px) on desktop
-    const padding = 16; // py-2 = 16px (fixed)
-    const logoHeight = isMobile ? 32 : 40; // h-8 = 32px, h-10 = 40px
-    
-    // Add safe area inset for mobile devices
-    if (isMobile && typeof window !== 'undefined') {
-      // SAFE: Use default safe area instead of getComputedStyle which can fail in Edge/Safari
-      const safeAreaTop = 0; // Safe default - CSS custom properties can cause crashes
-      // Add extra padding for mobile to ensure content isn't cut off
-      const mobileExtraPadding = 24; // Increased from 16 to 24px for more space
-      return padding + logoHeight + safeAreaTop + mobileExtraPadding;
-    }
-    
-    return padding + logoHeight;
-  };
-
-  // Calculate navigation height (fixed - no scroll changes)
-  const getNavigationHeight = () => {
-    // Navigation uses py-2 (16px padding) consistently
-    // Plus content height ~40px
-    const padding = 16; // py-2 = 16px (fixed)
-    const contentHeight = 40; // Approximate content height
-    
-    // Add extra height for mobile logo section
-    const mobileLogoHeight = isMobile ? 60 : 0; // Logo + border + padding
-    
-    // Add extra spacing between navigation and main content
-    const extraSpacing = isMobile ? 32 : 48; // Increased spacing: mobile from 24 to 32px, desktop from 32 to 48px
-    
-    return padding + contentHeight + mobileLogoHeight + extraSpacing;
-  };
-
-  // Total combined height for content offset
-  const getTotalFixedHeight = () => {
-    return getHeaderHeight() + getNavigationHeight();
-  };
+  }, [isMobile, getTotalFixedHeight]);
 
   const steps: NavigationStep[] = isMobile 
     ? [

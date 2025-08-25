@@ -19,7 +19,7 @@ export default function NotFound() {
         </h1>
         
         <p className="text-midnight/70 mb-8">
-          Sorry, we couldn't find the page you're looking for. 
+          Sorry, we couldn&apos;t find the page you&apos;re looking for. 
           The page may have been moved or no longer exists.
         </p>
         

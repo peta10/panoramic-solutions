@@ -38,7 +38,7 @@ function createSupabaseClient() {
     (window as any).__supabase_ppm__ = client;
   }
   if (typeof global !== 'undefined') {
-    global.__supabase_ppm__ = client;
+    global.__supabase_ppm__ = client as any;
   }
   
   console.info('✅ PPM Supabase client initialized (singleton)');

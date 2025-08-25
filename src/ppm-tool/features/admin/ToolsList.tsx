@@ -102,6 +102,10 @@ export const ToolsList: React.FC<ToolsListProps> = ({
   // Handle status change
   const handleStatusChange = async (toolId: string, newStatus: string) => {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
+      
       const { error } = await supabase.rpc('update_tool_status', {
         p_tool_id: toolId,
         p_status: newStatus

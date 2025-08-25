@@ -39,6 +39,10 @@ export const AdminDashboard: React.FC = () => {
       setError(null);
       
       // Use admin_tools_view to get all tools regardless of status
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
+      
       const { data, error } = await supabase
         .from('admin_tools_view')
         .select('*')
@@ -67,6 +71,10 @@ export const AdminDashboard: React.FC = () => {
   
   const fetchCriteria = async () => {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
+      
       const { data, error } = await supabase
         .from('criteria')
         .select('*')
@@ -114,6 +122,11 @@ export const AdminDashboard: React.FC = () => {
     
     try {
       setError(null);
+      
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
+      
       const { error } = await supabase
         .from('tools')
         .delete()
@@ -132,6 +145,10 @@ export const AdminDashboard: React.FC = () => {
   const handleApproveRejectTool = async (toolId: string, status: 'approved' | 'rejected') => {
     try {
       setError(null);
+      
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
       
       // Use the update_tool_status RPC function instead of direct update
       const { error } = await supabase.rpc('update_tool_status', {
@@ -160,12 +177,15 @@ export const AdminDashboard: React.FC = () => {
       }
       
       // Process each tool individually using the RPC function
-      const promises = submittedTools.map(tool =>
-        supabase.rpc('update_tool_status', {
+      const promises = submittedTools.map(tool => {
+        if (!supabase) {
+          throw new Error('Supabase client not configured');
+        }
+        return supabase.rpc('update_tool_status', {
           p_tool_id: tool.id,
           p_status: 'approved'
-        })
-      );
+        });
+      });
       
       const results = await Promise.all(promises);
       const errors = results.filter(result => result.error).map(result => result.error);
@@ -215,7 +235,7 @@ export const AdminDashboard: React.FC = () => {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the admin dashboard. Please contact your administrator.
+            You don&apos;t have permission to access the admin dashboard. Please contact your administrator.
           </p>
           <button
             onClick={() => window.history.back()}

@@ -455,11 +455,11 @@ export default function PPMToolFinderPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-              Let's Transform Your Operations Together
+              Let&apos;s Transform Your Operations Together
             </h2>
             <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto">
               Ready to reimagine how your organization can utilize user-centric digital technologies? 
-              Let's start with a conversation about your transformation goals.
+              Let&apos;s start with a conversation about your transformation goals.
             </p>
             <Button
               asChild

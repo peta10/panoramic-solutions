@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export const CTABanner: React.FC = () => {
   const handleGetAdvice = () => {
@@ -13,9 +14,11 @@ export const CTABanner: React.FC = () => {
           <div className="flex items-center gap-3 flex-1">
             {/* Profile Image */}
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center flex-shrink-0">
-              <img 
+              <Image 
                 src="https://images.unsplash.com/photo-1494790108755-2616b612b890?w=48&h=48&fit=crop&crop=face"
                 alt="Software Advisor"
+                width={48}
+                height={48}
                 className="w-full h-full rounded-full object-cover"
               />
             </div>

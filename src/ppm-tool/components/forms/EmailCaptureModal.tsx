@@ -150,7 +150,7 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
             <div className="p-4 md:p-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 md:mb-6">
                 <p className="text-sm md:text-base text-gray-600 mb-2">
-                  We'll send a clean, easy-to-read version of your results, rankings, and recommendations to your inbox.
+                  We&apos;ll send a clean, easy-to-read version of your results, rankings, and recommendations to your inbox.
                 </p>
                 <p className="text-xs md:text-sm text-blue-700 font-medium">
                   📊 Your email will include analysis of <strong>{selectedTools.length} {selectedTools.length === 1 ? 'tool' : 'tools'}</strong> based on your current filters.

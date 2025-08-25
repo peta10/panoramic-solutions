@@ -118,7 +118,7 @@ const PPMToolEmbed = memo(function PPMToolEmbed({
               </h2>
               
               <p className="text-midnight/70 mb-6">
-                We're experiencing technical difficulties. Please try again or contact support.
+                We&apos;re experiencing technical difficulties. Please try again or contact support.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

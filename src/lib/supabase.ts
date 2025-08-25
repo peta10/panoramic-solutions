@@ -40,7 +40,7 @@ function createSupabaseClient() {
     (window as any).__supabase_main__ = client;
   }
   if (typeof global !== 'undefined') {
-    global.__supabase_main__ = client;
+    global.__supabase_main__ = client as any;
   }
   
   console.info('✅ Supabase client initialized (singleton)');

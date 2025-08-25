@@ -281,7 +281,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     return personalizationData;
   };
 
-  const calculateRankings = () => {
+  const calculateRankings = React.useCallback(() => {
     const rankings: { [key: string]: number } = {};
     const weights: { [key: string]: number } = {};
     
@@ -367,7 +367,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     // If Q6 or Q7 not answered, flexibility remains at default value of 3
 
     return rankings;
-  };
+  }, [criteria, answers]);
 
   // Real-time update effect
   React.useEffect(() => {
@@ -375,7 +375,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
       const rankings = calculateRankings();
       onRealTimeUpdate?.(rankings);
     }
-  }, [answers, onRealTimeUpdate, isOpen]);
+  }, [answers, onRealTimeUpdate, isOpen, calculateRankings]);
 
   const handleSubmit = () => {
     const rankings = calculateRankings();

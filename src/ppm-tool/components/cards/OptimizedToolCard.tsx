@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { Badge } from '@/ppm-tool/components/ui/badge';
 import { Button } from '@/ppm-tool/components/ui/button';
@@ -82,9 +83,11 @@ export const OptimizedToolCard: React.FC<OptimizedToolCardProps> = ({
       <div className="flex items-start justify-between mb-2 md:mb-3">
         <div className="flex items-center space-x-2 md:space-x-3">
           <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-            <img 
+            <Image 
               src={tool.logo} 
               alt={tool.name} 
+              width={32}
+              height={32}
               className="w-6 h-6 md:w-8 md:h-8 object-contain"
             />
           </div>

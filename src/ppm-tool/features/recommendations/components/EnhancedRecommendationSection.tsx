@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { Award, ExternalLink, Star, TrendingUp, ArrowRight } from 'lucide-react';
 import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
@@ -40,10 +40,10 @@ export const EnhancedRecommendationSection: React.FC<RecommendationSectionProps>
     disabled: false
   });
 
-  const calculateToolScore = (tool: Tool) => {
+  const calculateToolScore = useCallback((tool: Tool) => {
     // Use the new calculateScore function with 0-10 scale
     return calculateScore(tool, selectedCriteria);
-  };
+  }, [selectedCriteria]);
 
   // Enhanced score display function - using 0-10 scale with proper color coding
   const getMatchScoreDisplay = (score: number): { value: string; color: string; bgColor: string } => {
@@ -75,7 +75,7 @@ export const EnhancedRecommendationSection: React.FC<RecommendationSectionProps>
 
   const sortedTools = React.useMemo(() => {
     return [...selectedTools].sort((a, b) => calculateToolScore(b) - calculateToolScore(a));
-  }, [selectedTools, selectedCriteria]);
+  }, [selectedTools, calculateToolScore]);
 
   // Set up tool order shuffle animation - triggers when sortedTools order changes
   useToolOrderShuffle(sortedTools, shuffleAnimation, {

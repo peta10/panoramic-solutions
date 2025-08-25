@@ -347,7 +347,7 @@ export const EmbeddableChartDemo: React.FC = () => {
               <h3 className="font-medium mb-2">Blog Post Integration</h3>
               <div className="bg-gray-50 p-4 rounded">
                 <p className="text-sm text-gray-600 mb-3">
-                  "After evaluating several project management tools, here's how they compare against our key criteria:"
+                  &ldquo;After evaluating several project management tools, here&apos;s how they compare against our key criteria:&rdquo;
                 </p>
                 <div className="max-w-lg">
                   <EmbeddableComparisonChart

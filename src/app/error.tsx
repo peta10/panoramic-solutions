@@ -25,7 +25,7 @@ export default function Error({
         </h2>
         
         <p className="text-midnight/70 mb-6">
-          We're sorry, but something unexpected happened. Please try again.
+          We&apos;re sorry, but something unexpected happened. Please try again.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

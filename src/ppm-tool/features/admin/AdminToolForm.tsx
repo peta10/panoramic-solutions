@@ -63,6 +63,11 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
     const fetchCriteria = async () => {
       try {
         setIsLoadingCriteria(true);
+        
+        if (!supabase) {
+          throw new Error('Supabase client not configured');
+        }
+        
         const { data, error } = await supabase
           .from('criteria')
           .select('*')
@@ -104,6 +109,10 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
     const fetchTagData = async () => {
       try {
         setIsLoadingTags(true);
+        
+        if (!supabase) {
+          throw new Error('Supabase client not configured');
+        }
         
         // First fetch tag types
         const { data: tagTypeData, error: tagTypeError } = await supabase
@@ -232,6 +241,11 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
     }
 
     // Get current session
+    if (!supabase) {
+      setError('Supabase client not configured');
+      return;
+    }
+    
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError || !session) {
@@ -243,6 +257,10 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
     try {
       setIsSubmitting(true);
       console.log('Starting tool submission...');
+      
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
       
       // Create the tool submission
       const { data: toolId, error: submissionError } = await supabase
@@ -269,6 +287,10 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
         }
         
         console.log(`Updating criterion ${criterion.name} (${criterion.id}) with rating ${rating}`);
+        
+        if (!supabase) {
+          throw new Error('Supabase client not configured');
+        }
         
         const { error: criteriaError } = await supabase
           .rpc('update_tool_criteria', {
@@ -387,7 +409,7 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
             
             {currentStep === 0 && (
               <div className="space-y-4">
-                <h4 className="text-lg font-medium text-gray-900">What's the name of the tool?</h4>
+                <h4 className="text-lg font-medium text-gray-900">What&apos;s the name of the tool?</h4>
                 <input
                   type="text"
                   value={name}
@@ -470,7 +492,7 @@ export const AdminToolForm: React.FC<AdminToolFormProps> = ({
 
             {currentStep === 3 && !isLoadingCriteria && (
               <div className="space-y-4">
-                <h4 className="text-lg font-medium text-gray-900">Rate the tool's capabilities</h4>
+                <h4 className="text-lg font-medium text-gray-900">Rate the tool&apos;s capabilities</h4>
                 <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-2">
                   {dbCriteria.map(criterion => (
                     <div key={criterion.id} className="bg-gray-50 p-4 rounded-lg">

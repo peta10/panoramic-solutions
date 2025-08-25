@@ -25,6 +25,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     setIsLoading(true);
 
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not configured');
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password

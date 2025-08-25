@@ -81,7 +81,7 @@ export default function ProductsPage() {
               </h3>
               
               <p className="text-midnight/50 mb-6">
-                We're developing additional tools to help streamline your digital transformation journey.
+                We&apos;re developing additional tools to help streamline your digital transformation journey.
               </p>
               
               <Button variant="outline" disabled className="opacity-50">
@@ -119,7 +119,7 @@ export default function ProductsPage() {
             Need a Custom Solution?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Let's discuss how we can build the perfect tools and solutions for your organization.
+            Let&apos;s discuss how we can build the perfect tools and solutions for your organization.
           </p>
           <Button 
             size="lg" 

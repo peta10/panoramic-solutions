@@ -41,7 +41,8 @@ const Tooltip = React.forwardRef<
       {children}
     </TooltipPrimitive.Root>
   );
-})
+});
+Tooltip.displayName = "Tooltip";
 
 // Mobile-friendly trigger that handles both hover and click
 const TooltipTrigger = React.forwardRef<
@@ -74,7 +75,8 @@ const TooltipTrigger = React.forwardRef<
       {children}
     </TooltipPrimitive.Trigger>
   );
-})
+});
+TooltipTrigger.displayName = "TooltipTrigger";
 
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,

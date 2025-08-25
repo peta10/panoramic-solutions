@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { Settings, X, Award, ArrowRight } from 'lucide-react';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
@@ -294,9 +295,11 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
                               key={tool.id}
                               className="group flex items-center space-x-2 px-3 py-1.5 bg-gray-50/50 rounded-lg border border-gray-200 text-gray-500"
                             >
-                              <img
+                              <Image
                                 src={tool.logo}
                                 alt={`${tool.name} logo`}
+                                width={24}
+                                height={24}
                                 className="w-6 h-6 rounded-full object-cover opacity-75"
                               />
                               <span className="text-sm">{tool.name}</span>

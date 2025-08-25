@@ -24,6 +24,7 @@ export function PPMReportEmailTemplate({
   
   return (
     <html>
+      {/* eslint-disable-next-line @next/next/no-head-element */}
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta httpEquiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -53,6 +54,7 @@ export function PPMReportEmailTemplate({
             padding: '30px 40px',
             textAlign: 'center' as const
           }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src="https://panoramicsolutions.com/images/Logo_Panoramic_Solutions.webp" 
               alt="Panoramic Solutions" 
@@ -84,7 +86,7 @@ export function PPMReportEmailTemplate({
                 color: '#374151'
               }}>
                 Thank you for using our PPM Tool Finder! Based on your criteria analysis, 
-                I've prepared your personalized comparison report.
+                I&apos;ve prepared your personalized comparison report.
               </p>
             </div>
 
@@ -189,6 +191,7 @@ export function PPMReportEmailTemplate({
                 }}>
                   Visual Comparison Chart:
                 </h3>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={chartImageUrl} 
                   alt="PPM Tools Comparison Chart" 
@@ -257,7 +260,7 @@ export function PPMReportEmailTemplate({
                 fontSize: '14px',
                 marginBottom: '20px'
               }}>
-                Let's discuss how to successfully implement your chosen PPM tool 
+                Let&apos;s discuss how to successfully implement your chosen PPM tool 
                 and maximize your project portfolio success.
               </p>
               <a 
@@ -286,6 +289,7 @@ export function PPMReportEmailTemplate({
             borderTop: '1px solid #e5e7eb'
           }}>
             <div style={{ marginBottom: '20px' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src="https://panoramicsolutions.com/images/Wagner_Headshot_2024.webp" 
                 alt="Matt Wagner" 

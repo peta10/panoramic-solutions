@@ -120,7 +120,7 @@ export function TestimonialCarousel({
 
             {/* Quote */}
             <blockquote className="text-base sm:text-lg text-midnight mb-4 sm:mb-6 italic text-center sm:text-left leading-relaxed">
-              "{testimonials[currentIndex].quote}"
+              &ldquo;{testimonials[currentIndex].quote}&rdquo;
             </blockquote>
 
             {/* Author */}
