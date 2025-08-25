@@ -34,19 +34,7 @@ export function DraggableList<T>({
 }: DraggableListProps<T>) {
   const isMobile = useMobileDetection();
 
-  // If on mobile, just render the items without drag and drop
-  if (isMobile) {
-    return (
-      <div className="space-y-4">
-        {items.map(item => (
-          <React.Fragment key={getItemId(item)}>
-            {renderItem(item)}
-          </React.Fragment>
-        ))}
-      </div>
-    );
-  }
-
+  // IMPORTANT: All hooks must be called before any early returns
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -63,6 +51,24 @@ export function DraggableList<T>({
       coordinateGetter: sortableKeyboardCoordinates,
     }));
 
+  // Guard against undefined items
+  if (!items || !Array.isArray(items)) {
+    return null;
+  }
+
+  // If on mobile, just render the items without drag and drop
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {items.map(item => (
+          <React.Fragment key={getItemId(item)}>
+            {renderItem(item)}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -74,10 +80,6 @@ export function DraggableList<T>({
     }
   };
 
-  // Guard against undefined items
-  if (!items || !Array.isArray(items)) {
-    return null;
-  }
   return (
     <DndContext
       collisionDetection={closestCenter}
