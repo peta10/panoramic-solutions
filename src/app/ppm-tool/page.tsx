@@ -8,8 +8,8 @@ import { GuidanceProvider } from '@/ppm-tool/shared/contexts/GuidanceContext';
 import { HowItWorksOverlay } from '@/ppm-tool/components/overlays/HowItWorksOverlay';
 import { LegalDisclaimer } from '@/ppm-tool/components/common/LegalDisclaimer';
 
-// Force dynamic rendering to avoid SSG issues with Supabase
-export const dynamic = 'force-dynamic';
+// Temporarily disable force-dynamic to fix deployment inconsistencies
+// export const dynamic = 'force-dynamic';
 
 export default function PPMToolPage() {
   const [showHowItWorks, setShowHowItWorks] = useState(false); // Changed from auto-popup to manual trigger

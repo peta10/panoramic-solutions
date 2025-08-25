@@ -23,7 +23,122 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const isTouchDevice = useTouchDevice();
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
+
+  const handleClickOutside = (e: MouseEvent) => {
+    if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+      setIsOpen(false);
+    }
+  };
+
+  // Hook 1: ALWAYS called at top level (before any returns)
+  useEffect(() => {
+    // Conditional logic INSIDE the hook, not around it
+    if (!isTouchDevice || !isOpen) return;
+    
+    document.addEventListener('click', handleClickOutside);
+    // Auto-close after 4 seconds
+    const timer = setTimeout(() => setIsOpen(false), 4000);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      clearTimeout(timer);
+    };
+  }, [isOpen, isTouchDevice]);
+
+  // Hook 2: ALWAYS called at top level (before any returns)
+  useEffect(() => {
+    // Conditional logic INSIDE the hook, not around it
+    if (!isTouchDevice || !isOpen || !triggerRef.current || !tooltipRef.current) return;
+    
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+    
+    let top = 0;
+    let left = 0;
+
+    // Calculate position based on side and align
+    switch (side) {
+      case 'top':
+        top = triggerRect.top - tooltipRect.height - 8;
+        switch (align) {
+          case 'start':
+            left = triggerRect.left;
+            break;
+          case 'center':
+            left = triggerRect.left + (triggerRect.width - tooltipRect.width) / 2;
+            break;
+          case 'end':
+            left = triggerRect.right - tooltipRect.width;
+            break;
+        }
+        break;
+      case 'bottom':
+        top = triggerRect.bottom + 8;
+        switch (align) {
+          case 'start':
+            left = triggerRect.left;
+            break;
+          case 'center':
+            left = triggerRect.left + (triggerRect.width - tooltipRect.width) / 2;
+            break;
+          case 'end':
+            left = triggerRect.right - tooltipRect.width;
+            break;
+        }
+        break;
+      case 'left':
+        left = triggerRect.left - tooltipRect.width - 8;
+        switch (align) {
+          case 'start':
+            top = triggerRect.top;
+            break;
+          case 'center':
+            top = triggerRect.top + (triggerRect.height - tooltipRect.height) / 2;
+            break;
+          case 'end':
+            top = triggerRect.bottom - tooltipRect.height;
+            break;
+        }
+        break;
+      case 'right':
+        left = triggerRect.right + 8;
+        switch (align) {
+          case 'start':
+            top = triggerRect.top;
+            break;
+          case 'center':
+            top = triggerRect.top + (triggerRect.height - tooltipRect.height) / 2;
+            break;
+          case 'end':
+            top = triggerRect.bottom - tooltipRect.height;
+            break;
+        }
+        break;
+    }
+
+    // Ensure tooltip stays within viewport
+    const padding = 8;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (left < padding) left = padding;
+    if (left + tooltipRect.width > viewportWidth - padding) {
+      left = viewportWidth - tooltipRect.width - padding;
+    }
+    if (top < padding) top = padding;
+    if (top + tooltipRect.height > viewportHeight - padding) {
+      top = viewportHeight - tooltipRect.height - padding;
+    }
+
+    setPosition({ top, left });
+  }, [isOpen, side, align, isTouchDevice]);
+
   // Only use custom tooltip on touch devices
+  // Early return AFTER all hooks
   if (!isTouchDevice) {
     // Fall back to Radix UI tooltip for desktop
     return (
@@ -40,121 +155,20 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
     );
   }
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsOpen(!isOpen);
-  };
-
-  const handleClickOutside = (e: MouseEvent) => {
-    if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
-      setIsOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
-      // Auto-close after 4 seconds
-      const timer = setTimeout(() => setIsOpen(false), 4000);
-      return () => {
-        document.removeEventListener('click', handleClickOutside);
-        clearTimeout(timer);
-      };
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen && triggerRef.current && tooltipRef.current) {
-      const triggerRect = triggerRef.current.getBoundingClientRect();
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      
-      let top = 0;
-      let left = 0;
-
-      // Calculate position based on side and align
-      switch (side) {
-        case 'top':
-          top = triggerRect.top - tooltipRect.height - 8;
-          switch (align) {
-            case 'start':
-              left = triggerRect.left;
-              break;
-            case 'end':
-              left = triggerRect.right - tooltipRect.width;
-              break;
-            default: // center
-              left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
-          }
-          break;
-        case 'bottom':
-          top = triggerRect.bottom + 8;
-          switch (align) {
-            case 'start':
-              left = triggerRect.left;
-              break;
-            case 'end':
-              left = triggerRect.right - tooltipRect.width;
-              break;
-            default: // center
-              left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
-          }
-          break;
-        case 'left':
-          left = triggerRect.left - tooltipRect.width - 8;
-          switch (align) {
-            case 'start':
-              top = triggerRect.top;
-              break;
-            case 'end':
-              top = triggerRect.bottom - tooltipRect.height;
-              break;
-            default: // center
-              top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
-          }
-          break;
-        case 'right':
-          left = triggerRect.right + 8;
-          switch (align) {
-            case 'start':
-              top = triggerRect.top;
-              break;
-            case 'end':
-              top = triggerRect.bottom - tooltipRect.height;
-              break;
-            default: // center
-              top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
-          }
-          break;
-      }
-
-      // Ensure tooltip stays within viewport
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      if (left < 8) left = 8;
-      if (left + tooltipRect.width > viewportWidth - 8) {
-        left = viewportWidth - tooltipRect.width - 8;
-      }
-      if (top < 8) top = 8;
-      if (top + tooltipRect.height > viewportHeight - 8) {
-        top = viewportHeight - tooltipRect.height - 8;
-      }
-
-      setPosition({ top, left });
-    }
-  }, [isOpen, side, align]);
-
   return (
-    <div className="relative">
-      <div ref={triggerRef} onClick={handleClick}>
+    <>
+      <div
+        ref={triggerRef}
+        onClick={handleClick}
+        className="inline-block cursor-pointer"
+      >
         {children}
       </div>
       
       {isOpen && (
         <div
           ref={tooltipRef}
-          className={`fixed z-[9999] bg-gray-900 text-white p-3 rounded-lg shadow-lg max-w-xs border border-gray-700 ${className}`}
+          className={`fixed z-[100] px-3 py-2 text-sm bg-gray-900 text-white rounded-md shadow-lg pointer-events-auto ${className}`}
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
@@ -163,6 +177,6 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
           {content}
         </div>
       )}
-    </div>
+    </>
   );
 };

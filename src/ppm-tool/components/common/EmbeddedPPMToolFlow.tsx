@@ -128,15 +128,17 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       }
     };
   }, [showProductBumper]);
-  // Set initial step based on mobile/desktop view with safety check
-  const [currentStep, setCurrentStep] = useState(() => {
+  // Set initial step based on mobile detection - move logic outside hook
+  const getInitialStep = () => {
     try {
       return isMobile ? 'criteria' : 'criteria-tools';
     } catch (error) {
       console.warn('Error determining mobile state, defaulting to criteria-tools:', error);
       return 'criteria-tools';
     }
-  });
+  };
+  
+  const [currentStep, setCurrentStep] = useState<string>(getInitialStep());
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [selectedTools, setSelectedTools] = useState<Tool[]>(defaultTools);
   const [removedCriteria, setRemovedCriteria] = useState<Criterion[]>([]);

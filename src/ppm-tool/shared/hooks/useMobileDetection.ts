@@ -10,7 +10,21 @@ import { useState, useEffect } from 'react';
  * @returns boolean indicating if the device is mobile/tablet
  */
 export function useMobileDetection(breakpoint: number = 1023): boolean {
-  const [isMobile, setIsMobile] = useState(false);
+  // Initialize with a safe default that matches SSR
+  // This prevents hydration mismatches between server and client
+  const [isMobile, setIsMobile] = useState(() => {
+    // During SSR, return false (desktop) as default
+    // This will be corrected immediately after mount
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    // On client, check immediately
+    try {
+      return window.innerWidth <= breakpoint;
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     const updateMobileState = () => {
@@ -24,7 +38,7 @@ export function useMobileDetection(breakpoint: number = 1023): boolean {
       }
     };
 
-    // Set initial state
+    // Update state after mount to ensure accuracy
     updateMobileState();
     
     // Listen for resize events

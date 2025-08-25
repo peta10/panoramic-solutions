@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getProductBumperState, dismissProductBumper } from '@/ppm-tool/shared/utils/productBumperState';
 
 interface GuidanceContextType {
@@ -26,15 +26,20 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
   const [showManualGuidance, setShowManualGuidance] = useState(false);
   const [hasShownManualGuidance, setHasShownManualGuidance] = useState(false);
   
-  // Product bumper state
+  // Product bumper state - avoid SSR/hydration mismatch
   const [internalShowProductBumper, setInternalShowProductBumper] = useState(false);
-  const [hasShownProductBumper, setHasShownProductBumper] = useState(() => {
+  const [hasShownProductBumper, setHasShownProductBumper] = useState(false);
+  
+  // Set proper state after mount to avoid hydration mismatch
+  useEffect(() => {
     if (typeof window !== 'undefined') {
+      // This runs only on client after hydration
       const state = getProductBumperState();
-      return state.dismissed;
+      if (state.dismissed) {
+        setHasShownProductBumper(true);
+      }
     }
-    return false;
-  });
+  }, []); // Run once on mount
 
   // Use external state if provided, otherwise use internal state
   const showProductBumper = externalShowProductBumper !== undefined ? externalShowProductBumper : internalShowProductBumper;

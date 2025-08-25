@@ -2,6 +2,8 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable source maps in production for better debugging
+  productionBrowserSourceMaps: true,
   // Performance optimizations
   experimental: {
     optimizePackageImports: [

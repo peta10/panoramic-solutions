@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, Eye, EyeOff, Bug, Zap } from 'lucide-react';
 import { 
@@ -23,34 +23,9 @@ export const DevelopmentPanel: React.FC<DevelopmentPanelProps> = ({
 
   // Only show in development
   const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev || !isVisible) return null;
-
-  useEffect(() => {
-    // Update state periodically
-    const updateState = () => {
-      setProductBumperState(getProductBumperState());
-    };
-    
-    updateState();
-    const interval = setInterval(updateState, 2000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    // Add keyboard shortcut: Ctrl+Shift+R
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'R') {
-        e.preventDefault();
-        handleResetProductBumper();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeydown);
-    return () => document.removeEventListener('keydown', handleKeydown);
-  }, []);
-
-  const handleResetProductBumper = () => {
+  
+  // Define handler functions with useCallback
+  const handleResetProductBumper = useCallback(() => {
     try {
       forceResetProductBumper();
       setProductBumperState(getProductBumperState());
@@ -63,7 +38,39 @@ export const DevelopmentPanel: React.FC<DevelopmentPanelProps> = ({
     } catch (error) {
       console.error('❌ Failed to reset ProductBumper:', error);
     }
-  };
+  }, []);
+  
+  // ALWAYS call all hooks before any conditional returns
+  useEffect(() => {
+    // Only run if visible and in dev
+    if (!isDev || !isVisible) return;
+    
+    // Update state periodically
+    const updateState = () => {
+      setProductBumperState(getProductBumperState());
+    };
+    
+    updateState();
+    const interval = setInterval(updateState, 2000);
+    
+    return () => clearInterval(interval);
+  }, [isDev, isVisible]);
+
+  useEffect(() => {
+    // Only run if visible and in dev
+    if (!isDev || !isVisible) return;
+    
+    // Add keyboard shortcut: Ctrl+Shift+R
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+        e.preventDefault();
+        handleResetProductBumper();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, [isDev, isVisible, handleResetProductBumper]);
 
   const handleTogglePanel = () => {
     setIsExpanded(!isExpanded);
@@ -78,6 +85,9 @@ export const DevelopmentPanel: React.FC<DevelopmentPanelProps> = ({
     if (!productBumperState) return 'Unknown';
     return productBumperState.dismissed ? 'Dismissed' : 'Active';
   };
+
+  // Early return AFTER all hooks
+  if (!isDev || !isVisible) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999] font-mono text-xs">
