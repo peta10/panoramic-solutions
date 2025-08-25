@@ -29,11 +29,7 @@ interface DraggableItemProps {
 export const DraggableItem: React.FC<DraggableItemProps> = ({ id, children }) => {
   const isMobile = useMobileDetection();
 
-  // If on mobile, just render the children without drag handle
-  if (isMobile) {
-    return <div className="relative">{children}</div>;
-  }
-
+  // ALWAYS call useSortable to avoid hooks violations, but conditionally use it
   const {
     attributes,
     listeners,
@@ -42,6 +38,11 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({ id, children }) =>
     transition,
     isDragging,
   } = useSortable({ id });
+
+  // If on mobile, just render the children without drag functionality
+  if (isMobile) {
+    return <div className="relative">{children}</div>;
+  }
 
   const style = {
     transform: CSS.Transform.toString(transform),
