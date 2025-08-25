@@ -1,8 +1,8 @@
 import React from 'react';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { Award, ExternalLink, Star, TrendingUp, ArrowRight } from 'lucide-react';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
-import { FullscreenNavigation } from '@/ppm-tool/components/layout/FullscreenNavigation';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
+// REMOVED: FullscreenNavigation - no longer needed without FullscreenContext
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ppm-tool/components/ui/card';
 import { Badge } from '@/ppm-tool/components/ui/badge';
 import { Button } from '@/ppm-tool/components/ui/button';
@@ -30,8 +30,8 @@ export const EnhancedRecommendationSection: React.FC<RecommendationSectionProps>
   onContinue,
   isSubmitting = false,
 }) => {
-  const { fullscreenView, isMobile } = useFullscreen();
-  const isFullscreen = fullscreenView === 'recommendations';
+  const isMobile = useMobileDetection();
+  // REMOVED: fullscreen functionality - simplified without FullscreenContext
 
   // Initialize shuffle animation
   const shuffleAnimation = useShuffleAnimation({
@@ -118,7 +118,7 @@ export const EnhancedRecommendationSection: React.FC<RecommendationSectionProps>
           </div>
         </div>
         <div className="flex items-center space-x-1 md:space-x-2">
-          <FullscreenNavigation />
+          {/* REMOVED: FullscreenNavigation - no longer needed */}
 
           {onContinue && (
             <button
@@ -385,14 +385,7 @@ export const EnhancedRecommendationSection: React.FC<RecommendationSectionProps>
      </div>
   );
 
-  if (isFullscreen) {
-    return (
-      <div className="flex-1 overflow-y-auto">
-        {content}
-      </div>
-    );
-  }
-
+  // SIMPLIFIED: Always use standard layout (removed fullscreen complexity)
   return (
     <div id="recommendations-section" className="bg-white rounded-lg border shadow-sm">
       <div className="flex flex-col h-full">

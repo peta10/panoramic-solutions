@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { ErrorBoundary } from '@/ppm-tool/components/common/ErrorBoundary';
 import { EmbeddedPPMToolFlow } from '@/ppm-tool/components/common/EmbeddedPPMToolFlow';
-import { FullscreenProvider } from '@/ppm-tool/shared/contexts/FullscreenContext';
+// REMOVED: FullscreenProvider - no longer needed, using simple mobile detection
 import { GuidanceProvider } from '@/ppm-tool/shared/contexts/GuidanceContext';
 import { HowItWorksOverlay } from '@/ppm-tool/components/overlays/HowItWorksOverlay';
 
@@ -37,8 +37,7 @@ export default function Home() {
   return (
     <ErrorBoundary>
       <GuidanceProvider>
-        <FullscreenProvider>
-          <div className="min-h-screen bg-background" role="main">
+        <div className="min-h-screen bg-background" role="main">
             <EmbeddedPPMToolFlow 
               showGuidedRanking={showGuidedRanking}
               onGuidedRankingComplete={handleGuidedRankingComplete}
@@ -54,8 +53,7 @@ export default function Home() {
               onGetStarted={handleGetStarted}
               onManualRanking={handleManualRanking}
             />
-          </div>
-        </FullscreenProvider>
+        </div>
       </GuidanceProvider>
     </ErrorBoundary>
   );

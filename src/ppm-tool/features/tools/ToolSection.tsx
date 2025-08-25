@@ -9,8 +9,8 @@ import { EnhancedCompactToolCard } from '@/ppm-tool/components/cards/EnhancedCom
 import { RemovedToolsMenu } from './RemovedToolsMenu';
 import { filterTools } from '@/ppm-tool/shared/utils/filterTools';
 import { testGetToolRating, calculateScore } from '@/ppm-tool/shared/utils/toolRating';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
-import { FullscreenNavigation } from '@/ppm-tool/components/layout/FullscreenNavigation';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
+// REMOVED: FullscreenNavigation - no longer needed without FullscreenContext
 import { ToolCompareAnimation } from '@/ppm-tool/components/animations/ToolCompareAnimation';
 import { useShuffleAnimation, useToolOrderShuffle } from '@/ppm-tool/hooks/useShuffleAnimation';
 import { ShuffleContainer } from '@/ppm-tool/components/animations/ShuffleContainer';
@@ -62,7 +62,7 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
   comparedTools = new Set(),
   chartButtonPosition
 }) => {
-  const { isMobile } = useFullscreen();
+  const isMobile = useMobileDetection();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
@@ -333,7 +333,7 @@ export const ToolSection: React.FC<ToolSectionProps> = ({
               </div>
             )}
           </div>
-          <FullscreenNavigation />
+          {/* REMOVED: FullscreenNavigation - no longer needed */}
 
           {onContinue && (
             <button

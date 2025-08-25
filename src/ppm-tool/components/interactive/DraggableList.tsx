@@ -17,7 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 
 interface DraggableListProps<T> {
   items: T[];
@@ -32,7 +32,7 @@ export function DraggableList<T>({
   renderItem,
   getItemId,
 }: DraggableListProps<T>) {
-  const { isMobile } = useFullscreen();
+  const isMobile = useMobileDetection();
 
   // If on mobile, just render the items without drag and drop
   if (isMobile) {

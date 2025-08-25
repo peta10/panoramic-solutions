@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { ComparisonChart } from '@/ppm-tool/components/charts/ComparisonChart';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+// REMOVED: FullscreenContext dependency
 
 interface ComparisonSectionProps {
   tools: Tool[];
@@ -14,14 +14,12 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({
   criteria: selectedCriteria,
   comparedTools = new Set(),
 }) => {
-  const { fullscreenView } = useFullscreen();
-  const isFullscreen = fullscreenView === 'chart';
+  // SIMPLIFIED: Always use standard layout (removed fullscreen complexity)
 
   return (
     <ComparisonChart
       tools={selectedTools}
       criteria={selectedCriteria}
-      isFullscreen={isFullscreen}
       comparedTools={comparedTools}
     />
   );

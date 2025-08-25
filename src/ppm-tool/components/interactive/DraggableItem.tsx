@@ -4,7 +4,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 
 interface DragHandleProps {
   listeners: any;
@@ -27,7 +27,7 @@ interface DraggableItemProps {
 }
 
 export const DraggableItem: React.FC<DraggableItemProps> = ({ id, children }) => {
-  const { isMobile } = useFullscreen();
+  const isMobile = useMobileDetection();
 
   // If on mobile, just render the children without drag handle
   if (isMobile) {

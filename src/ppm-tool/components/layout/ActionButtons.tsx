@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { Send, HelpCircle } from 'lucide-react';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 import { cn } from '@/ppm-tool/shared/lib/utils';
 import { EmailCaptureModal } from '@/ppm-tool/components/forms/EmailCaptureModal';
-import { generateReport } from '@/ppm-tool/shared/utils/pdfExport';
+// REMOVED: PDF generation functionality - now focuses on email reports only
 import type { Tool, Criterion } from '@/ppm-tool/shared/types';
 
 interface ActionButtonsProps {
@@ -21,9 +21,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   filteredTools = [],
   onShowHowItWorks
 }) => {
-  const { isMobile } = useFullscreen();
+  const isMobile = useMobileDetection();
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const handleGetReport = () => {
     setShowEmailModal(true);
@@ -31,18 +31,22 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
   const handleEmailSubmit = async (email: string) => {
     try {
-      setIsGeneratingPDF(true);
+      setIsProcessing(true);
       
-      // Generate and download the PDF report
-      await generateReport(selectedTools, selectedCriteria);
+      // TODO: Send email report via API instead of PDF generation
+      // await sendEmailReport(email, selectedTools, selectedCriteria);
       
-      // Close modal after successful download
+      console.log('Email report request for:', email);
+      console.log('Tools:', selectedTools.length);
+      console.log('Criteria:', selectedCriteria.length);
+      
+      // Close modal after successful submission
       setShowEmailModal(false);
     } catch (error) {
-      console.error('Error generating PDF report:', error);
+      console.error('Error sending email report:', error);
       // Keep modal open so user can try again
     } finally {
-      setIsGeneratingPDF(false);
+      setIsProcessing(false);
     }
   };
 
@@ -90,7 +94,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           isOpen={showEmailModal}
           onClose={() => setShowEmailModal(false)}
           onSubmit={handleEmailSubmit}
-          isLoading={isGeneratingPDF}
+          isLoading={isProcessing}
           selectedTools={filteredTools.length > 0 ? filteredTools : selectedTools}
           selectedCriteria={selectedCriteria}
         />
@@ -128,7 +132,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         isOpen={showEmailModal}
         onClose={() => setShowEmailModal(false)}
         onSubmit={handleEmailSubmit}
-        isLoading={isGeneratingPDF}
+        isLoading={isProcessing}
         selectedTools={filteredTools.length > 0 ? filteredTools : selectedTools}
         selectedCriteria={selectedCriteria}
       />

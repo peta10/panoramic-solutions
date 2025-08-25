@@ -20,13 +20,12 @@ import {
 import { ChartControls } from './ChartControls';
 import { MobileToolSelector } from './MobileToolSelector';
 import { getToolColor } from '@/ppm-tool/shared/utils/chartColors';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 
 
 interface ComparisonChartProps {
   tools: Tool[];
   criteria: Criterion[];
-  isFullscreen?: boolean;
   comparedTools?: Set<string>;
 }
 
@@ -42,10 +41,9 @@ ChartJS.register(
 export const ComparisonChart: React.FC<ComparisonChartProps> = ({
   tools: selectedTools,
   criteria: selectedCriteria,
-  isFullscreen = false,
   comparedTools = new Set()
 }) => {
-  const { isMobile } = useFullscreen();
+  const isMobile = useMobileDetection();
 
 
   const [visibleCriteria, setVisibleCriteria] = useState<Set<string>>(
@@ -284,13 +282,13 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({
         pointLabels: {
           display: true,
           font: {
-            size: isFullscreen ? 14 : isMobile ? 11 : 12,
+            size: isMobile ? 11 : 12,
           },
-          padding: isFullscreen ? 30 : isMobile ? 12 : 18,
+          padding: isMobile ? 12 : 18,
           color: '#374151',
           callback: function (value: string) {
-            // Better text wrapping for mobile, fullscreen, and desktop
-            const maxLength = isFullscreen ? 18 : isMobile ? 10 : 15;
+            // Better text wrapping for mobile and desktop
+            const maxLength = isMobile ? 10 : 15;
             if (value.length > maxLength) {
               const words = value.split(' ');
               const lines: string[] = [];
@@ -427,141 +425,18 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({
             })}
           </div>
         )}
-        <div className={`w-full ${isFullscreen ? 'h-[calc(100vh-400px)]' : isMobile ? 'h-[360px]' : 'h-[450px]'} ${isMobile ? 'pt-2 px-3' : 'pt-4 px-4'}`}>
+        <div className={`w-full ${isMobile ? 'h-[360px]' : 'h-[450px]'} ${isMobile ? 'pt-2 px-3' : 'pt-4 px-4'}`}>
           <Radar data={data} options={options} />
         </div>
       </div>
     </div>
   );
 
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-white">
-        <div className="flex flex-col h-full">
-          {/* Fixed Header Section */}
-          <div className="flex-shrink-0 flex items-center justify-between p-6 pb-4 border-b bg-white">
-            <div className="flex items-center">
-              <LineChart className="w-6 h-6 mr-2 text-alpine-blue-400" />
-              <div className="flex items-center">
-                <h2 className="text-xl font-bold text-gray-900">Tools - Criteria Comparison</h2>
-                <span className="hidden lg:block ml-2 text-sm text-gray-500">
-                  {selectedTools.length} {selectedTools.length === 1 ? 'tool' : 'tools'} analyzed
-                </span>
-              </div>
-            </div>
-
-            {/* Control buttons */}
-            <div className="flex items-center gap-2">
-              <ChartControls
-                tools={selectedTools}
-                criteria={selectedCriteria}
-                visibleTools={visibleTools}
-                visibleCriteria={visibleCriteria}
-                onToggleTool={handleToggleTool}
-                onToggleCriterion={handleToggleCriterion}
-                onToggleAllTools={handleToggleAllTools}
-                onToggleAllCriteria={handleToggleAllCriteria}
-              />
-            </div>
-          </div>
-
-          <div className="bg-gray-50 border-b">
-            <div className="px-6 py-3">
-              <p className="text-sm text-gray-600">
-                Your needs and tool capabilities, side by side for easy analysis.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Scrollable chart content area with proper scroll handling */}
-        <div 
-          className="flex-1 chart-fullscreen-scroll"
-          data-lenis-prevent
-          style={{ height: 'calc(100vh - 300px)' }}
-        >
-          <div className="flex flex-col min-h-full">
-            {/* Mobile Tool Selector for Fullscreen */}
-            {isMobile ? (
-              <div className="p-2 bg-white border-b">
-                <MobileToolSelector
-                  tools={selectedTools}
-                  visibleTools={visibleTools}
-                  onToggleTool={handleToggleTool}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2 md:gap-4 py-3 md:py-4 px-3 md:px-4 justify-center bg-white border-b">
-                <button
-                  key="chart-toggle-requirements"
-                  onClick={() => handleToggleTool('requirements')}
-                  className={`flex items-center space-x-1 md:space-x-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition-all ${
-                    visibleTools.has('requirements')
-                      ? 'bg-green-100 border-2 border-green-300 shadow-sm'
-                      : 'hover:bg-gray-100 border-2 border-transparent'
-                  }`}
-                >
-                  {visibleTools.has('requirements') ? (
-                    <div className="w-4 h-4 md:w-5 md:h-5 border-3 border-dashed border-green-600 bg-green-200 rounded-sm" />
-                  ) : (
-                    <EyeOff className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
-                  )}
-                  <span className={`text-xs md:text-sm font-semibold ${
-                    visibleTools.has('requirements') ? 'text-green-800' : 'text-gray-600'
-                  }`}>
-                    Your Tool
-                  </span>
-                </button>
-                {selectedTools.map((tool, index) => {
-                  const [backgroundColor, borderColor] = getToolColor(index);
-                  return (
-                    <button
-                      key={`chart-toggle-${tool.id}-${index}`}
-                      onClick={() => handleToggleTool(tool.id)}
-                      className="flex items-center space-x-1 md:space-x-2 px-2 md:px-3 py-1 md:py-1.5 rounded hover:bg-gray-100 transition-colors"
-                    >
-                      {visibleTools.has(tool.id) ? (
-                        <div
-                          className="w-3 h-3 md:w-4 md:h-4"
-                          style={{
-                            backgroundColor,
-                            borderColor,
-                            borderWidth: 2,
-                            borderStyle: 'solid',
-                          }}
-                        />
-                      ) : (
-                        <EyeOff className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />
-                      )}
-                      <span className="text-xs md:text-sm text-gray-600">{tool.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            
-            {/* Chart container with improved scrolling and padding */}
-            <div className="flex-1 p-2 sm:p-4 pb-8 bg-white">
-              <div className="w-full min-h-[550px] flex items-center justify-center">
-                <div className="w-full h-full max-w-5xl" style={{ minHeight: '550px' }}>
-                  <Radar data={data} options={options} />
-                </div>
-              </div>
-              {/* Add extra bottom padding to ensure chart labels are fully visible */}
-              <div className="h-8"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // SIMPLIFIED: Always use standard layout (removed fullscreen complexity)
   return (
     <div
       id="chart-section"
-      className={`bg-white rounded-lg shadow-lg flex flex-col h-full overflow-hidden ${
-        isFullscreen ? 'fullscreen-container' : ''
-      }`}
+      className="bg-white rounded-lg shadow-lg flex flex-col h-full overflow-hidden"
     >
       {content}
     </div>

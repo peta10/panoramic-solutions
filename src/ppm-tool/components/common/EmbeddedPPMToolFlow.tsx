@@ -11,7 +11,7 @@ import { FilterCondition } from '@/ppm-tool/components/filters/FilterSystem';
 import { filterTools } from '@/ppm-tool/shared/utils/filterTools';
 import { supabase } from '@/ppm-tool/shared/lib/supabase';
 import { ErrorBoundary } from '@/ppm-tool/components/common/ErrorBoundary';
-import { FullscreenProvider, useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 import { useLenis } from '@/ppm-tool/shared/hooks/useLenis';
 import { CriteriaSection } from '@/ppm-tool/features/criteria/components/CriteriaSection';
 import { ToolSection } from '@/ppm-tool/features/tools/ToolSection';
@@ -30,7 +30,7 @@ import {
   resetProductBumperState,
   getProductBumperState
 } from '@/ppm-tool/shared/utils/productBumperState';
-import { MobileDiagnostics } from './MobileDiagnostics';
+// REMOVED: import { MobileDiagnostics } from './MobileDiagnostics'; - Causes browser compatibility issues
 import { MobileRecoverySystem } from './MobileRecoverySystem';
 
 interface EmbeddedPPMToolFlowProps {
@@ -87,53 +87,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   onShowHowItWorks,
   guidedButtonRef
 }) => {
-  const { isMobile: fullscreenIsMobile } = useFullscreen();
-  
-  // Enhanced mobile detection with browser compatibility
-  const isMobile = React.useMemo(() => {
-    try {
-      if (typeof window === 'undefined') return false;
-      
-      // Multiple mobile detection methods for maximum compatibility
-      const userAgent = navigator.userAgent || '';
-      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(userAgent);
-      const isMobileScreen = window.innerWidth <= 768;
-      const isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
-      const isSmallScreen = window.screen && window.screen.width <= 768;
-      
-      // Check for mobile-specific features
-      const hasMobileFeatures = !!(
-        'orientation' in window ||
-        'ontouchstart' in document.documentElement ||
-        navigator.maxTouchPoints > 0 ||
-        (navigator as any).msMaxTouchPoints > 0
-      );
-      
-      const result = fullscreenIsMobile || isMobileUserAgent || (isMobileScreen && isTouchDevice) || (isSmallScreen && hasMobileFeatures);
-      
-      console.log('Mobile detection result:', {
-        result,
-        fullscreenIsMobile,
-        isMobileUserAgent,
-        isMobileScreen,
-        isTouchDevice,
-        isSmallScreen,
-        hasMobileFeatures,
-        userAgent: userAgent.substring(0, 50) + '...'
-      });
-      
-      return result;
-    } catch (error) {
-      console.error('Error detecting mobile device, defaulting to screen size:', error);
-      // Fallback to simple screen size check
-      try {
-        return typeof window !== 'undefined' && window.innerWidth <= 768;
-      } catch (fallbackError) {
-        console.error('Fallback mobile detection failed:', fallbackError);
-        return false;
-      }
-    }
-  }, [fullscreenIsMobile]);
+  // Simple, reliable mobile detection
+  const isMobile = useMobileDetection();
   
   // Disable Lenis smooth scroll on mobile to prevent tooltip interference
   useLenis({
@@ -944,7 +899,6 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
 
   return (
     <ErrorBoundary>
-      <FullscreenProvider>
         {/* PPM Tool Embedded Application */}
         <div 
           className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 rounded-lg"
@@ -1003,8 +957,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           }}
         />
 
-        {/* Mobile Diagnostics for debugging */}
-        <MobileDiagnostics />
+        {/* REMOVED: Mobile Diagnostics - Causes browser compatibility issues with Edge/Safari
+            <MobileDiagnostics /> */}
 
         {/* Mobile Recovery System */}
         {isMobile && (
@@ -1019,7 +973,6 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           />
         )}
 
-      </FullscreenProvider>
     </ErrorBoundary>
   );
 }; 

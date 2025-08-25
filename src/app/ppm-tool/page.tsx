@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { ErrorBoundary } from '@/ppm-tool/components/common/ErrorBoundary';
 import { EmbeddedPPMToolFlow } from '@/ppm-tool/components/common/EmbeddedPPMToolFlow';
-import { FullscreenProvider } from '@/ppm-tool/shared/contexts/FullscreenContext';
+// REMOVED: FullscreenProvider - no longer needed, using simple mobile detection
 import { GuidanceProvider } from '@/ppm-tool/shared/contexts/GuidanceContext';
 import { HowItWorksOverlay } from '@/ppm-tool/components/overlays/HowItWorksOverlay';
 import { LegalDisclaimer } from '@/ppm-tool/components/common/LegalDisclaimer';
@@ -40,8 +40,7 @@ export default function PPMToolPage() {
 
   return (
     <ErrorBoundary>
-      <FullscreenProvider>
-        <GuidanceProvider>
+              <GuidanceProvider>
           {/* PPM Tool Section */}
           <div className="min-h-screen" style={{ backgroundColor: '#F0F4FE' }}>
             <EmbeddedPPMToolFlow 
@@ -65,7 +64,6 @@ export default function PPMToolPage() {
             </div>
           </div>
         </GuidanceProvider>
-      </FullscreenProvider>
     </ErrorBoundary>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 import { cn } from '@/ppm-tool/shared/lib/utils';
 import { Sliders, Layout, LineChart } from 'lucide-react';
 import { ActionButtons } from './ActionButtons';
@@ -40,7 +40,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
   isProductBumperVisible = false,
   onChartButtonPosition
 }) => {
-  const { isMobile } = useFullscreen();
+  const isMobile = useMobileDetection();
   const [isChartGlowing, setIsChartGlowing] = useState(false);
   const chartButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -128,8 +128,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     
     // Add safe area inset for mobile devices
     if (isMobile && typeof window !== 'undefined') {
-      // Use CSS custom property or fallback to 0
-      const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat') || '0');
+      // SAFE: Use default safe area instead of getComputedStyle which can fail in Edge/Safari
+      const safeAreaTop = 0; // Safe default - CSS custom properties can cause crashes
       // Add extra padding for mobile to ensure content isn't cut off
       const mobileExtraPadding = 24; // Increased from 16 to 24px for more space
       return padding + logoHeight + safeAreaTop + mobileExtraPadding;

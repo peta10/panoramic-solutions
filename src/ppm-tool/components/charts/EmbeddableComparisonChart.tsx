@@ -11,13 +11,13 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { getToolColor } from '@/ppm-tool/shared/utils/chartColors';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
 
 interface EmbeddableComparisonChartProps {
   selectedTools: Tool[];
   selectedCriteria: Criterion[];
-  onExportPDF?: () => void;
+  // REMOVED: onExportPDF - PDF functionality no longer needed
   height?: number;
   showHeader?: boolean;
   compactMode?: boolean;
@@ -29,13 +29,12 @@ const LazyRadarChart = React.lazy(() => import('@/ppm-tool/features/comparison/C
 export const EmbeddableComparisonChart: React.FC<EmbeddableComparisonChartProps> = ({
   selectedTools,
   selectedCriteria,
-  onExportPDF,
   height = 400,
   showHeader = true,
   compactMode = true,
 }) => {
-  const { fullscreenView, toggleFullscreen, isMobile } = useFullscreen();
-  const isFullscreen = fullscreenView === 'chart';
+  const isMobile = useMobileDetection();
+  // SIMPLIFIED: Always use standard layout (removed fullscreen complexity)
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -498,16 +497,7 @@ export const EmbeddableComparisonChart: React.FC<EmbeddableComparisonChartProps>
     </div>
   );
 
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-white overflow-auto">
-        <div className="min-h-full">
-          {chartContent}
-        </div>
-      </div>
-    );
-  }
-
+  // SIMPLIFIED: Always use standard layout (removed fullscreen complexity)
   return chartContent;
 };
 

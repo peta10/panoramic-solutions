@@ -3,7 +3,7 @@ import { CriteriaSection } from '@/ppm-tool/features/criteria/components/Criteri
 import { ToolSection } from '@/ppm-tool/features/tools/ToolSection';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { FilterCondition } from '@/ppm-tool/components/filters/FilterSystem';
-import { useFullscreen } from '@/ppm-tool/shared/contexts/FullscreenContext';
+import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 
 interface SplitViewProps {
   criteria: Criterion[];
@@ -48,7 +48,7 @@ export const SplitView: React.FC<SplitViewProps> = ({
   onOpenGuidedRanking,
   chartButtonPosition
 }) => {
-  const { isMobile } = useFullscreen();
+  const isMobile = useMobileDetection();
 
   return (
     <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'} h-[calc(100dvh-180px)] min-h-[400px] max-h-[800px] overflow-hidden rounded-lg bg-white shadow-sm`}>
