@@ -56,18 +56,8 @@ export function DraggableList<T>({
     return null;
   }
 
-  // If on mobile, just render the items without drag and drop
-  if (isMobile) {
-    return (
-      <div className="space-y-4">
-        {items.map(item => (
-          <React.Fragment key={getItemId(item)}>
-            {renderItem(item)}
-          </React.Fragment>
-        ))}
-      </div>
-    );
-  }
+  // On mobile, still provide DnD context but with disabled sensors
+  const activeSensors = isMobile ? [] : sensors;
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -84,7 +74,7 @@ export function DraggableList<T>({
     <DndContext
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
-      sensors={sensors}
+      sensors={activeSensors}
     >
       <SortableContext
         items={items.map(getItemId)}

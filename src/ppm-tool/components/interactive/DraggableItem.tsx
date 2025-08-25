@@ -39,9 +39,13 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({ id, children }) =>
     isDragging,
   } = useSortable({ id });
 
-  // If on mobile, just render the children without drag functionality
+  // If on mobile, still need to provide the ref to avoid DOM node errors
   if (isMobile) {
-    return <div className="relative">{children}</div>;
+    return (
+      <div ref={setNodeRef} className="relative">
+        {children}
+      </div>
+    );
   }
 
   const style = {
