@@ -84,8 +84,11 @@ const TooltipContent = React.forwardRef<
 >(({ className, sideOffset = 4, children, ...props }, ref) => {
   const isTouchDevice = useTouchDevice();
 
-  // Auto-close tooltip on mobile after 4 seconds
+  // Auto-close tooltip on mobile after 4 seconds (but only when tooltip is visible)
+  const [isContentVisible, setIsContentVisible] = React.useState(false);
+  
   React.useEffect(() => {
+    setIsContentVisible(true);
     if (!isTouchDevice) return;
 
     const timer = setTimeout(() => {

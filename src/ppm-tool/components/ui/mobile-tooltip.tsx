@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTouchDevice } from '@/ppm-tool/shared/hooks/useTouchDevice';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
 interface MobileTooltipProps {
   content: React.ReactNode;
@@ -17,6 +17,11 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
   align = 'center',
   className = ''
 }) => {
+  // TEMPORARILY DISABLE ALL TOOLTIP FUNCTIONALITY TO FIX INFINITE LOOP
+  return <>{children}</>;
+  
+  // DISABLED CODE BELOW - keeping for reference
+  /*
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -35,13 +40,10 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
     }
   };
 
-  // Hook 1: ALWAYS called at top level (before any returns)
   useEffect(() => {
-    // Conditional logic INSIDE the hook, not around it
     if (!isTouchDevice || !isOpen) return;
     
     document.addEventListener('click', handleClickOutside);
-    // Auto-close after 4 seconds
     const timer = setTimeout(() => setIsOpen(false), 4000);
     return () => {
       document.removeEventListener('click', handleClickOutside);
@@ -49,9 +51,7 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
     };
   }, [isOpen, isTouchDevice]);
 
-  // Hook 2: ALWAYS called at top level (before any returns)
   useEffect(() => {
-    // Conditional logic INSIDE the hook, not around it
     if (!isTouchDevice || !isOpen || !triggerRef.current || !tooltipRef.current) return;
     
     const triggerRect = triggerRef.current.getBoundingClientRect();
@@ -60,7 +60,6 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
     let top = 0;
     let left = 0;
 
-    // Calculate position based on side and align
     switch (side) {
       case 'top':
         top = triggerRect.top - tooltipRect.height - 8;
@@ -120,7 +119,6 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
         break;
     }
 
-    // Ensure tooltip stays within viewport
     const padding = 8;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -137,21 +135,16 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
     setPosition({ top, left });
   }, [isOpen, side, align, isTouchDevice]);
 
-  // Only use custom tooltip on touch devices
-  // Early return AFTER all hooks
   if (!isTouchDevice) {
-    // Fall back to Radix UI tooltip for desktop
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {children}
-          </TooltipTrigger>
-          <TooltipContent side={side} align={align} className={className}>
-            {content}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent side={side} align={align} className={className}>
+          {content}
+        </TooltipContent>
+      </Tooltip>
     );
   }
 
@@ -179,4 +172,5 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
       )}
     </>
   );
+  */
 };

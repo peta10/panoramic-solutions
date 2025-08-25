@@ -6,38 +6,31 @@ import { useState, useEffect } from 'react';
  * @returns boolean indicating if the device supports touch
  */
 export const useTouchDevice = () => {
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(() => {
+    // Initialize immediately on client-side to prevent hydration mismatch
+    if (typeof window === 'undefined') return false;
+    
+    // Multiple detection methods for comprehensive touch device detection
+    const hasTouchEvents = 'ontouchstart' in window;
+    const hasMaxTouchPoints = navigator.maxTouchPoints > 0;
+    const hasHoverNone = window.matchMedia && window.matchMedia('(hover: none)').matches;
+    const hasPointerCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    return hasTouchEvents || hasMaxTouchPoints || hasHoverNone || hasPointerCoarse || isIOS || isMobileUserAgent;
+  });
   
   useEffect(() => {
-    // Multiple detection methods for comprehensive touch device detection
-    const checkTouchDevice = () => {
-      // Method 1: Basic touch events
-      const hasTouchEvents = 'ontouchstart' in window;
-      
-      // Method 2: Navigator touch points
-      const hasMaxTouchPoints = navigator.maxTouchPoints > 0;
-      
-      // Method 3: CSS media query for hover capability
-      const hasHoverNone = window.matchMedia && window.matchMedia('(hover: none)').matches;
-      
-      // Method 4: Check for pointer capabilities
-      const hasPointerCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-      
-      // Method 5: iOS/Safari specific detection
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      
-      // Method 6: Mobile user agent detection as fallback
-      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      // Device is considered touch if any of these conditions are true
-      return hasTouchEvents || hasMaxTouchPoints || hasHoverNone || hasPointerCoarse || isIOS || isMobileUserAgent;
-    };
-    
-    setIsTouchDevice(checkTouchDevice());
-    
-    // Also listen for changes in hover capabilities (e.g., when external mouse is connected/disconnected)
+    // Only listen for hover changes, don't re-evaluate everything constantly
     const mediaQuery = window.matchMedia('(hover: none)');
-    const handleHoverChange = () => setIsTouchDevice(checkTouchDevice());
+    const handleHoverChange = (e: MediaQueryListEvent) => {
+      // Only update if the hover capability actually changed
+      setIsTouchDevice(prev => {
+        const newValue = e.matches || navigator.maxTouchPoints > 0;
+        return prev !== newValue ? newValue : prev;
+      });
+    };
     
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleHoverChange);

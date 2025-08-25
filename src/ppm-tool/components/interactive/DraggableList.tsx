@@ -51,13 +51,17 @@ export function DraggableList<T>({
       coordinateGetter: sortableKeyboardCoordinates,
     }));
 
+  // Create stable sensor arrays to prevent useEffect dependency warnings
+  const emptySensors = React.useMemo(() => [], []);
+  const activeSensors = React.useMemo(() => 
+    isMobile ? emptySensors : sensors, 
+    [isMobile, sensors, emptySensors]
+  );
+
   // Guard against undefined items
   if (!items || !Array.isArray(items)) {
     return null;
   }
-
-  // On mobile, still provide DnD context but with disabled sensors
-  const activeSensors = isMobile ? [] : sensors;
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

@@ -203,6 +203,10 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
   const formRef = React.useRef<HTMLDivElement>(null);
   const isTouchDevice = useTouchDevice();
   
+  // Create stable reference for onRealTimeUpdate to prevent unnecessary re-renders
+  const onRealTimeUpdateRef = React.useRef(onRealTimeUpdate);
+  onRealTimeUpdateRef.current = onRealTimeUpdate;
+  
   // Reset form state whenever the form closes
   const resetFormState = () => {
     setAnswers({});
@@ -369,13 +373,19 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     return rankings;
   }, [criteria, answers]);
 
-  // Real-time update effect
+  // Debounced real-time update effect to prevent infinite loops
   React.useEffect(() => {
-    if (isOpen && Object.keys(answers).length > 0) {
+    if (!isOpen || Object.keys(answers).length === 0) return;
+    
+    // Debounce rapid answer changes to prevent overwhelming the parent component  
+    const timeoutId = setTimeout(() => {
       const rankings = calculateRankings();
-      onRealTimeUpdate?.(rankings);
-    }
-  }, [answers, onRealTimeUpdate, isOpen, calculateRankings]);
+      onRealTimeUpdateRef.current?.(rankings);
+    }, 150); // 150ms debounce for user input
+    
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answers, isOpen]); // Keep calculateRankings out of deps to prevent infinite loops
 
   const handleSubmit = () => {
     const rankings = calculateRankings();

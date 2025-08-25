@@ -648,16 +648,33 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     onGuidedRankingComplete?.();
   };
 
-  // Real-time update for background preview
-  const handleRealTimeUpdate = (rankings: { [key: string]: number }) => {
-    // Only update rankings that were actually set by the guided form
-    setCriteria(prevCriteria => 
-      prevCriteria.map(criterion => ({
-        ...criterion,
-        userRating: rankings[criterion.id] !== undefined ? rankings[criterion.id] : criterion.userRating
-      }))
-    );
-  };
+  // Throttled real-time update for background preview to prevent infinite loops
+  const handleRealTimeUpdate = React.useCallback(
+    React.useMemo(() => {
+      let timeoutId: NodeJS.Timeout;
+      return (rankings: { [key: string]: number }) => {
+        // Clear previous timeout to debounce rapid updates
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          // Only update rankings that were actually set by the guided form
+          setCriteria(prevCriteria => {
+            // Check if any changes are actually needed to prevent unnecessary re-renders
+            const hasChanges = prevCriteria.some(criterion => 
+              rankings[criterion.id] !== undefined && rankings[criterion.id] !== criterion.userRating
+            );
+            
+            if (!hasChanges) return prevCriteria;
+            
+            return prevCriteria.map(criterion => ({
+              ...criterion,
+              userRating: rankings[criterion.id] !== undefined ? rankings[criterion.id] : criterion.userRating
+            }));
+          });
+        }, 100); // 100ms debounce to prevent rapid fire updates
+      };
+    }, []),
+    []
+  );
 
   const handleCompare = (tool: Tool) => {
     setComparedTools(prev => {

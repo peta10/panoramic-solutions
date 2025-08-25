@@ -10,6 +10,7 @@ import { defaultCriteria } from '@/ppm-tool/data/criteria';
 import { CriteriaGuidance } from '@/ppm-tool/components/overlays/CriteriaGuidance';
 import { Slider } from '@/ppm-tool/components/ui/slider';
 import { MobileTooltip } from '@/ppm-tool/components/ui/mobile-tooltip';
+import { TooltipProvider } from '@/ppm-tool/components/ui/tooltip';
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
 
 interface CriteriaSectionProps {
@@ -47,8 +48,9 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
   } = useGuidance();
 
   // Debug logging
-  console.log('CriteriaSection - showProductBumper:', showProductBumper);
-  console.log('CriteriaSection - guidedButtonRef:', guidedButtonRef);
+  // Debug logs removed to prevent performance issues
+  // console.log('CriteriaSection - showProductBumper:', showProductBumper);
+  // console.log('CriteriaSection - guidedButtonRef:', guidedButtonRef);
 
   const handleGuidedRankingsClick = () => {
     onOpenGuidedRanking?.();
@@ -63,8 +65,29 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
     closeManualGuidance();
   };
 
+  // Create a stable reference for onCriteriaChange to avoid infinite loops  
+  const onCriteriaChangeRef = React.useRef(onCriteriaChange);
+  onCriteriaChangeRef.current = onCriteriaChange;
+  
+  // Create individual callbacks for each criterion to prevent recreation
+  const criteriaIds = React.useMemo(() => criteria.map(c => c.id).join(','), [criteria]);
+  const sliderCallbacks = React.useMemo(() => {
+    const callbacks: Record<string, (value: number[]) => void> = {};
+    criteria.forEach((criterion) => {
+      callbacks[criterion.id] = (value: number[]) => {
+        const updatedCriteria = criteria.map((c) =>
+          c.id === criterion.id
+            ? { ...c, userRating: value[0] }
+            : c
+        );
+        onCriteriaChangeRef.current(updatedCriteria);
+      };
+    });
+    return callbacks;
+  }, [criteria]); // Recreate when criteria change
+
   return (
-    <>
+    <TooltipProvider>
       {/* Guidance Popup - Moved OUTSIDE the overflow-hidden container */}
       <CriteriaGuidance
         isVisible={showManualGuidance}
@@ -161,14 +184,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                               min={1}
                               max={5}
                               step={1}
-                              onValueChange={(value) => {
-                                const updatedCriteria = criteria.map((c) =>
-                                  c.id === criterion.id
-                                    ? { ...c, userRating: value[0] }
-                                    : c
-                                );
-                                onCriteriaChange(updatedCriteria);
-                              }}
+                              onValueChange={sliderCallbacks[criterion.id]}
                             />
                           </div>
                           <div className="flex items-center justify-end min-w-[30px]">
@@ -190,6 +206,6 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
 
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 };

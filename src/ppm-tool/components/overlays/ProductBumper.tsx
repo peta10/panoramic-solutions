@@ -33,7 +33,8 @@ export const ProductBumper: React.FC<ProductBumperProps> = ({
 
   
   // Debug logging for ProductBumper render
-  console.log('🎯 ProductBumper render - isVisible:', isVisible, 'isMobile:', isMobile);
+  // Debug log removed to prevent performance issues
+  // console.log('🎯 ProductBumper render - isVisible:', isVisible, 'isMobile:', isMobile);
 
   // Remove all button-specific positioning logic since this is now page-wide
 

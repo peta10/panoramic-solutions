@@ -172,12 +172,13 @@ export const getCriteriaMatchCount = (tool: Tool, criteria: Criterion[]): number
  * @returns Debug information about the rating lookup
  */
 export const testGetToolRating = (tool: Tool, criterionId: string) => {
-  console.log('Testing getToolRating for:', tool.name, 'criterion:', criterionId);
-  console.log('Tool criteria array:', tool.criteria);
-  console.log('Tool ratings object:', tool.ratings);
+  // Debug logs disabled to prevent infinite loops
+  // console.log('Testing getToolRating for:', tool.name, 'criterion:', criterionId);
+  // console.log('Tool criteria array:', tool.criteria);
+  // console.log('Tool ratings object:', tool.ratings);
   
   const rating = getToolRating(tool, criterionId);
-  console.log('Result:', rating);
+  // console.log('Result:', rating);
   
   return {
     toolName: tool.name,
