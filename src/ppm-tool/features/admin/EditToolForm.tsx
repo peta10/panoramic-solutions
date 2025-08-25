@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, AlertCircle, Loader } from 'lucide-react';
 import { Tool, Criterion } from '@/ppm-tool/shared/types';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Slider } from '@/ppm-tool/components/ui/slider';
 
 interface EditToolFormProps {

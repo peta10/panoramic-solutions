@@ -9,7 +9,7 @@ import { defaultTools } from '@/ppm-tool/data/tools';
 import { Tool, Criterion, CriteriaRating, Tag } from '@/ppm-tool/shared/types';
 import { FilterCondition } from '@/ppm-tool/components/filters/FilterSystem';
 import { filterTools } from '@/ppm-tool/shared/utils/filterTools';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { ErrorBoundary } from '@/ppm-tool/components/common/ErrorBoundary';
 import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 import { useLenis } from '@/ppm-tool/shared/hooks/useLenis';

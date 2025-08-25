@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, Plus, LogOut } from 'lucide-react';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/ppm-tool/shared/hooks/useAuth';
 import { AdminLogin } from './AdminLogin';
 

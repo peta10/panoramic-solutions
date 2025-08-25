@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { LogIn, LogOut, UserPlus, Settings, ChevronDown, Mail, Lock, Chrome } from 'lucide-react';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
 interface AuthMenuProps {

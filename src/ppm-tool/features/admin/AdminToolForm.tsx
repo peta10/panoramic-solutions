@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Criterion } from '@/ppm-tool/shared/types';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { LoginModal } from '@/ppm-tool/components/auth/LoginModal';
 import { Slider } from '@/ppm-tool/components/ui/slider';
 

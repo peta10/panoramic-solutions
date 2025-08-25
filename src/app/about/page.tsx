@@ -71,9 +71,9 @@ export default function PPMToolFinderPage() {
                     src="/images/Wagner_Headshot_2024.webp"
                     alt="Matt Wagner - Solutions Architect & Founder at Panoramic Solutions"
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover"
                     priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
                 {/* Floating card */}

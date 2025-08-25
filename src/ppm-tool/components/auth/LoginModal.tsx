@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Mail, Lock, AlertCircle } from 'lucide-react';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
 
 interface LoginModalProps {

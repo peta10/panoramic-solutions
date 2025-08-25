@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, AlertCircle, LogIn, UserPlus } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '@/ppm-tool/shared/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export const AdminLogin: React.FC = () => {
   const [showSignUp, setShowSignUp] = useState(false);

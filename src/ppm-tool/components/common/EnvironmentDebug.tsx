@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export const EnvironmentDebug: React.FC = () => {
   const [supabaseStatus, setSupabaseStatus] = React.useState<string>('checking...');

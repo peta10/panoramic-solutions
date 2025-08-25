@@ -63,6 +63,7 @@ export function Header() {
               src="/images/Logo_Panoramic_Solutions.webp"
               alt="Panoramic Solutions Logo"
               fill
+              sizes="(max-width: 640px) 32px, 40px"
               className="object-contain group-hover:opacity-80 transition-opacity"
               priority
             />

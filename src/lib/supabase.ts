@@ -43,7 +43,7 @@ function createSupabaseClient() {
     global.__supabase_main__ = client as any;
   }
   
-  console.info('✅ Supabase client initialized (singleton)');
+  console.info('✅ Supabase client initialized (singleton) - UNIFIED CLIENT');
   
   return client;
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Edit, Trash2, Check, X, Filter, ChevronDown, ChevronUp, Search, Calendar } from 'lucide-react';
 import { Tool } from '@/ppm-tool/shared/types';
 import { StatusDropdown } from './StatusDropdown';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface ToolsListProps {
   tools: Tool[];

@@ -51,6 +51,7 @@ export function Footer() {
                   src="/images/Logo_Panoramic_Solutions.webp"
                   alt="Panoramic Solutions Logo"
                   fill
+                  sizes="32px"
                   className="object-contain"
                 />
               </div>

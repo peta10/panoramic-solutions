@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, Plus } from 'lucide-react';
-import { supabase } from '@/ppm-tool/shared/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { ToolsList } from './ToolsList';
 import { EditToolForm } from './EditToolForm';
 import { AdminToolForm } from './AdminToolForm';
