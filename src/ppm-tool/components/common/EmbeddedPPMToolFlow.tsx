@@ -19,13 +19,16 @@ import { cn } from '@/ppm-tool/shared/lib/utils';
 import { ActionButtons } from '@/ppm-tool/components/layout/ActionButtons';
 import { GuidedRankingForm } from '@/ppm-tool/components/forms/GuidedRankingForm';
 import { ProductBumper } from '@/ppm-tool/components/overlays/ProductBumper';
+import { ExitIntentBumper } from '@/ppm-tool/components/overlays/ExitIntentBumper';
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
+import { useExitIntent } from '@/ppm-tool/shared/hooks/useExitIntent';
 import { 
   shouldShowProductBumper, 
   dismissProductBumper, 
   incrementShowCount,
   markInitialTimerComplete,
   recordMouseMovement,
+  resetMouseMovement,
   getTimingConstants,
   resetProductBumperState,
   getProductBumperState
@@ -100,7 +103,11 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     showProductBumper, 
     closeProductBumper, 
     triggerProductBumper,
-    hasShownProductBumper
+    hasShownProductBumper,
+    showExitIntentBumper,
+    closeExitIntentBumper,
+    triggerExitIntentBumper,
+    exitIntentTriggerType
   } = useGuidance();
 
   // Debug logging for guidance state (only log when state changes)
@@ -128,6 +135,13 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       }
     };
   }, [showProductBumper]);
+
+  // Exit intent detection hook
+  const { hasTriggered: exitIntentTriggered } = useExitIntent({
+    onTrigger: triggerExitIntentBumper,
+    enabled: !isMobile, // Only enable on desktop
+    minTimeOnPage: 30000 // Minimum 30 seconds before showing
+  });
   // Set initial step based on mobile detection - move logic outside hook
   const getInitialStep = () => {
     try {
@@ -484,7 +498,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // Product bumper timing strategy: 23s initial timer + 3s mouse movement timer (only on first page)
+  // Product bumper timing strategy: 23s initial timer + 3s mouse movement timer (only on first page, desktop only)
   useEffect(() => {
     const { INITIAL_TIMER_MS, MOUSE_MOVEMENT_TIMER_MS } = getTimingConstants();
     let initialTimer: NodeJS.Timeout;
@@ -498,6 +512,12 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       return;
     }
     
+    // Don't run ProductBumper logic on mobile devices
+    if (isMobile) {
+      console.log('📱 Mobile device detected - ProductBumper disabled');
+      return;
+    }
+    
     // Start 23-second initial timer immediately when component mounts
     initialTimer = setTimeout(() => {
       console.log('🕐 Initial 23-second timer complete - marking timer complete');
@@ -506,17 +526,17 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
 
     // Set up mouse movement tracking
     const trackMouseMovement = (e: MouseEvent) => {
-      // Record mouse movement and start 3-second timer
-      recordMouseMovement();
-      
-      // Clear existing timer
+      // Clear existing timer when mouse moves (restart the countdown)
       if (mouseMovementTimer) {
         clearTimeout(mouseMovementTimer);
       }
       
-      // Start 3-second timer for mouse movement
+      // Record that mouse movement is happening (reset the movement detection)
+      recordMouseMovement();
+      
+      // Start 3-second timer that triggers when mouse movement STOPS
       mouseMovementTimer = setTimeout(() => {
-        console.log('🖱️ 3 seconds after mouse movement - checking if should show ProductBumper');
+        console.log('🖱️ 3 seconds after mouse movement STOPPED - checking if should show ProductBumper');
         const state = getProductBumperState();
         console.log('📊 ProductBumper state check:', {
           dismissed: state.dismissed,
@@ -535,7 +555,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           (!state.dismissed && state.initialTimerComplete && !showProductBumper);
         
         if (shouldShow) {
-          console.log('🎯 Triggering ProductBumper after mouse movement timer' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
+          console.log('🎯 Triggering ProductBumper after mouse movement stopped' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
           incrementShowCount();
           triggerProductBumper();
         } else {
@@ -572,7 +592,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       if (initialTimer) clearTimeout(initialTimer);
       if (mouseMovementTimer) clearTimeout(mouseMovementTimer);
     };
-  }, [triggerProductBumper, showProductBumper, currentStep]);
+  }, [triggerProductBumper, showProductBumper, currentStep, isMobile]);
 
   // Close ProductBumper when navigating away from first page
   useEffect(() => {
@@ -649,32 +669,27 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   };
 
   // Throttled real-time update for background preview to prevent infinite loops
-  const handleRealTimeUpdate = React.useCallback(
-    React.useMemo(() => {
-      let timeoutId: NodeJS.Timeout;
-      return (rankings: { [key: string]: number }) => {
-        // Clear previous timeout to debounce rapid updates
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          // Only update rankings that were actually set by the guided form
-          setCriteria(prevCriteria => {
-            // Check if any changes are actually needed to prevent unnecessary re-renders
-            const hasChanges = prevCriteria.some(criterion => 
-              rankings[criterion.id] !== undefined && rankings[criterion.id] !== criterion.userRating
-            );
-            
-            if (!hasChanges) return prevCriteria;
-            
-            return prevCriteria.map(criterion => ({
-              ...criterion,
-              userRating: rankings[criterion.id] !== undefined ? rankings[criterion.id] : criterion.userRating
-            }));
-          });
-        }, 100); // 100ms debounce to prevent rapid fire updates
-      };
-    }, []),
-    []
-  );
+  const handleRealTimeUpdate = React.useCallback((rankings: { [key: string]: number }) => {
+    // Clear previous timeout to debounce rapid updates
+    const timeoutId = setTimeout(() => {
+      // Only update rankings that were actually set by the guided form
+      setCriteria(prevCriteria => {
+        // Check if any changes are actually needed to prevent unnecessary re-renders
+        const hasChanges = prevCriteria.some(criterion => 
+          rankings[criterion.id] !== undefined && rankings[criterion.id] !== criterion.userRating
+        );
+        
+        if (!hasChanges) return prevCriteria;
+        
+        return prevCriteria.map(criterion => ({
+          ...criterion,
+          userRating: rankings[criterion.id] !== undefined ? rankings[criterion.id] : criterion.userRating
+        }));
+      });
+    }, 100); // 100ms debounce to prevent rapid fire updates
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const handleCompare = (tool: Tool) => {
     setComparedTools(prev => {
@@ -975,6 +990,14 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             closeProductBumper();
             onOpenGuidedRanking && onOpenGuidedRanking();
           }}
+          guidedButtonRef={guidedButtonRef}
+        />
+
+        {/* Exit Intent Bumper - captures users leaving the site */}
+        <ExitIntentBumper
+          isVisible={showExitIntentBumper}
+          onClose={closeExitIntentBumper}
+          triggerType={exitIntentTriggerType || 'mouse-leave'}
         />
 
         {/* REMOVED: Mobile Diagnostics - Causes browser compatibility issues with Edge/Safari

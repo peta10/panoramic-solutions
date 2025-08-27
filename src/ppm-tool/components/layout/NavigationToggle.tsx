@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 import { cn } from '@/ppm-tool/shared/lib/utils';
-import { Sliders, Layout, LineChart } from 'lucide-react';
 import { ActionButtons } from './ActionButtons';
 import type { Tool, Criterion } from '@/ppm-tool/shared/types';
 import Image from 'next/image';
@@ -11,7 +10,6 @@ import Image from 'next/image';
 type NavigationStep = {
   id: string;
   label: string;
-  icon: React.ElementType;
   description: string;
 };
 
@@ -180,13 +178,13 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
 
   const steps: NavigationStep[] = isMobile 
     ? [
-        { id: 'criteria', label: 'Rank Your Criteria', icon: Sliders, description: 'Set importance levels' },
-        { id: 'tools', label: 'Tools & Recommendations', icon: Layout, description: 'Choose PPM solutions' },
-        { id: 'chart', label: 'Tools - Criteria Comparison', icon: LineChart, description: 'Visual comparison' },
+        { id: 'criteria', label: 'Rank Your Criteria', description: 'Set importance levels' },
+        { id: 'tools', label: 'Tools & Recommendations', description: 'Choose PPM solutions' },
+        { id: 'chart', label: 'Tools - Criteria Comparison', description: 'Visual comparison' },
       ]
     : [
-        { id: 'criteria-tools', label: 'Criteria + Tools', icon: Layout, description: 'Set criteria & select tools' },
-        { id: 'chart', label: 'Chart Comparison', icon: LineChart, description: 'Compare solutions' },
+        { id: 'criteria-tools', label: 'Criteria + Tools', description: 'Set criteria & select tools' },
+        { id: 'chart', label: 'Chart Comparison', description: 'Compare solutions' },
       ];
 
   return (
@@ -212,10 +210,13 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
           {/* Navigation Steps - Left Side */}
           <div className={cn(
             "flex items-center",
-            isMobile ? "w-full max-w-md space-x-1 md:space-x-2 mx-auto" : "space-x-2 md:space-x-4"
+            isMobile ? "w-full max-w-md mx-auto" : ""
           )}>
-            {/* Toggle Container */}
-            <div className="flex bg-white rounded-lg border border-gray-300 p-1">
+            {/* Simple Tab Navigation */}
+            <div className="flex items-center space-x-6 relative">
+              {/* Continuous base line - starts at first letter of first tab */}
+              <div className="absolute bottom-0 left-4 right-0 h-0.5 bg-gray-300"></div>
+              
               {steps.map((step) => {
                 const isActive = currentStep === step.id;
                 const isChartStep = step.id === 'chart';
@@ -226,45 +227,28 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
                     ref={isChartStep ? chartButtonRef : undefined}
                     onClick={() => onStepChange(step.id)}
                     className={cn(
-                      'relative flex items-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 md:py-2.5 rounded-md transition-all duration-300 font-medium border',
-                      isMobile ? 'flex-1 justify-center' : '',
+                      'relative px-1 py-2 font-bold transition-all duration-300',
                       isActive
-                        ? 'bg-alpine-blue-50 text-alpine-blue-700 border-alpine-blue-200 shadow-sm'
-                        : 'text-gray-700 hover:text-alpine-blue-500 hover:bg-alpine-blue-50 border-transparent hover:border-alpine-blue-200',
+                        ? 'text-blue-600'
+                        : 'text-gray-700',
                       shouldGlow && 'chart-toggle-glow'
                     )}
                   >
-                    <div className={cn(
-                      'flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded-lg transition-all duration-300',
-                      isActive
-                        ? 'bg-alpine-blue-100 text-alpine-blue-600'
-                        : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
-                    )}>
-                      {React.createElement(step.icon, {
-                        className: cn(
-                          'w-3 h-3 md:w-4 md:h-4',
-                          isActive ? 'text-alpine-blue-600' : 'text-gray-500'
-                        )
-                      })}
-                    </div>
-                    <span className={cn(
-                      'font-medium',
-                      isMobile ? 'text-xs md:text-sm' : 'text-sm md:text-base'
-                    )}>
+                    <span className="text-sm md:text-base">
                       {step.label}
                     </span>
                     {isChartStep && compareCount > 0 && (
                       <div className={cn(
                         'absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full text-xs font-medium',
-                        isActive ? 'bg-alpine-blue-500 text-white' : 'bg-gray-600 text-white'
+                        isActive ? 'bg-blue-500 text-white' : 'bg-gray-600 text-white'
                       )}>
                         {compareCount}
                       </div>
                     )}
-                    {/* Enhanced underline indicator */}
+                    {/* Active underline indicator - sits on top of base line */}
                     <div className={cn(
-                      "absolute bottom-0 left-0 right-0 h-1 rounded-full transition-all duration-300",
-                      isActive ? "bg-alpine-blue-500" : "bg-transparent"
+                      "absolute bottom-0 left-0 right-0 h-0.5 transition-all duration-300",
+                      isActive ? "bg-blue-600" : "bg-transparent"
                     )} />
                   </button>
                 );

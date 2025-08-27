@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { ArrowRight, X } from 'lucide-react';
+import { ArrowRight, X, Zap, Users, Target, TrendingUp } from 'lucide-react';
 import { Button } from '@/ppm-tool/components/ui/button';
 
 interface HowItWorksOverlayProps {
@@ -42,6 +42,29 @@ const remainingSteps = [
     items: [
       "We'll send a clean, easy-to-read version of your results, rankings, and recommendations to your inbox.",
     ]
+  }
+];
+
+const featureCards = [
+  {
+    icon: <Zap className="w-4 h-4 text-blue-600" />,
+    title: "Instant Intelligence",
+    description: "Get recommendations in minutes, not months"
+  },
+  {
+    icon: <Users className="w-4 h-4 text-blue-600" />,
+    title: "Proven Methodology",
+    description: "Designed using real-world implementations across industries"
+  },
+  {
+    icon: <Target className="w-4 h-4 text-blue-600" />,
+    title: "Tailored Results",
+    description: "Recommendations specific to your organization's needs"
+  },
+  {
+    icon: <TrendingUp className="w-4 h-4 text-blue-600" />,
+    title: "Start on Course",
+    description: "Leverage our deep research and avoid costly tool selection mistakes"
   }
 ];
 
@@ -114,7 +137,7 @@ export const HowItWorksOverlay: React.FC<HowItWorksOverlayProps> = ({
         className="absolute inset-4 flex items-center justify-center pointer-events-none"
       >
         <div 
-          className="bg-white rounded-xl shadow-xl w-full max-w-sm md:max-w-3xl lg:max-w-4xl max-h-full overflow-y-auto pointer-events-auto"
+          className="bg-white rounded-xl shadow-xl w-full max-w-sm md:max-w-4xl lg:max-w-5xl max-h-[80vh] md:max-h-none overflow-y-auto md:overflow-visible pointer-events-auto"
           style={{
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
@@ -126,89 +149,117 @@ export const HowItWorksOverlay: React.FC<HowItWorksOverlayProps> = ({
             e.stopPropagation();
           }}
         >
-          <div className="p-4 md:p-6 lg:p-8">
-        {/* Header */}
-        <div className="relative text-center mb-4 md:mb-6 lg:mb-8">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">How It Works</h2>
-          <p className="text-sm md:text-base text-gray-600">Discover tools that best match your business needs</p>
-        </div>
-        
-        {/* Main layout: Step 1 card with integrated button */}
-        <div className="mb-4 md:mb-6 lg:mb-8">
-          {/* Step 1: Rank Your Criteria - Main Card with Button */}
-          <div className="bg-white rounded-lg md:rounded-t-lg shadow-md border border-gray-200 relative">
-            <div className="absolute -top-3 -left-3 md:-top-4 md:-left-4 w-8 h-8 md:w-12 md:h-12 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center text-base md:text-2xl font-bold">
-              01
-            </div>
-            <div className="pt-6 md:pt-8 px-4 md:px-6 pb-4 md:pb-6">
-              <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-2 md:mb-3">Rank Your Criteria</h3>
-              <div className="w-8 md:w-12 h-1 bg-alpine-blue-400 mb-3 md:mb-4"></div>
+          <div className="p-3 md:p-5">
+            {/* Header */}
+            <div className="relative text-center mb-3">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">How It Works</h2>
               
-              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-                <div className="flex-1 text-sm md:text-base text-gray-700">
-                  <p className="text-xs md:text-sm mb-3 md:mb-4">Our guided method ensures your rankings follow the same research-backed framework we use to evaluate tools.</p>
-                  <p className="font-medium mb-2 md:mb-3 text-sm md:text-base">Criteria That Is Analyzed:</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 md:gap-x-6 md:gap-y-2">
-                    {step1Criteria.map((criterion, index) => (
-                      <div key={index} className="flex items-center">
-                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-400 rounded-full mr-2 md:mr-3 flex-shrink-0"></span>
-                        <span className="text-xs md:text-sm">{criterion}</span>
+              {/* Value Statement */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Get 100% free personalized recommendations in minutes with our intelligent Project Portfolio Management Tool assessment. Make informed decisions and focus on key features identified through deep research for lasting project portfolio success.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature Cards Section - Hidden on Mobile */}
+            <div className="mb-4 hidden md:block">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                {featureCards.map((card, index) => (
+                  <div 
+                    key={index} 
+                    className="bg-white rounded-lg shadow-sm border border-gray-100 p-2"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="mb-1 p-1 bg-blue-50 rounded-full">
+                        {card.icon}
                       </div>
-                    ))}
+                      <h4 className="font-bold text-gray-900 text-xs mb-1">{card.title}</h4>
+                      <p className="text-xs text-gray-600 leading-tight">{card.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Main layout: Step 1 card with integrated button */}
+            <div className="mb-4">
+              {/* Step 1: Rank Your Criteria - Main Card with Button */}
+              <div className="bg-gradient-to-br from-white to-blue-50 rounded-lg shadow-lg border border-blue-200 relative overflow-visible">
+                <div className="absolute -top-2 -left-2 md:-top-3 md:-left-3 w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center text-sm md:text-base font-bold shadow-lg z-20">
+                  01
+                </div>
+                <div className="pt-6 md:pt-7 px-4 pb-4">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">Rank Your Criteria</h3>
+                  <div className="w-12 h-1 bg-gradient-to-r from-blue-400 to-blue-600 mb-3 rounded-full"></div>
+                  
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 text-sm text-gray-700">
+                      <p className="text-sm mb-3 text-gray-600 leading-relaxed">
+                        Our guided method ensures your rankings follow the same research-backed framework we use to evaluate tools.
+                      </p>
+                      <p className="font-semibold mb-2 text-sm text-gray-900">Criteria That Is Analyzed:</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-4">
+                        {step1Criteria.map((criterion, index) => (
+                          <div key={index} className="flex items-center">
+                            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2 flex-shrink-0"></span>
+                            <span className="text-sm text-gray-700">{criterion}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* CTA Button - positioned to the right on desktop, below on mobile */}
+                    <div className="flex justify-center md:items-center mt-3 md:mt-0">
+                      <button
+                        onClick={onGetStarted}
+                        className="flex flex-col items-center px-5 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg"
+                      >
+                        <span>Rank Your Criteria</span>
+                        <div className="flex items-center mt-1">
+                          <span className="text-xs opacity-90">Question 1</span>
+                          <ArrowRight className="ml-1 w-3 h-3" />
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
-                
-                {/* CTA Button - positioned to the right on desktop, below on mobile */}
-                <div className="flex justify-center md:items-center mt-3 md:mt-0">
-                  <button
-                    onClick={onGetStarted}
-                    className="flex flex-col items-center px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm font-medium text-white bg-alpine-blue-400 hover:bg-alpine-blue-500 rounded-lg transition-colors"
-                  >
-                    <span>Rank Your Criteria</span>
-                    <div className="flex items-center mt-0.5">
-                      <span className="text-xs">Question 1</span>
-                      <ArrowRight className="ml-1 w-3 h-3" />
-                    </div>
-                  </button>
-                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Bottom cards - responsive grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6 lg:mb-8">
-          {remainingSteps.map((step, index) => (
-            <div key={index} className="bg-white rounded-lg md:rounded-t-lg shadow-md border border-gray-200 relative">
-              <div className="absolute -top-3 -left-3 md:-top-4 md:-left-4 w-8 h-8 md:w-12 md:h-12 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center text-base md:text-2xl font-bold">
-                {step.number}
-              </div>
-              <div className="pt-6 md:pt-8 px-3 md:px-4 pb-3 md:pb-4">
-                <h3 className="text-sm md:text-base font-bold text-gray-900 mb-2 md:mb-3">{step.title}</h3>
-                <div className={`w-8 md:w-12 h-1 bg-alpine-blue-400 ${step.number === "03" ? "mb-4 md:mb-6" : "mb-2 md:mb-3"}`}></div>
-                <div className="text-xs text-gray-700">
-                  {step.items.map((item, itemIndex) => (
-                    <div key={itemIndex}>
-                      <span>{item}</span>
+            {/* Bottom cards - responsive grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+              {remainingSteps.map((step, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md border border-gray-200 relative overflow-visible">
+                  <div className="absolute -top-2 -left-2 md:-top-3 md:-left-3 w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-gray-400 to-gray-500 text-white rounded-full flex items-center justify-center text-sm md:text-base font-bold shadow-lg z-20">
+                    {step.number}
+                  </div>
+                  <div className="pt-6 md:pt-7 px-3 pb-3">
+                    <h3 className="text-sm font-bold text-gray-900 mb-2">{step.title}</h3>
+                    <div className={`w-10 h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full ${step.number === "03" ? "mb-3" : "mb-2"}`}></div>
+                    <div className="text-xs text-gray-700 leading-relaxed">
+                      {step.items.map((item, itemIndex) => (
+                        <div key={itemIndex}>
+                          <span>{item}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Go Directly to Tool Research button - responsive positioning */}
-        <div className="flex justify-center md:justify-start">
-          <button
-            onClick={handleManualRankingClick}
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-xs md:text-sm text-gray-600 hover:text-gray-700"
-            aria-label="Go Directly to Tool Research"
-          >
-            <X className="w-4 h-4" />
-            Go Directly to Tool Research
-          </button>
-        </div>
+            {/* Go Directly to Tool Research button - responsive positioning */}
+            <div className="flex justify-center md:justify-start">
+              <button
+                onClick={handleManualRankingClick}
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 text-sm text-gray-600"
+                aria-label="Go Directly to Tool Research"
+              >
+                <X className="w-4 h-4" />
+                Go Directly to Tool Research
+              </button>
+            </div>
           </div>
         </div>
       </div>

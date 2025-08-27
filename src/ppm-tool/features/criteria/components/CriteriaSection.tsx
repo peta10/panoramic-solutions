@@ -9,8 +9,10 @@ import { defaultCriteria } from '@/ppm-tool/data/criteria';
 
 import { CriteriaGuidance } from '@/ppm-tool/components/overlays/CriteriaGuidance';
 import { Slider } from '@/ppm-tool/components/ui/slider';
-import { MobileTooltip } from '@/ppm-tool/components/ui/mobile-tooltip';
-import { TooltipProvider } from '@/ppm-tool/components/ui/tooltip';
+import { DesktopTooltip } from '@/ppm-tool/components/ui/desktop-tooltip';
+import { BasicHoverTooltip } from '@/ppm-tool/components/ui/basic-hover-tooltip';
+import { MobileTouchTooltip } from '@/ppm-tool/components/ui/mobile-touch-tooltip';
+
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
 
 interface CriteriaSectionProps {
@@ -87,7 +89,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
   }, [criteria]); // Recreate when criteria change
 
   return (
-    <TooltipProvider>
+    <>
       {/* Guidance Popup - Moved OUTSIDE the overflow-hidden container */}
       <CriteriaGuidance
         isVisible={showManualGuidance}
@@ -156,7 +158,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                           <h3 className="text-lg font-semibold text-gray-900">
                             {criterion.name}
                           </h3>
-                          <MobileTooltip 
+                          <BasicHoverTooltip 
                             content={
                               <div className="break-words">
                                 {getTooltipDescription(criterion)}
@@ -173,7 +175,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                             >
                               <HelpCircle className="w-4 h-4" />
                             </button>
-                          </MobileTooltip>
+                          </BasicHoverTooltip>
                         </div>
                       </div>
                       <div data-lenis-prevent>
@@ -206,6 +208,6 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
 
         </div>
       </div>
-    </TooltipProvider>
+    </>
   );
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TestimonialCarousel } from '@/features/testimonials/components/TestimonialCarousel';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { fadeInUp, slideInLeft, slideInRight } from '@/shared/utils/motion';
 import { submitContactForm } from '@/lib/supabase';
+import { usePostHog } from '@/hooks/usePostHog';
 import {
   Mail,
   MapPin,
@@ -29,6 +30,36 @@ export default function ContactPage() {
     company: '',
     message: '',
   });
+  const { trackForm, trackClick, capture, checkAndTrackVisitor, checkAndTrackActive, trackRanking } = usePostHog();
+
+  // Track new visitor and active user on page load
+  useEffect(() => {
+    // Check and track new visitor
+    checkAndTrackVisitor({
+      page: 'contact',
+      form_type: 'inquiry'
+    });
+
+    // Track first interaction as active user
+    const handleFirstInteraction = () => {
+      checkAndTrackActive('page_interaction', {
+        page: 'contact',
+        interaction_type: 'page_load'
+      });
+      
+      // Remove listeners after first interaction
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('scroll', handleFirstInteraction);
+    };
+
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('scroll', handleFirstInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('scroll', handleFirstInteraction);
+    };
+  }, [checkAndTrackVisitor, checkAndTrackActive]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -42,11 +73,28 @@ export default function ContactPage() {
     // Validate all fields are filled
     if (!formData.name || !formData.email || !formData.company || !formData.message) {
       setError('Please fill in all required fields.');
+      capture('contact_form_validation_error', { 
+        missing_fields: [
+          !formData.name && 'name',
+          !formData.email && 'email',
+          !formData.company && 'company',
+          !formData.message && 'message'
+        ].filter(Boolean)
+      });
       return;
     }
 
     setIsSubmitting(true);
     setError(null);
+
+    // Track form submission attempt
+    trackForm('contact_form', {
+      has_name: !!formData.name,
+      has_email: !!formData.email,
+      has_company: !!formData.company,
+      has_message: !!formData.message,
+      message_length: formData.message.length
+    });
 
     try {
       const { data, error: submitError } = await submitContactForm(formData);
@@ -55,14 +103,41 @@ export default function ContactPage() {
         throw submitError;
       }
 
+      // Track successful submission and ranking submittal
+      capture('contact_form_submitted', {
+        company: formData.company,
+        message_length: formData.message.length,
+        submission_time: Date.now()
+      });
+
+      // Track new ranking submittal
+      trackRanking({
+        form_type: 'contact_inquiry',
+        company: formData.company,
+        message_length: formData.message.length
+      });
+
       // Success - show success page
       setShowSuccess(true);
     } catch (err: any) {
       console.error('Form submission error:', err);
+      
+      // Track submission error
+      capture('contact_form_error', {
+        error_message: err.message,
+        error_type: err.name,
+        submission_time: Date.now()
+      });
+      
       setError(err.message || 'Something went wrong. Please try again or contact us directly.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleScheduleCall = () => {
+    trackClick('schedule_call_button', { location: 'contact_success_page' });
+    window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank');
   };
 
   const isFormValid = formData.name && formData.email && formData.company && formData.message;
@@ -103,7 +178,7 @@ export default function ContactPage() {
                   </p>
                   <Button 
                     className="bg-alpine hover:bg-summit text-white"
-                    onClick={() => window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank')}
+                    onClick={handleScheduleCall}
                     style={{ minHeight: '48px' }}
                   >
                     Schedule a Call

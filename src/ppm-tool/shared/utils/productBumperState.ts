@@ -130,6 +130,19 @@ export function recordMouseMovement(): void {
 }
 
 /**
+ * Reset mouse movement detection (called when movement starts again)
+ */
+export function resetMouseMovement(): void {
+  const currentState = getProductBumperState();
+  const newState: ProductBumperState = {
+    ...currentState,
+    mouseMovementDetected: false,
+    lastMouseMovementAt: ''
+  };
+  saveProductBumperState(newState);
+}
+
+/**
  * Check if we're in development mode
  */
 function isDevelopmentMode(): boolean {
@@ -156,12 +169,12 @@ export function shouldShowProductBumper(): boolean {
     return false;
   }
   
-  // Check if mouse movement detected and enough time has passed
+  // Check if mouse movement detected and enough time has passed since movement STOPPED
   if (state.mouseMovementDetected && state.lastMouseMovementAt) {
     const lastMovement = new Date(state.lastMouseMovementAt);
     const timeSinceLastMovement = Date.now() - lastMovement.getTime();
     
-    // Show after 3 seconds of mouse movement
+    // Show after 3 seconds since mouse movement STOPPED
     return timeSinceLastMovement >= MOUSE_MOVEMENT_TIMER_MS;
   }
   
@@ -219,5 +232,6 @@ if (typeof window !== 'undefined') {
   (window as any).resetProductBumperState = resetProductBumperState;
   (window as any).forceResetProductBumper = forceResetProductBumper;
   (window as any).getProductBumperState = getProductBumperState;
+  (window as any).resetMouseMovement = resetMouseMovement;
   console.log('🔧 ProductBumper debugging functions available globally');
 }

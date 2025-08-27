@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Tool, Criterion } from '../types';
 import { PPMEmailTemplateGenerator } from '../utils/emailTemplateGenerator';
+import { trackNewReportSent } from '@/lib/posthog';
 
 interface UseEmailReportOptions {
   onSuccess?: (response: any) => void;
@@ -116,6 +117,22 @@ export const useEmailReport = (options: UseEmailReportOptions = {}) => {
       } catch (trackingError) {
         console.warn('Failed to track email event:', trackingError);
         // Don't fail the email send for tracking issues
+      }
+
+      // Track PostHog New_Report_Sent event
+      try {
+        trackNewReportSent({
+          tool_count: data.selectedTools.length,
+          criteria_count: data.selectedCriteria.length,
+          has_chart: !!chartImageUrl,
+          email_domain: data.userEmail.split('@')[1] || 'unknown',
+          guided_ranking_used: !!guidedRankingAnswers,
+          personalization_used: !!personalizationData,
+          test_mode: isTestMode
+        });
+      } catch (posthogError) {
+        console.warn('Failed to track PostHog report event:', posthogError);
+        // Don't fail the email send for PostHog tracking issues
       }
       
       options.onSuccess?.(result);

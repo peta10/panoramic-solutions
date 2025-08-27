@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Criterion } from '@/ppm-tool/shared/types';
 import { useClickOutside } from '@/ppm-tool/shared/hooks/useClickOutside';
 import { useTouchDevice } from '@/ppm-tool/shared/hooks/useTouchDevice';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/ppm-tool/components/ui/button';
+import { Slider } from '@/ppm-tool/components/ui/slider';
+import { trackNewRankingSubmittal } from '@/lib/posthog';
 
 interface GuidedRankingFormProps {
   isOpen: boolean;
@@ -384,8 +387,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     }, 150); // 150ms debounce for user input
     
     return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answers, isOpen]); // Keep calculateRankings out of deps to prevent infinite loops
+  }, [calculateRankings, isOpen, answers]);
 
   const handleSubmit = () => {
     const rankings = calculateRankings();
@@ -396,6 +398,20 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     
     // Save answers and personalization data
     onSaveAnswers?.(answers, personalizationData);
+    
+    // Track PostHog New_Ranking_Submittal event
+    try {
+      trackNewRankingSubmittal({
+        ranking_type: 'guided',
+        questions_answered: Object.keys(answers).length,
+        has_personalization: Object.keys(personalizationData).length > 0,
+        criteria_count: criteria.length,
+        completion_time: Date.now()
+      });
+    } catch (posthogError) {
+      console.warn('Failed to track PostHog ranking event:', posthogError);
+      // Don't fail the form submission for PostHog tracking issues
+    }
     
     // Reset form state and close
     resetFormState();
@@ -444,7 +460,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[70]"
           onClick={handleClose}
           variants={overlayVariants}
           initial="hidden"
@@ -453,13 +469,14 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
         >
           <div 
             className="absolute inset-2 sm:inset-4 flex items-center justify-center pointer-events-none"
+            style={{ paddingTop: 'max(80px, env(safe-area-inset-top, 80px))' }}
           >
             <motion.div 
               ref={formRef} 
               className={`bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden pointer-events-auto flex flex-col ${
                 isTouchDevice 
-                  ? 'h-[96vh] max-h-[50rem] sm:h-[92vh] sm:max-h-[55rem] md:h-[96vh] md:max-h-[65rem]' 
-                  : 'h-[95vh] max-h-[55rem] sm:h-[90vh] sm:max-h-[65rem] md:h-[98vh] md:max-h-[75rem] lg:h-[95vh] lg:max-h-[75rem]'
+                  ? 'h-[90vh] max-h-[45rem] sm:h-[85vh] sm:max-h-[50rem] md:h-[90vh] md:max-h-[60rem]' 
+                  : 'h-[88vh] max-h-[50rem] sm:h-[85vh] sm:max-h-[60rem] md:h-[92vh] md:max-h-[70rem] lg:h-[90vh] lg:max-h-[70rem]'
               }`}
               style={{
                 WebkitOverflowScrolling: 'touch',

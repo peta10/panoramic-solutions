@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getProductBumperState, dismissProductBumper } from '@/ppm-tool/shared/utils/productBumperState';
+import { getExitIntentState, dismissExitIntent } from '@/ppm-tool/shared/utils/exitIntentState';
 
 interface GuidanceContextType {
   showManualGuidance: boolean;
@@ -12,6 +13,11 @@ interface GuidanceContextType {
   triggerProductBumper: () => void;
   closeProductBumper: () => void;
   hasShownProductBumper: boolean;
+  showExitIntentBumper: boolean;
+  triggerExitIntentBumper: (triggerType: 'mouse-leave' | 'tab-switch') => void;
+  closeExitIntentBumper: () => void;
+  hasShownExitIntentBumper: boolean;
+  exitIntentTriggerType: 'mouse-leave' | 'tab-switch' | null;
 }
 
 const GuidanceContext = createContext<GuidanceContextType | undefined>(undefined);
@@ -30,13 +36,23 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
   const [internalShowProductBumper, setInternalShowProductBumper] = useState(false);
   const [hasShownProductBumper, setHasShownProductBumper] = useState(false);
   
+  // Exit intent bumper state
+  const [showExitIntentBumper, setShowExitIntentBumper] = useState(false);
+  const [hasShownExitIntentBumper, setHasShownExitIntentBumper] = useState(false);
+  const [exitIntentTriggerType, setExitIntentTriggerType] = useState<'mouse-leave' | 'tab-switch' | null>(null);
+  
   // Set proper state after mount to avoid hydration mismatch
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // This runs only on client after hydration
-      const state = getProductBumperState();
-      if (state.dismissed) {
+      const productBumperState = getProductBumperState();
+      if (productBumperState.dismissed) {
         setHasShownProductBumper(true);
+      }
+      
+      const exitIntentState = getExitIntentState();
+      if (exitIntentState.dismissed) {
+        setHasShownExitIntentBumper(true);
       }
     }
   }, []); // Run once on mount
@@ -99,6 +115,51 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
     }
   };
 
+  const triggerExitIntentBumper = (triggerType: 'mouse-leave' | 'tab-switch') => {
+    console.log('🎯 triggerExitIntentBumper called - trigger type:', triggerType);
+    
+    // Check if we're in development mode
+    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
+                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+    
+    // Always check localStorage for dismissed state
+    if (typeof window !== 'undefined') {
+      const state = getExitIntentState();
+      if (state.dismissed) {
+        console.log('⛔ ExitIntentBumper permanently dismissed via localStorage');
+        return;
+      }
+    }
+    
+    // Check if already showing or has been shown
+    const canShow = !showExitIntentBumper && !hasShownExitIntentBumper;
+    
+    if (canShow) {
+      console.log('✅ Showing ExitIntentBumper');
+      setExitIntentTriggerType(triggerType);
+      setShowExitIntentBumper(true);
+      setHasShownExitIntentBumper(true);
+    } else {
+      console.log('⚠️ ExitIntentBumper already shown or visible, skipping...');
+    }
+  };
+
+  const closeExitIntentBumper = () => {
+    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
+                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+    
+    setShowExitIntentBumper(false);
+    
+    // Always dismiss to localStorage for persistence
+    dismissExitIntent();
+    console.log('💾 ExitIntentBumper dismissed - saved to localStorage');
+    setHasShownExitIntentBumper(true);
+    
+    if (isDevelopmentMode) {
+      console.log('🔄 ExitIntentBumper closed [DEV MODE] - but still dismissed in localStorage');
+    }
+  };
+
 
 
   return (
@@ -110,7 +171,12 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       showProductBumper,
       triggerProductBumper,
       closeProductBumper,
-      hasShownProductBumper
+      hasShownProductBumper,
+      showExitIntentBumper,
+      triggerExitIntentBumper,
+      closeExitIntentBumper,
+      hasShownExitIntentBumper,
+      exitIntentTriggerType
     }}>
       {children}
     </GuidanceContext.Provider>

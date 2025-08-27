@@ -8,15 +8,18 @@ interface ProductBumperProps {
   isVisible: boolean;
   onClose: () => void;
   onUseGuided: () => void;
+  guidedButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export const ProductBumper: React.FC<ProductBumperProps> = ({
   isVisible,
   onClose,
-  onUseGuided
+  onUseGuided,
+  guidedButtonRef
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0, width: 0 });
   
   // Check for mobile device
   useEffect(() => {
@@ -28,6 +31,59 @@ export const ProductBumper: React.FC<ProductBumperProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Calculate button position when visible
+  useEffect(() => {
+    if (isVisible && guidedButtonRef?.current) {
+      const updatePosition = () => {
+        const button = guidedButtonRef.current;
+        if (!button) return;
+        
+        const rect = button.getBoundingClientRect();
+        
+        // Position directly below the button with small gap
+        let viewportTop = rect.bottom + 12; // 12px gap below button
+        const viewportLeft = rect.left + (rect.width / 2); // Center of button
+        
+        // Check if popup would go off-screen at bottom
+        const popupHeight = 220; // Approximate height of popup
+        const viewportHeight = window.innerHeight;
+        if (viewportTop + popupHeight > viewportHeight - 20) {
+          // Position above the button instead
+          viewportTop = rect.top - popupHeight - 12;
+        }
+        
+        setButtonPosition({
+          top: viewportTop,
+          left: viewportLeft,
+          width: rect.width
+        });
+      };
+      
+      // Update position immediately
+      updatePosition();
+      
+      // Update position on scroll and resize
+      const handleUpdate = () => {
+        requestAnimationFrame(updatePosition);
+      };
+      
+      window.addEventListener('scroll', handleUpdate, { passive: true });
+      window.addEventListener('resize', handleUpdate, { passive: true });
+      
+      return () => {
+        window.removeEventListener('scroll', handleUpdate);
+        window.removeEventListener('resize', handleUpdate);
+      };
+    } else if (isVisible) {
+      // Fallback positioning if button ref is not available
+      setButtonPosition({
+        top: 120, // Default position below header
+        left: window.innerWidth / 2,
+        width: 0
+      });
+    }
+  }, [isVisible, guidedButtonRef]);
 
   // Calculate connecting line coordinates
 
@@ -65,13 +121,18 @@ export const ProductBumper: React.FC<ProductBumperProps> = ({
 
 
 
+  // Don't render anything on mobile
+  if (isMobile) {
+    return null;
+  }
+
   return (
     <AnimatePresence>
-      {isVisible && !isMobile && (
+      {isVisible && (
         <>
           {/* Simple full-page backdrop */}
           <motion.div 
-            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
+            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -80,10 +141,10 @@ export const ProductBumper: React.FC<ProductBumperProps> = ({
           
           
           
-                     {/* Enhanced Popup positioned near Guided Rankings button */}
+                     {/* Enhanced Popup positioned under Guided Rankings button */}
            <motion.div
              ref={popupRef}
-             className="fixed inset-0 z-[60] flex items-start justify-center p-8 pt-56" 
+             className="fixed z-50" 
              variants={popupVariants}
              initial="hidden"
              animate="visible"
@@ -92,8 +153,22 @@ export const ProductBumper: React.FC<ProductBumperProps> = ({
              aria-modal="true"
              aria-labelledby="product-bumper-title"
              aria-describedby="product-bumper-description"
+             style={{
+               top: `${buttonPosition.top}px`,
+               left: `${buttonPosition.left}px`,
+               transform: 'translateX(-50%)', // Center horizontally relative to button
+               maxWidth: '380px',
+               width: 'calc(100vw - 32px)', // Responsive width with padding
+               minWidth: '320px',
+               zIndex: 50
+             }}
            >
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden z-10">
+            <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full overflow-hidden relative">
+              {/* Arrow pointing to button */}
+              <div 
+                className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-200 rotate-45"
+                style={{ zIndex: -1 }}
+              />
               
               {/* Header - Professional styling */}
               <div className="px-4 py-3 border-b flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
