@@ -87,7 +87,7 @@ export const useExitIntent = (options: UseExitIntentOptions) => {
     };
   }, [enabled, hasTriggered, isMobile, pageLoadTime, minTimeOnPage, options]);
 
-  // Enhanced mouse movement detection (optional - for more precise control)
+  // Enhanced mouse movement detection for website navigation header
   useEffect(() => {
     if (!enabled || hasTriggered || isMobile) return;
 
@@ -97,19 +97,25 @@ export const useExitIntent = (options: UseExitIntentOptions) => {
         clearTimeout(mouseLeaveTimeoutRef.current);
       }
 
-      // If mouse is near the top of the viewport (within 50px), start a timer
-      if (e.clientY <= 50) {
+      // Calculate approximate header height (similar to NavigationToggle logic)
+      // Header: ~60px (mobile) to ~68px (desktop)
+      // Navigation: ~84px
+      // Total fixed height is approximately 140-160px
+      const headerHeight = window.innerWidth < 768 ? 144 : 152; // Approximate total header + nav height
+      
+      // If mouse is within the website navigation header area, start a timer
+      if (e.clientY <= headerHeight) {
         mouseLeaveTimeoutRef.current = setTimeout(() => {
           const timeOnPage = Date.now() - pageLoadTime;
           
           if (timeOnPage >= minTimeOnPage && shouldShowExitIntent()) {
-            console.log('🎯 Exit intent triggered: mouse near top');
+            console.log('🎯 Exit intent triggered: mouse in navigation header area');
             recordMouseLeaveTrigger();
             incrementExitIntentShowCount();
             setHasTriggered(true);
             options.onTrigger('mouse-leave');
           }
-        }, 1000); // 1 second delay when mouse is near top
+        }, 1000); // 1 second delay when mouse is in header area
       }
     };
 

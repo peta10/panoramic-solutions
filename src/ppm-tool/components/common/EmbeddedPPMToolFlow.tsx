@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { NavigationToggle } from '@/ppm-tool/components/layout/NavigationToggle';
 import { SplitView } from '@/ppm-tool/components/layout/SplitView';
 import { ComparisonChart } from '@/ppm-tool/components/charts/ComparisonChart';
@@ -52,9 +53,7 @@ interface DbCriterion {
 
 interface DbTag {
   name: string;
-  tag_type: {
-    name: string;
-  };
+  type: string;
 }
 
 interface DbTool {
@@ -85,7 +84,7 @@ interface PersonalizationData {
 
 export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   showGuidedRanking = false,
-  onGuidedRankingComplete,
+  onGuidedRankingComplete: onGuidedRankingCompleteFromParent,
   onOpenGuidedRanking,
   onShowHowItWorks,
   guidedButtonRef
@@ -107,7 +106,9 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     showExitIntentBumper,
     closeExitIntentBumper,
     triggerExitIntentBumper,
-    exitIntentTriggerType
+    exitIntentTriggerType,
+    onGuidedRankingStart,
+    onGuidedRankingComplete
   } = useGuidance();
 
   // Debug logging for guidance state (only log when state changes)
@@ -140,7 +141,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   const { hasTriggered: exitIntentTriggered } = useExitIntent({
     onTrigger: triggerExitIntentBumper,
     enabled: !isMobile, // Only enable on desktop
-    minTimeOnPage: 30000 // Minimum 30 seconds before showing
+    minTimeOnPage: 120000 // Minimum 2 minutes before showing
   });
   // Set initial step based on mobile detection - move logic outside hook
   const getInitialStep = () => {
@@ -162,6 +163,9 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [comparedTools, setComparedTools] = useState<Set<string>>(new Set());
   const [chartButtonPosition, setChartButtonPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  
+  // Get Report button ref for ExitIntentBumper unblur cutout
+  const getReportButtonRef = useRef<HTMLButtonElement>(null);
 
   // Add state for guided ranking answers and personalization data
   const [guidedRankingAnswers, setGuidedRankingAnswers] = useState<Record<string, GuidedRankingAnswer>>({});
@@ -298,10 +302,10 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
       // Process tags for methodologies and functions
       if (Array.isArray(dbTool.tags)) {
         dbTool.tags.forEach((tag: DbTag) => {
-          if (tag && tag.name && tag.tag_type) {
-            if (tag.tag_type.name === 'Methodology') {
+          if (tag && tag.name && tag.type) {
+            if (tag.type === 'Methodology') {
               methodologies.push(tag.name);
-            } else if (tag.tag_type.name === 'Function') {
+            } else if (tag.type === 'Function') {
               functions.push(tag.name);
             }
           }
@@ -603,6 +607,33 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     }
   }, [currentStep, showProductBumper, closeProductBumper]);
 
+  // Track guided ranking state for coordination
+  useEffect(() => {
+    if (showGuidedRanking) {
+      onGuidedRankingStart();
+    }
+  }, [showGuidedRanking, onGuidedRankingStart]);
+
+  // Development keybind for testing ExitIntentBumper appearance (Ctrl+Shift+E)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      console.log('🔧 Key pressed:', e.key, 'Ctrl:', e.ctrlKey, 'Shift:', e.shiftKey);
+      
+      if (e.ctrlKey && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
+        e.preventDefault();
+        console.log('🎯 Testing ExitIntentBumper appearance via keybind');
+        triggerExitIntentBumper('mouse-leave');
+      }
+    };
+
+    console.log('🔧 Adding keybind listener for ExitIntentBumper test');
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      console.log('🔧 Removing keybind listener');
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [triggerExitIntentBumper]);
+
   const filteredTools = filterTools(selectedTools, filterConditions, filterMode);
 
   // Handlers for criteria
@@ -652,6 +683,36 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     );
   };
 
+  // Handler for guided ranking methodology filtering
+  const handleMethodologyFilter = React.useCallback((methodologies: string[]) => {
+    setFilterConditions(prevFilterConditions => {
+      // Clear existing methodology filters
+      const nonMethodologyFilters = prevFilterConditions.filter(c => c.type !== 'Methodology');
+      
+      if (methodologies.length === 0) {
+        // No methodologies selected or "Not Sure" - show all tools
+        return nonMethodologyFilters;
+      } else {
+        // Create methodology filter conditions for each selected methodology
+        const methodologyFilters: FilterCondition[] = methodologies.map((methodology, index) => ({
+          id: `guided-methodology-${index}`,
+          type: 'Methodology' as const,
+          value: methodology,
+          operator: undefined,
+          rating: undefined
+        }));
+        
+        // Set filter mode to OR when multiple methodologies are selected
+        if (methodologies.length > 1) {
+          setFilterMode('OR');
+        }
+        
+        // Apply the new methodology filters
+        return [...nonMethodologyFilters, ...methodologyFilters];
+      }
+    });
+  }, []);
+
   const handleToggleFilterMode = () => {
     setFilterMode(filterMode === 'AND' ? 'OR' : 'AND');
   };
@@ -665,7 +726,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         userRating: rankings[criterion.id] !== undefined ? rankings[criterion.id] : criterion.userRating
       }))
     );
-    onGuidedRankingComplete?.();
+    onGuidedRankingCompleteFromParent?.();
   };
 
   // Throttled real-time update for background preview to prevent infinite loops
@@ -949,6 +1010,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             filteredTools={filteredTools}
             onShowHowItWorks={onShowHowItWorks}
             isProductBumperVisible={showProductBumper}
+            getReportButtonRef={getReportButtonRef}
             onChartButtonPosition={setChartButtonPosition}
           />
           <main 
@@ -957,10 +1019,27 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
               isMobile && "pb-28" // Increased padding to accommodate the action buttons
             )}
             style={{
-              paddingTop: isMobile ? "var(--header-height-mobile, 15rem)" : "var(--header-height-desktop, 11.25rem)" // Direct use of REM variables to avoid conflicts
+              paddingTop: "var(--total-fixed-height, 12rem)" // Use the calculated total height from NavigationToggle
             }}
           >
-            {renderContent()}
+            {/* Mobile Logo - Scrollable, appears above content */}
+            {isMobile && (
+              <div className="text-center mb-4 pb-2 border-b border-gray-200/50">
+                <div className="flex justify-center px-4 mt-2">
+                  <Image
+                    src="/images/PPM_Tool_Finder.png"
+                    alt="PPM Tool Finder"
+                    width={200}
+                    height={60}
+                    className="h-8 md:h-10 w-auto object-contain"
+                    priority
+                  />
+                </div>
+              </div>
+            )}
+            <div className="pb-4">
+              {renderContent()}
+            </div>
           </main>
           {isMobile && (
             <ActionButtons 
@@ -968,6 +1047,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
               selectedCriteria={criteria}
               filteredTools={filteredTools}
               onShowHowItWorks={onShowHowItWorks}
+              getReportButtonRef={getReportButtonRef}
             />
           )}
         </div>
@@ -975,11 +1055,17 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         {/* Guided Ranking Form */}
         <GuidedRankingForm
           isOpen={showGuidedRanking}
-          onClose={onGuidedRankingComplete || (() => {})}
+          onClose={() => {
+            // Call the coordination handler first from useGuidance
+            onGuidedRankingComplete();
+            // Then call the original handler from props
+            onGuidedRankingCompleteFromParent && onGuidedRankingCompleteFromParent();
+          }}
           criteria={criteria}
           onUpdateRankings={handleUpdateRankings}
           onRealTimeUpdate={handleRealTimeUpdate}
           onSaveAnswers={handleSaveAnswers}
+          onMethodologyFilter={handleMethodologyFilter}
         />
 
         {/* Product Bumper - guides users to guided ranking */}
@@ -998,6 +1084,9 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           isVisible={showExitIntentBumper}
           onClose={closeExitIntentBumper}
           triggerType={exitIntentTriggerType || 'mouse-leave'}
+          toolCount={filteredTools.length}
+          hasFilters={filterConditions.length > 0}
+          emailButtonRef={getReportButtonRef}
         />
 
         {/* REMOVED: Mobile Diagnostics - Causes browser compatibility issues with Edge/Safari

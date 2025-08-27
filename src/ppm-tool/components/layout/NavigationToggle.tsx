@@ -23,6 +23,7 @@ interface NavigationToggleProps {
   onAnimationTrigger?: () => void;
   onShowHowItWorks?: () => void;
   isProductBumperVisible?: boolean;
+  getReportButtonRef?: React.RefObject<HTMLButtonElement>;
   onChartButtonPosition?: (position: { x: number; y: number }) => void;
 }
 
@@ -36,6 +37,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
   onAnimationTrigger,
   onShowHowItWorks,
   isProductBumperVisible = false,
+  getReportButtonRef,
   onChartButtonPosition
 }) => {
   const isMobile = useMobileDetection();
@@ -56,21 +58,16 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
 
   // Calculate header height (fixed - no scroll changes)
   const getHeaderHeight = useCallback(() => {
-    // Header uses py-2 (16px padding) consistently
+    // Header uses py-2 but paddingTop style overrides the top portion
+    // paddingTop: 'max(12px, env(safe-area-inset-top, 12px))' = 12px top
+    // py-2 = 8px bottom (top portion is overridden by style)
     // Logo height: h-8 (32px) on mobile, h-10 (40px) on desktop
-    const padding = 16; // py-2 = 16px (fixed)
+    const topPadding = 12; // From style override: max(12px, env(safe-area-inset-top, 12px))
+    const bottomPadding = 8; // From py-2 (bottom portion only)
     const logoHeight = isMobile ? 32 : 40; // h-8 = 32px, h-10 = 40px
     
-    // Add safe area inset for mobile devices
-    if (isMobile && typeof window !== 'undefined') {
-      // SAFE: Use default safe area instead of getComputedStyle which can fail in Edge/Safari
-      const safeAreaTop = 0; // Safe default - CSS custom properties can cause crashes
-      // Add extra padding for mobile to ensure content isn't cut off
-      const mobileExtraPadding = 24; // Increased from 16 to 24px for more space
-      return padding + logoHeight + safeAreaTop + mobileExtraPadding;
-    }
-    
-    return padding + logoHeight;
+    // Total header height: top padding + bottom padding + logo height
+    return topPadding + bottomPadding + logoHeight;
   }, [isMobile]);
 
   // Calculate navigation height (fixed - no scroll changes)
@@ -80,11 +77,11 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     const padding = 16; // py-2 = 16px (fixed)
     const contentHeight = 40; // Approximate content height
     
-    // Add extra height for mobile logo section
-    const mobileLogoHeight = isMobile ? 60 : 0; // Logo + border + padding
+    // Mobile logo is now scrollable, so no extra height needed for sticky nav
+    const mobileLogoHeight = 0; // Logo is no longer part of sticky navigation
     
-    // Add extra spacing between navigation and main content
-    const extraSpacing = isMobile ? 32 : 48; // Increased spacing: mobile from 24 to 32px, desktop from 32 to 48px
+    // Comfortable spacing between navigation and main content
+    const extraSpacing = isMobile ? 28 : 28; // Increased spacing for better visual separation
     
     return padding + contentHeight + mobileLogoHeight + extraSpacing;
   }, [isMobile]);
@@ -202,7 +199,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
       aria-label="PPM Tool Navigation"
       role="navigation"
     >
-      <div className="container mx-auto px-3 md:px-4 pt-4 pb-2">
+      <div className="container mx-auto px-2 md:px-4 pt-4 pb-2">
         <div className={cn(
           "flex items-center",
           isMobile ? "justify-center" : "justify-between"
@@ -210,12 +207,15 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
           {/* Navigation Steps - Left Side */}
           <div className={cn(
             "flex items-center",
-            isMobile ? "w-full max-w-md mx-auto" : ""
+            isMobile ? "w-full justify-center" : ""
           )}>
             {/* Simple Tab Navigation */}
-            <div className="flex items-center space-x-6 relative">
-              {/* Continuous base line - starts at first letter of first tab */}
-              <div className="absolute bottom-0 left-4 right-0 h-0.5 bg-gray-300"></div>
+            <div className={cn(
+              "flex items-center relative",
+              isMobile ? "space-x-4" : "space-x-6"
+            )}>
+              {/* Continuous base line - spans across all tabs */}
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-300"></div>
               
               {steps.map((step) => {
                 const isActive = currentStep === step.id;
@@ -227,7 +227,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
                     ref={isChartStep ? chartButtonRef : undefined}
                     onClick={() => onStepChange(step.id)}
                     className={cn(
-                      'relative px-1 py-2 font-bold transition-all duration-300',
+                      'relative py-2 font-bold transition-all duration-300',
+                      isMobile ? 'px-2 text-center' : 'px-1',
                       isActive
                         ? 'text-blue-600'
                         : 'text-gray-700',
@@ -279,26 +280,12 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
               selectedCriteria={selectedCriteria}
               filteredTools={filteredTools}
               onShowHowItWorks={onShowHowItWorks}
+              getReportButtonRef={getReportButtonRef}
             />
           )}
-        </div>
-
-        {/* Mobile Logo - Below navigation */}
-        {isMobile && (
-          <div className="text-center mt-3 pt-3 border-t border-gray-200/50">
-            <div className="flex justify-center px-4">
-              <Image
-                src="/images/PPM_Tool_Finder.png"
-                alt="PPM Tool Finder"
-                width={200}
-                height={60}
-                className="h-8 md:h-10 w-auto object-contain"
-                priority
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
+                 </div>
+       </div>
+     </nav>
   );
 }; 
+

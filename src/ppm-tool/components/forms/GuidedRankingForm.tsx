@@ -17,6 +17,7 @@ interface GuidedRankingFormProps {
   onUpdateRankings: (rankings: { [key: string]: number }) => void;
   onRealTimeUpdate?: (rankings: { [key: string]: number }) => void;
   onSaveAnswers?: (answers: Record<string, QuestionAnswer>, personalizationData: Record<string, QuestionAnswer>) => void;
+  onMethodologyFilter?: (methodologies: string[]) => void;
 }
 
 interface QuestionOption {
@@ -184,7 +185,8 @@ const questions: Question[] = [
     options: [
       { text: 'Agile', value: 1 },
       { text: 'Waterfall', value: 2 },
-      { text: 'Continuous Improvement', value: 3 }
+      { text: 'Continuous Improvement', value: 3 },
+      { text: 'Not Sure', value: 4 }
     ]
   }
 ];
@@ -197,7 +199,8 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
   criteria,
   onUpdateRankings,
   onRealTimeUpdate,
-  onSaveAnswers
+  onSaveAnswers,
+  onMethodologyFilter
 }) => {
   const [answers, setAnswers] = React.useState<Record<string, QuestionAnswer>>({});
   const [currentStep, setCurrentStep] = React.useState(0);
@@ -211,11 +214,26 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
   onRealTimeUpdateRef.current = onRealTimeUpdate;
   
   // Reset form state whenever the form closes
-  const resetFormState = () => {
+  const resetFormState = React.useCallback(() => {
     setAnswers({});
     setOtherAnswers({});
     setCurrentStep(0);
-  };
+  }, []);
+
+  // Track if we've cleared filters to avoid unnecessary calls
+  const hasOpenedRef = React.useRef(false);
+  
+  // Separate effect to clear methodology filters when form opens
+  React.useEffect(() => {
+    if (isOpen && !hasOpenedRef.current) {
+      // Clear methodology filters when form opens for the first time
+      onMethodologyFilter?.([]);
+      hasOpenedRef.current = true;
+    } else if (!isOpen) {
+      // Reset the flag when form closes
+      hasOpenedRef.current = false;
+    }
+  }, [isOpen, onMethodologyFilter]);
 
   const handleClose = () => {
     // If user has answered any questions, apply partial rankings with defaults
@@ -241,7 +259,7 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     if (isOpen) {
       resetFormState();
     }
-  }, [isOpen]);
+  }, [isOpen, resetFormState]);
 
   const handleAnswer = (questionId: string, value: number) => {
     const question = questions.find(q => q.id === questionId);
@@ -253,11 +271,41 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
         const newValues = currentValues.includes(value)
           ? currentValues.filter((v: number) => v !== value)
           : [...currentValues, value];
+        
+        // Apply methodology filtering for Q12
+        if (questionId === 'q12') {
+          applyMethodologyFilter(newValues);
+        }
+        
         return { ...prev, [questionId]: newValues };
       });
     } else {
       // For single-select, just set the value
       setAnswers(prev => ({ ...prev, [questionId]: value }));
+    }
+  };
+
+  const applyMethodologyFilter = (selectedValues: number[]) => {
+    if (!onMethodologyFilter) return;
+    
+    // Map values to methodology names
+    const valueToMethodology: { [key: number]: string } = {
+      1: 'Agile',
+      2: 'Waterfall', 
+      3: 'Continuous Improvement',
+      4: 'Not Sure'
+    };
+    
+    const selectedMethodologies = selectedValues
+      .map(value => valueToMethodology[value])
+      .filter(Boolean);
+    
+    // If "Not Sure" is selected or no methodologies selected, show all tools (empty filter)
+    if (selectedMethodologies.includes('Not Sure') || selectedMethodologies.length === 0) {
+      onMethodologyFilter([]);
+    } else {
+      // Apply actual methodology filters (OR logic - show tools that support ANY selected methodology)
+      onMethodologyFilter(selectedMethodologies);
     }
   };
 

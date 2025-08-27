@@ -13,13 +13,15 @@ interface ActionButtonsProps {
   selectedCriteria?: Criterion[];
   filteredTools?: Tool[];
   onShowHowItWorks?: () => void;
+  getReportButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({ 
   selectedTools = [], 
   selectedCriteria = [],
   filteredTools = [],
-  onShowHowItWorks
+  onShowHowItWorks,
+  getReportButtonRef
 }) => {
   const isMobile = useMobileDetection();
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -75,6 +77,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
               )}
               {/* Get Report Button - Blue (Mobile) */}
               <button
+                ref={getReportButtonRef}
                 onClick={handleGetReport}
                 className={cn(
                   `${onShowHowItWorks ? 'flex-1' : 'w-full'} bg-blue-400 text-white px-4 py-3 rounded-xl font-medium text-sm`,
@@ -119,6 +122,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         )}
         
         <button
+          ref={getReportButtonRef}
           onClick={handleGetReport}
           className="bg-alpine-blue-400 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-alpine-blue-500 transition-colors"
         >

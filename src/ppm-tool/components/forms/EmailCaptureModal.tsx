@@ -153,7 +153,7 @@ export const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
                   We&apos;ll send a clean, easy-to-read version of your results, rankings, and recommendations to your inbox.
                 </p>
                 <p className="text-xs md:text-sm text-blue-700 font-medium">
-                  📊 Your email will include analysis of <strong>{selectedTools.length} {selectedTools.length === 1 ? 'tool' : 'tools'}</strong> based on your current filters.
+                  📊 Your report will include analysis of <strong>{selectedTools.length} {selectedTools.length === 1 ? 'tool' : 'tools'}</strong> based on your current rankings and filters.
                 </p>
               </div>
               

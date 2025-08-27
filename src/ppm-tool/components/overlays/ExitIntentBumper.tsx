@@ -8,16 +8,28 @@ interface ExitIntentBumperProps {
   isVisible: boolean;
   onClose: () => void;
   triggerType?: 'mouse-leave' | 'tab-switch';
+  toolCount?: number;
+  hasFilters?: boolean;
+  emailButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export const ExitIntentBumper: React.FC<ExitIntentBumperProps> = ({
   isVisible,
   onClose,
-  triggerType = 'mouse-leave'
+  triggerType = 'mouse-leave',
+  toolCount = 0,
+  hasFilters = false,
+  emailButtonRef
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [emailButtonPosition, setEmailButtonPosition] = useState({ 
+    x: '50%', 
+    y: '50%', 
+    width: '200px',
+    height: '50px' 
+  });
   
   // Check for mobile device
   useEffect(() => {
@@ -29,6 +41,99 @@ export const ExitIntentBumper: React.FC<ExitIntentBumperProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Track email button position for the unblur cutout
+  useEffect(() => {
+    if (isVisible) {
+      const updateEmailButtonPosition = () => {
+        // Try multiple selectors to find the email button
+        const selectors = [
+          '[data-testid="get-report-button"]',
+          'button:contains("Get my Free Comparison Report")',
+          'button[class*="get-report"]',
+          'button:has-text("Get my Free Comparison Report")',
+          // Fallback: look for any button with "report" or "comparison" in text
+          'button'
+        ];
+        
+        let emailButton = null;
+        
+        // Try using the ref first
+        if (emailButtonRef?.current) {
+          emailButton = emailButtonRef.current;
+        } else {
+          // Fallback: search for the button by text content
+          const buttons = document.querySelectorAll('button');
+          for (let i = 0; i < buttons.length; i++) {
+            const button = buttons[i];
+            const text = button.textContent?.toLowerCase() || '';
+            if (text.includes('get my free comparison report') || 
+                text.includes('get report') || 
+                text.includes('free comparison') ||
+                text.includes('comparison report')) {
+              emailButton = button;
+              console.log('📍 Found email button via text search:', text);
+              break;
+            }
+          }
+        }
+        
+        // If still not found, try a more aggressive search
+        if (!emailButton) {
+          const allButtons = document.querySelectorAll('button');
+          for (let i = 0; i < allButtons.length; i++) {
+            const button = allButtons[i];
+            const text = button.textContent?.toLowerCase() || '';
+            if (text.includes('report') && text.includes('free')) {
+              emailButton = button;
+              console.log('📍 Found email button via aggressive search:', text);
+              break;
+            }
+          }
+        }
+        
+        if (emailButton) {
+          const rect = emailButton.getBoundingClientRect();
+          
+          // Calculate the rectangular area with some padding
+          const padding = 8; // Reduced padding for thinner fit
+          const left = rect.left - padding;
+          const top = rect.top - padding;
+          const width = rect.width + (padding * 2);
+          const height = rect.height + (padding * 2);
+          
+          // Convert to pixels for precise positioning
+          setEmailButtonPosition({
+            x: `${left}px`,
+            y: `${top}px`,
+            width: `${width}px`,
+            height: `${height}px`
+          });
+          
+          console.log('📍 Email button found and tracked (rectangular):', { 
+            left, top, width, height
+          });
+        } else {
+          console.warn('⚠️ Email button not found for unblur cutout');
+        }
+      };
+      
+      // Update position immediately and on changes
+      updateEmailButtonPosition();
+      
+      const handleUpdate = () => {
+        requestAnimationFrame(updateEmailButtonPosition);
+      };
+      
+      window.addEventListener('scroll', handleUpdate, { passive: true });
+      window.addEventListener('resize', handleUpdate, { passive: true });
+      
+      return () => {
+        window.removeEventListener('scroll', handleUpdate);
+        window.removeEventListener('resize', handleUpdate);
+      };
+    }
+  }, [isVisible, emailButtonRef]);
 
   // Calculate popup position when visible - position near header button
   useEffect(() => {
@@ -61,14 +166,10 @@ export const ExitIntentBumper: React.FC<ExitIntentBumperProps> = ({
   }, [isVisible]);
 
   const getMessage = () => {
-    switch (triggerType) {
-      case 'mouse-leave':
-        return "Wait! Don't leave without your personalized PPM tool comparison report.";
-      case 'tab-switch':
-        return "Don't lose your progress! Get your free comparison report before you go.";
-      default:
-        return "Get your personalized PPM tool comparison report in just 2 minutes.";
-    }
+    const toolText = toolCount > 0 ? `${toolCount} tools` : 'tools';
+    const filterText = hasFilters ? 'rankings and filters' : 'current rankings';
+    
+    return `Your report will include analysis of ${toolText} based on your ${filterText}.`;
   };
 
   const getSubMessage = () => {
@@ -116,19 +217,83 @@ export const ExitIntentBumper: React.FC<ExitIntentBumperProps> = ({
     <AnimatePresence>
       {isVisible && (
         <>
-          {/* Full-page backdrop with stronger blur */}
+          {/* Create four separate blur rectangles around the button area */}
+          {/* Top rectangle */}
           <motion.div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-[8px] z-30"
+            className="fixed z-[70]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
+            style={{
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: emailButtonPosition.y,
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)'
+            }}
+          />
+
+          {/* Bottom rectangle */}
+          <motion.div 
+            className="fixed z-[70]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            style={{
+              top: `calc(${emailButtonPosition.y} + ${emailButtonPosition.height})`,
+              left: 0,
+              width: '100%',
+              height: `calc(100% - ${emailButtonPosition.y} - ${emailButtonPosition.height})`,
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)'
+            }}
+          />
+
+          {/* Left rectangle */}
+          <motion.div 
+            className="fixed z-[70]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            style={{
+              top: emailButtonPosition.y,
+              left: 0,
+              width: emailButtonPosition.x,
+              height: emailButtonPosition.height,
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)'
+            }}
+          />
+
+          {/* Right rectangle */}
+          <motion.div 
+            className="fixed z-[70]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            style={{
+              top: emailButtonPosition.y,
+              left: `calc(${emailButtonPosition.x} + ${emailButtonPosition.width})`,
+              width: `calc(100% - ${emailButtonPosition.x} - ${emailButtonPosition.width})`,
+              height: emailButtonPosition.height,
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)'
+            }}
           />
           
           {/* Exit Intent Popup - Positioned near header button */}
           <motion.div
             ref={popupRef}
-            className="fixed z-50" 
+            className="fixed z-[80]" 
             variants={popupVariants}
             initial="hidden"
             animate="visible"
@@ -143,7 +308,7 @@ export const ExitIntentBumper: React.FC<ExitIntentBumperProps> = ({
               maxWidth: '380px',
               width: 'calc(100vw - 32px)',
               minWidth: '320px',
-              zIndex: 50
+              zIndex: 80
             }}
           >
             <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full overflow-hidden relative">
@@ -177,10 +342,6 @@ export const ExitIntentBumper: React.FC<ExitIntentBumperProps> = ({
               <div className="p-4">
                 <p className="text-sm text-gray-600 mb-3">
                   {getMessage()}
-                </p>
-                
-                <p className="text-xs text-gray-500">
-                  Takes just 2 minutes • Research-backed analysis
                 </p>
               </div>
             </div>

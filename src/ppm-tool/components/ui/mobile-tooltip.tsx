@@ -17,11 +17,6 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
   align = 'center',
   className = ''
 }) => {
-  // TEMPORARILY DISABLE ALL TOOLTIP FUNCTIONALITY TO FIX INFINITE LOOP
-  return <>{children}</>;
-  
-  // DISABLED CODE BELOW - keeping for reference
-  /*
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -29,13 +24,16 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
   const isTouchDevice = useTouchDevice();
 
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsOpen(!isOpen);
+    if (isTouchDevice) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsOpen(!isOpen);
+    }
   };
 
   const handleClickOutside = (e: MouseEvent) => {
-    if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+    if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node) &&
+        triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
       setIsOpen(false);
     }
   };
@@ -43,10 +41,11 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
   useEffect(() => {
     if (!isTouchDevice || !isOpen) return;
     
-    document.addEventListener('click', handleClickOutside);
-    const timer = setTimeout(() => setIsOpen(false), 4000);
+    document.addEventListener('click', handleClickOutside, true);
+    const timer = setTimeout(() => setIsOpen(false), 5000);
+    
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside, true);
       clearTimeout(timer);
     };
   }, [isOpen, isTouchDevice]);
@@ -119,6 +118,7 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
         break;
     }
 
+    // Viewport boundary checking
     const padding = 8;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -135,6 +135,7 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
     setPosition({ top, left });
   }, [isOpen, side, align, isTouchDevice]);
 
+  // On desktop, use the standard Radix tooltip with hover behavior
   if (!isTouchDevice) {
     return (
       <Tooltip>
@@ -148,6 +149,7 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
     );
   }
 
+  // On mobile/touch devices, use click-to-show tooltip
   return (
     <>
       <div
@@ -161,7 +163,7 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
       {isOpen && (
         <div
           ref={tooltipRef}
-          className={`fixed z-[100] px-3 py-2 text-sm bg-gray-900 text-white rounded-md shadow-lg pointer-events-auto ${className}`}
+          className={`fixed z-[9999] px-3 py-2 text-sm bg-gray-900 text-white rounded-md shadow-lg pointer-events-auto max-w-xs break-words ${className}`}
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
@@ -172,5 +174,4 @@ export const MobileTooltip: React.FC<MobileTooltipProps> = ({
       )}
     </>
   );
-  */
 };

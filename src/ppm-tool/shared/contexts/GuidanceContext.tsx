@@ -3,6 +3,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getProductBumperState, dismissProductBumper } from '@/ppm-tool/shared/utils/productBumperState';
 import { getExitIntentState, dismissExitIntent } from '@/ppm-tool/shared/utils/exitIntentState';
+import { 
+  canShowProductBumper, 
+  canShowExitIntentBumper, 
+  recordBumperShown,
+  markGuidedRankingActive,
+  markGuidedRankingCompleted
+} from '@/ppm-tool/shared/utils/bumperCoordination';
 
 interface GuidanceContextType {
   showManualGuidance: boolean;
@@ -18,6 +25,8 @@ interface GuidanceContextType {
   closeExitIntentBumper: () => void;
   hasShownExitIntentBumper: boolean;
   exitIntentTriggerType: 'mouse-leave' | 'tab-switch' | null;
+  onGuidedRankingStart: () => void;
+  onGuidedRankingComplete: () => void;
 }
 
 const GuidanceContext = createContext<GuidanceContextType | undefined>(undefined);
@@ -87,6 +96,12 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       }
     }
     
+    // Check bumper coordination rules
+    if (!canShowProductBumper()) {
+      console.log('⚠️ ProductBumper blocked by coordination rules');
+      return;
+    }
+    
     // Check if already showing or has been shown
     const canShow = !internalShowProductBumper && !hasShownProductBumper;
     
@@ -94,6 +109,7 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       console.log('✅ Showing ProductBumper');
       setInternalShowProductBumper(true);
       setHasShownProductBumper(true);
+      recordBumperShown('product');
     } else {
       console.log('⚠️ ProductBumper already shown or visible, skipping...');
     }
@@ -131,6 +147,12 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       }
     }
     
+    // Check bumper coordination rules (includes guided ranking and delay logic)
+    if (!canShowExitIntentBumper()) {
+      console.log('⚠️ ExitIntentBumper blocked by coordination rules');
+      return;
+    }
+    
     // Check if already showing or has been shown
     const canShow = !showExitIntentBumper && !hasShownExitIntentBumper;
     
@@ -139,6 +161,7 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       setExitIntentTriggerType(triggerType);
       setShowExitIntentBumper(true);
       setHasShownExitIntentBumper(true);
+      recordBumperShown('exit-intent');
     } else {
       console.log('⚠️ ExitIntentBumper already shown or visible, skipping...');
     }
@@ -160,7 +183,15 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
     }
   };
 
+  const onGuidedRankingStart = () => {
+    console.log('🎯 Guided ranking started - marking as active');
+    markGuidedRankingActive();
+  };
 
+  const onGuidedRankingComplete = () => {
+    console.log('🎯 Guided ranking completed - starting delay timer');
+    markGuidedRankingCompleted();
+  };
 
   return (
     <GuidanceContext.Provider value={{
@@ -176,7 +207,9 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       triggerExitIntentBumper,
       closeExitIntentBumper,
       hasShownExitIntentBumper,
-      exitIntentTriggerType
+      exitIntentTriggerType,
+      onGuidedRankingStart,
+      onGuidedRankingComplete
     }}>
       {children}
     </GuidanceContext.Provider>

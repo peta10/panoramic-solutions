@@ -43,17 +43,11 @@ export const filterTools = (
     const results = validConditions.map(condition => {
       switch (condition.type) {
         case 'Methodology': {
-          // Define tool exclusions for each methodology
-          const methodologyExclusions: Record<string, string[]> = {
-            'Waterfall': ['Azure DevOps', 'Jira'],
-            'Agile': ['Smartsheet', 'Monday.com', 'ClickUp', 'Asana', 'MS Project', 'Hive', 'Adobe Workfront'],
-            'Continuous Improvement': ['ClickUp', 'Asana', 'MS Project', 'Azure DevOps', 'Jira']
-          };
-          
-          const excludedTools = methodologyExclusions[condition.value] || [];
-          const isExcluded = excludedTools.includes(tool.name);
-          console.debug(`Methodology filter for ${tool.name}: ${condition.value} -> ${isExcluded ? 'excluded' : 'included'}`);
-          return !isExcluded;
+          // Check if the tool actually supports the selected methodology
+          const toolMethodologies = tool.methodologies || [];
+          const supportsMethodology = toolMethodologies.includes(condition.value);
+          console.debug(`Methodology filter for ${tool.name}: ${condition.value} -> ${supportsMethodology ? 'included' : 'excluded'} (tool methodologies: ${toolMethodologies.join(', ')})`);
+          return supportsMethodology;
         }
         
         case 'Criteria': {
