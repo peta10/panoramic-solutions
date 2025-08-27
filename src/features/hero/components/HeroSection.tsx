@@ -67,7 +67,7 @@ export function HeroSection() {
   const { ref } = useHeroAnimation()
 
   return (
-    <section ref={ref} className="relative h-screen sm:h-screen lg:h-[85vh] xl:h-[80vh] flex items-center justify-center overflow-hidden pt-24 sm:pt-32 lg:pt-24">
+    <section ref={ref} className="relative h-[85vh] sm:h-screen lg:h-[85vh] xl:h-[80vh] flex items-center justify-center overflow-hidden pt-20 sm:pt-32 lg:pt-24">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -83,12 +83,12 @@ export function HeroSection() {
 
       {/* Hero Content */}
       <motion.div
-        className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-start pt-8 pb-16 sm:pt-12 sm:pb-20 lg:pt-16 lg:pb-24"
+        className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-start pt-4 pb-4 sm:pt-12 sm:pb-20 lg:pt-16 lg:pb-24"
         variants={heroTitleContainer}
         initial="initial"
         animate="animate"
       >
-        <div className="mb-3 sm:mb-4 lg:mb-6">
+        <h1 className="mb-3 sm:mb-4 lg:mb-6">
           <motion.div
             variants={heroTitleLine}
             className="heading-mobile font-bold leading-tight"
@@ -101,7 +101,7 @@ export function HeroSection() {
           >
             <span className="text-white">Software & Project Management</span>
           </motion.div>
-        </div>
+        </h1>
         
         <motion.p
           className="text-lg sm:text-xl lg:text-2xl mb-4 sm:mb-6 lg:mb-8 text-snow/90 max-w-4xl mx-auto leading-relaxed"
@@ -114,19 +114,29 @@ export function HeroSection() {
 
         {/* PPM Tool Finder Highlight */}
         <motion.div
-          className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6 border border-white/20 shadow-lg max-w-2xl mx-auto"
+          className="p-3 rounded-lg border border-alpine mb-2 sm:mb-3 shadow-md max-w-lg mx-auto"
+          style={{ backgroundColor: '#e9f2ee' }}
           variants={heroButtons}
         >
-          <div className="text-center">
-            <p className="text-white/90 text-sm sm:text-base mb-2 sm:mb-3 leading-relaxed">
-              Get 100% free personalized recommendations with our intelligent Project Portfolio Management Tool assessment.
-            </p>
-            <Button
-              className="btn-hover-lift bg-white hover:bg-white/90 text-midnight font-semibold px-4 sm:px-6 py-2 sm:py-3 shadow-lg text-sm sm:text-base w-full sm:w-auto"
-              onClick={() => window.open('/ppm-tool', '_self')}
-            >
-              Start Free Assessment <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+          <div className="flex items-start space-x-2">
+            <div className="flex-shrink-0 text-alpine">
+              <ArrowRight className="h-4 w-4 mt-0.5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-midnight mb-1">
+                PPM Tool Finder - FREE Interactive Assessment
+              </h3>
+              <p className="text-midnight/70 text-xs mb-2 leading-relaxed">
+                Get personalized PPM software recommendations in minutes.
+              </p>
+              <Button
+                size="sm"
+                className="btn-hover-lift bg-white hover:bg-white/90 text-midnight font-semibold px-3 py-1 shadow-md text-xs"
+                onClick={() => window.open('/ppm-tool', '_self')}
+              >
+                Try PPM Tool Finder <ArrowRight className="ml-1 h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </motion.div>
 

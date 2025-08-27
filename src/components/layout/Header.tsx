@@ -18,7 +18,7 @@ const navigation = [
     href: '/products',
     hasDropdown: true,
     dropdownItems: [
-      { name: 'PPM-Tool', href: '/ppm-tool' }
+      { name: 'PPM-Tool Finder', href: '/ppm-tool' }
     ]
   },
   { name: 'About', href: '/about' },
@@ -63,12 +63,12 @@ export function Header() {
       <nav className="container px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3 group">
-          <div className="relative h-12 w-12 sm:h-14 sm:w-14">
+          <div className="relative h-10 w-10 sm:h-12 sm:w-12">
             <Image
               src="/images/Logo_Panoramic_Solutions.webp"
               alt="Panoramic Solutions Logo"
               fill
-              sizes="(max-width: 640px) 48px, 56px"
+              sizes="(max-width: 640px) 40px, 48px"
               className="object-contain group-hover:opacity-80 transition-opacity"
               priority
             />
@@ -132,7 +132,7 @@ export function Header() {
               {((item.hasDropdown && isCurrentDropdownPage(item.dropdownItems || [])) || 
                 (!item.hasDropdown && isCurrentPage(item.href))) && (
                 <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-alpine"
+                  className="absolute -bottom-2 left-0 right-0 h-0.5 bg-alpine"
                   layoutId="activeTab"
                 />
               )}

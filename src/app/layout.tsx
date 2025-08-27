@@ -5,6 +5,7 @@ import { ClientProviders } from '@/components/providers/ClientProviders'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { StructuredData } from '@/features/seo/components/StructuredData'
+import { StructuredData as MainStructuredData, organizationData, websiteData } from '@/components/seo/StructuredData'
 import { generateSiteMetadata } from '@/shared/utils/seo'
 import { Toaster } from "@/components/ui/toaster"
 
@@ -41,6 +42,8 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <StructuredData />
+        <MainStructuredData data={organizationData} />
+        <MainStructuredData data={websiteData} />
       </head>
       <body className="font-sans antialiased bg-white">
         <ClientProviders>

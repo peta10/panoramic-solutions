@@ -55,7 +55,7 @@ const offeringCategories: OfferingCategory[] = [
     offerings: [
       {
         title: 'PPM Tool Finder - FREE Interactive Assessment',
-        description: 'Use our comprehensive, research-backed tool to find the perfect project management software for your organization. Get personalized recommendations in minutes.',
+        description: 'Use our comprehensive, research-backed tool to find the perfect project portfolio management software for your organization. Get personalized recommendations in minutes.',
         icon: FileCheck,
         isHighlighted: true,
         ctaText: 'Try PPM Tool Finder',

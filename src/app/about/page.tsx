@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { fadeInUp, slideInLeft, slideInRight, staggerContainer } from '@/shared/utils/motion';
+import { StructuredData, personData } from '@/components/seo/StructuredData';
 import {
   Award,
   Users,
@@ -51,6 +52,7 @@ const personalStats = [
 export default function PPMToolFinderPage() {
   return (
     <>
+      <StructuredData data={personData} />
       {/* Hero Section */}
       <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 bg-white">
         <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,7 +124,7 @@ export default function PPMToolFinderPage() {
 
 
       {/* Certifications Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+      <section className="py-12 sm:py-16 lg:py-20 bg-snow">
         <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-12 sm:mb-16"

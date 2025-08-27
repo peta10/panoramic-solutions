@@ -171,8 +171,7 @@ export default function ContactPage() {
             </h1>
             
             <p className="text-lg sm:text-xl text-midnight/70 mb-6 sm:mb-8">
-              Your message has been received. Team Panoramic will review your information and respond 
-              within 24 hours with next steps for your discovery call.
+              Your message has been received. Team Panoramic will be in touch shortly.
             </p>
 
             {/* Schedule Call Button */}

@@ -15,6 +15,8 @@ const nextConfig = {
       'react-chartjs-2'
     ],
     webpackBuildWorker: true,
+    optimizeCss: true,
+    optimizeServerReact: true,
   },
   
   // Compiler optimizations
@@ -55,14 +57,62 @@ const nextConfig = {
       });
     }
 
+    // Production optimizations
+    if (!dev) {
+      // Tree shaking and dead code elimination
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+        moduleIds: 'deterministic',
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              enforce: true,
+            },
+          },
+        },
+      };
+    }
+
     return config;
   },
   
   // Image optimizations
   images: {
-    domains: ['images.pexels.com', 'images.unsplash.com', 'panoramicsolutions.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'panoramic-solutions.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'panoramicsolutions.com',
+      }
+    ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
   // Security and performance headers

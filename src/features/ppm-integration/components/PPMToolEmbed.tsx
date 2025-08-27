@@ -136,11 +136,29 @@ const PPMToolEmbed = memo(function PPMToolEmbed({
         )}
       </AnimatePresence>
 
-      {/* Note: This would normally embed the actual PPM Tool */}
-      <div className={`w-full h-full transition-opacity duration-300 ${
-        loadingState === 'loaded' ? 'opacity-100' : 'opacity-0'
-      }`}>
-        <div className="flex items-center justify-center h-full bg-white">
+      {/* PPM Tool iframe - would normally embed the actual PPM Tool */}
+      <iframe
+        ref={iframeRef}
+        src={src}
+        title={title || 'Project Portfolio Management Tool Finder - Interactive Tool Selection Assistant'}
+        className={`w-full h-full border-0 transition-opacity duration-300 ${
+          loadingState === 'loaded' ? 'opacity-100' : 'opacity-0'
+        }`}
+        onLoad={handleIframeLoad}
+        onError={handleIframeError}
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        loading="lazy"
+        style={{ display: loadingState === 'loaded' ? 'block' : 'none' }}
+      />
+      
+      {/* Fallback content for when iframe is not available */}
+      <div 
+        className={`w-full h-full transition-opacity duration-300 ${
+          loadingState === 'loaded' ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+        style={{ display: loadingState === 'loaded' ? 'none' : 'flex' }}
+      >
+        <div className="flex items-center justify-center h-full bg-white w-full">
           <div className="text-center p-8">
             <h2 className="text-2xl font-bold text-midnight mb-4">PPM Tool Finder</h2>
             <p className="text-midnight/70 mb-6">

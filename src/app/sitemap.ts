@@ -30,6 +30,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/ppm-tool`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/products`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     }
   ]
 }
