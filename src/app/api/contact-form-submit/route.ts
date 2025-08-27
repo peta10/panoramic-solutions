@@ -165,27 +165,14 @@ export async function POST(request: NextRequest) {
           <td style="padding:0 24px 24px 24px;">
             <div style="text-align:center;">
               <a href="mailto:${email}?subject=Re: Your inquiry about ${company}" 
-                 style="display:inline-block;background:#1d4ed8;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin:0 8px;">
+                 style="display:inline-block;background:#1d4ed8;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">
                 📧 Reply to ${name}
-              </a>
-              <a href="https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt" 
-                 style="display:inline-block;background:#059669;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin:0 8px;">
-                📅 Send Calendar Link
               </a>
             </div>
           </td>
         </tr>
 
-        ${submissionId ? `
-        <!-- Database Info -->
-        <tr>
-          <td style="padding:0 24px 24px 24px;">
-            <div style="background:#f1f5f9;border-radius:6px;padding:12px;font-size:12px;color:#64748b;text-align:center;">
-              📊 Submission ID: ${submissionId} | Stored in contact_submissions table
-            </div>
-          </td>
-        </tr>
-        ` : ''}
+
 
       </table>
     </td>

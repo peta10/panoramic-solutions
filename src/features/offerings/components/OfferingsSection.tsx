@@ -38,7 +38,7 @@ export function OfferingsSection() {
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
 
   return (
-    <section ref={sectionRef} className="mobile-py bg-snow">
+    <section ref={sectionRef} className="mobile-py bg-white">
       <div className="container max-w-6xl mx-auto mobile-px">
         <motion.div
           className="text-center mb-12 sm:mb-16"
@@ -46,7 +46,7 @@ export function OfferingsSection() {
           initial="initial"
           animate={isIntersecting ? "animate" : "initial"}
         >
-          <h2 className="heading-mobile font-bold text-midnight mb-4 sm:mb-6">
+          <h2 className="section-heading-mobile font-bold text-midnight mb-4 sm:mb-6">
             Core <span className="text-midnight">Specialties</span>
           </h2>
         </motion.div>

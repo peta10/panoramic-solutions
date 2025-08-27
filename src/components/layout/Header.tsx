@@ -63,12 +63,12 @@ export function Header() {
       <nav className="container px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3 group">
-          <div className="relative h-8 w-8 sm:h-10 sm:w-10">
+          <div className="relative h-12 w-12 sm:h-14 sm:w-14">
             <Image
               src="/images/Logo_Panoramic_Solutions.webp"
               alt="Panoramic Solutions Logo"
               fill
-              sizes="(max-width: 640px) 32px, 40px"
+              sizes="(max-width: 640px) 48px, 56px"
               className="object-contain group-hover:opacity-80 transition-opacity"
               priority
             />
@@ -82,12 +82,12 @@ export function Header() {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
           {navigation.map((item) => (
-            <div key={item.name} className="relative">
+            <div key={item.name} className="relative group">
               {item.hasDropdown ? (
-                <div className="relative group">
+                <>
                   <button
                     className={cn(
-                      "flex items-center space-x-1 text-sm font-medium transition-colors hover:text-alpine relative py-2",
+                      "flex items-center space-x-1 text-sm font-medium transition-colors hover:text-alpine py-2",
                       isCurrentDropdownPage(item.dropdownItems || [])
                         ? 'text-alpine'
                         : 'text-midnight/70'
@@ -113,32 +113,28 @@ export function Header() {
                       </Link>
                     ))}
                   </div>
-                  
-                  {isCurrentDropdownPage(item.dropdownItems || []) && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-alpine"
-                      layoutId="activeTab"
-                    />
-                  )}
-                </div>
+                </>
               ) : (
                 <Link
                   href={item.href}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-alpine relative py-2",
+                    "text-sm font-medium transition-colors hover:text-alpine py-2",
                     isCurrentPage(item.href)
                       ? 'text-alpine'
                       : 'text-midnight/70'
                   )}
                 >
                   {item.name}
-                  {isCurrentPage(item.href) && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-alpine"
-                      layoutId="activeTab"
-                    />
-                  )}
                 </Link>
+              )}
+              
+              {/* Unified underline positioning for ALL items at the same container level */}
+              {((item.hasDropdown && isCurrentDropdownPage(item.dropdownItems || [])) || 
+                (!item.hasDropdown && isCurrentPage(item.href))) && (
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-alpine"
+                  layoutId="activeTab"
+                />
               )}
             </div>
           ))}

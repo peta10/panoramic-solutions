@@ -275,6 +275,10 @@
       @apply text-xl;
     }
     
+    .section-heading-mobile {
+      @apply text-2xl;
+    }
+    
     .body-mobile {
       @apply text-base;
     }
@@ -301,6 +305,10 @@
       @apply text-2xl;
     }
     
+    .section-heading-mobile {
+      @apply text-3xl;
+    }
+    
     .body-mobile {
       @apply text-lg;
     }
@@ -321,6 +329,10 @@
     
     .subheading-mobile {
       @apply text-3xl;
+    }
+    
+    .section-heading-mobile {
+      @apply text-4xl;
     }
   }
 

@@ -10,12 +10,14 @@ interface TestimonialCarouselProps {
   className?: string
   autoPlay?: boolean
   interval?: number
+  backgroundColor?: 'white' | 'snow'
 }
 
 export function TestimonialCarousel({ 
   className = '', 
   autoPlay = true, 
-  interval = 5000 
+  interval = 5000,
+  backgroundColor = 'snow'
 }: TestimonialCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isUserInteracting, setIsUserInteracting] = useState(false)
@@ -105,7 +107,7 @@ export function TestimonialCarousel({
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            className="absolute inset-0 flex flex-col justify-center p-3 sm:p-6 bg-snow border border-midnight/10 rounded-lg shadow-lg"
+            className={`absolute inset-0 flex flex-col justify-center p-3 sm:p-6 ${backgroundColor === 'white' ? 'bg-white' : 'bg-snow'} border border-midnight/10 rounded-lg shadow-lg`}
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}

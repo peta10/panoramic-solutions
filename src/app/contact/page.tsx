@@ -200,7 +200,7 @@ export default function ContactPage() {
   }
 
   return (
-    <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 bg-white">
+    <section className="pt-24 sm:pt-32 bg-white">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
            {/* Main Form - 3 columns */}
@@ -367,7 +367,7 @@ export default function ContactPage() {
       </div>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-alpine">
+      <section className="mt-16 sm:mt-20 lg:mt-24 py-12 sm:py-16 lg:py-20 bg-alpine">
         <div className="container max-w-6xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

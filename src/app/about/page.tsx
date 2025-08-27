@@ -18,31 +18,26 @@ const certifications = [
   {
     name: 'PMP® - Project Management Professional',
     issuer: 'Project Management Institute (PMI)',
-    year: '2024',
     image: '/images/certifications/pmp.png',
   },
   {
     name: 'Certified SAFe 6 Agilist',
     issuer: 'Scaled Agile, Inc.',
-    year: '2024',
     image: '/images/certifications/safe.png',
   },
   {
     name: 'Airtable Builder Accreditation',
     issuer: 'Airtable',
-    year: '2024',
     image: '/images/certifications/airtable.png',
   },
   {
     name: 'Smartsheet Core Product Certified',
     issuer: 'Smartsheet',
-    year: '2024',
     image: '/images/certifications/smartsheet.png',
   },
   {
     name: 'Smartsheet Aligned Certified Solution Professional',
     issuer: 'Smartsheet',
-    year: '2024',
     image: '/images/certifications/smartsheet.png',
   },
 ];
@@ -163,8 +158,7 @@ export default function PPMToolFinderPage() {
                       <h3 className="text-base sm:text-lg font-semibold text-midnight mb-2">
                         {cert.name}
                       </h3>
-                      <p className="text-gray-600 mb-2 text-sm sm:text-base">{cert.issuer}</p>
-                      <p className="text-xs sm:text-sm text-alpine font-medium">{cert.year}</p>
+                      <p className="text-gray-600 text-sm sm:text-base">{cert.issuer}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -189,8 +183,7 @@ export default function PPMToolFinderPage() {
                       <h3 className="text-base sm:text-lg font-semibold text-midnight mb-2">
                         {cert.name}
                       </h3>
-                      <p className="text-gray-600 mb-2 text-sm sm:text-base">{cert.issuer}</p>
-                      <p className="text-xs sm:text-sm text-alpine font-medium">{cert.year}</p>
+                      <p className="text-gray-600 text-sm sm:text-base">{cert.issuer}</p>
                     </CardContent>
                   </Card>
                 </motion.div>

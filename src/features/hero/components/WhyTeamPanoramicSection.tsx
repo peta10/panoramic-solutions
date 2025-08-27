@@ -71,7 +71,7 @@ export function WhyTeamPanoramicSection() {
           initial="initial"
           animate={isIntersecting ? "animate" : "initial"}
         >
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-midnight mb-4 sm:mb-6">
+          <h2 className="section-heading-mobile font-bold text-midnight mb-4 sm:mb-6">
             Why Team Panoramic?
           </h2>
           <p className="text-base sm:text-lg text-midnight/70 max-w-4xl mx-auto px-4">

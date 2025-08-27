@@ -67,7 +67,7 @@ export function HeroSection() {
   const { ref } = useHeroAnimation()
 
   return (
-    <section ref={ref} className="relative h-screen sm:h-[75vh] lg:h-[80vh] flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="relative h-screen sm:h-screen lg:h-[85vh] xl:h-[80vh] flex items-center justify-center overflow-hidden pt-24 sm:pt-32 lg:pt-24">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -83,7 +83,7 @@ export function HeroSection() {
 
       {/* Hero Content */}
       <motion.div
-        className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center min-h-screen sm:min-h-0 py-8 sm:py-0"
+        className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-start pt-8 pb-16 sm:pt-12 sm:pb-20 lg:pt-16 lg:pb-24"
         variants={heroTitleContainer}
         initial="initial"
         animate="animate"
@@ -92,7 +92,6 @@ export function HeroSection() {
           <motion.div
             variants={heroTitleLine}
             className="heading-mobile font-bold leading-tight"
-            style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}
           >
             End-to-End Excellence in
           </motion.div>
@@ -100,7 +99,7 @@ export function HeroSection() {
             variants={heroTitleLine}
             className="heading-mobile font-bold leading-tight mt-1 sm:mt-2"
           >
-            <span className="text-white" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>Software & Project Management</span>
+            <span className="text-white">Software & Project Management</span>
           </motion.div>
         </div>
         
