@@ -2,31 +2,17 @@ import { TestimonialData } from '@/shared/types'
 
 export const testimonials: TestimonialData[] = [
   {
-    quote: "Matt transformed our PMO from chaos to clarity. His systematic approach to portfolio governance delivered results we didn't think were possible.",
-    author: "Sarah Chen",
-    title: "CIO",
-    company: "TechCorp Industries",
+    quote: "We needed a real solution, not more overhead. Panoramic came in, listened to the people doing the work, and delivered a lean, mobile-first system that fits the way we operate. Our clients love it, and it's given us a clear edge in how we execute our services.",
+    author: "Ben Breedlove",
+    title: "General Manager",
+    company: "Roadrunner Moving & Storage",
     rating: 5,
   },
   {
-    quote: "The PPM tool selection process saved us $2M in the first year alone. Matt's expertise in business applications is unmatched.",
-    author: "David Rodriguez",
-    title: "Portfolio Director",
-    company: "Global Manufacturing Co",
-    rating: 5,
-  },
-  {
-    quote: "Working with Panoramic Solutions was a game-changer. Matt's SAFe implementation brought our agile transformation together beautifully.",
-    author: "Jennifer Walsh",
-    title: "VP of Engineering",
-    company: "FinTech Solutions",
-    rating: 5,
-  },
-  {
-    quote: "Our project success rate went from 60% to 97% after implementing Matt's portfolio management framework. Incredible results.",
-    author: "Michael Thompson",
-    title: "PMO Director",
-    company: "Healthcare Systems Inc",
+    quote: "Partnering with Panoramic Solutions has been a transformative experience for General Electric Credit Union. Their expertise was pivotal in building out Smartsheet for our Project Management Office, and in seamlessly integrating it with Power BI to enhance visibility into resource availability. Thanks to their guidance, we've unlocked new efficiencies and strengthened our data-driven decision-making.",
+    author: "Ryan Gleason",
+    title: "Senior Vice President of Project Management",
+    company: "General Electric Credit Union",
     rating: 5,
   },
 ]

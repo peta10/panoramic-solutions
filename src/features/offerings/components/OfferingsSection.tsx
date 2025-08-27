@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ServiceCard } from './ServiceCard'
+import { OfferingCard } from './OfferingCard'
 import { ArrowRight, Cloud, Zap, Settings } from 'lucide-react'
 import { useIntersectionObserver } from '@/shared/hooks/useIntersectionObserver'
 
@@ -34,7 +34,7 @@ const slideInUpFast = {
   },
 }
 
-export function ServicesSection() {
+export function OfferingsSection() {
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
 
   return (
@@ -49,22 +49,19 @@ export function ServicesSection() {
           <h2 className="heading-mobile font-bold text-midnight mb-4 sm:mb-6">
             Core <span className="text-midnight">Specialties</span>
           </h2>
-          <p className="subheading-mobile text-midnight/70 max-w-3xl mx-auto px-4">
-            Comprehensive solutions for modern digital transformation challenges
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 mobile-gap max-w-5xl mx-auto mb-8 sm:mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto mb-8 sm:mb-12">
           <motion.div
             variants={slideInUpFast}
             initial="initial"
             animate={isIntersecting ? "animate" : "initial"}
             style={{ willChange: 'transform, opacity' }}
           >
-            <ServiceCard
+            <OfferingCard
               icon={Cloud}
-              title="SaaS Architecture"
-              excerpt="Enterprise-grade SaaS platform design and implementation with focus on scalability, security, and performance optimization."
+              title="Project & Portfolio Consulting"
+              excerpt="Project portfolio management offerings with certified expertise including PPM tool selection, implementation, and ongoing support."
               showLearnMore={false}
             />
           </motion.div>
@@ -76,10 +73,10 @@ export function ServicesSection() {
             transition={{ delay: 0.1 }}
             style={{ willChange: 'transform, opacity' }}
           >
-            <ServiceCard
+            <OfferingCard
               icon={Zap}
-              title="Enterprise Automations"
-              excerpt="Streamline operations and eliminate manual processes through intelligent automation solutions that integrate with existing systems."
+              title="Business Applications"
+              excerpt="End-to-end business solutions and system implementations including SaaS architecture, system integration, and business process automation."
               showLearnMore={false}
             />
           </motion.div>
@@ -91,10 +88,10 @@ export function ServicesSection() {
             transition={{ delay: 0.2 }}
             style={{ willChange: 'transform, opacity' }}
           >
-            <ServiceCard
+            <OfferingCard
               icon={Settings}
-              title="Business Systems Implementation"
-              excerpt="End-to-end implementation of business systems including Airtable, Smartsheet, and custom solutions tailored to your needs."
+              title="Development & Integration Services"
+              excerpt="Custom development and technical integration solutions including rapid prototyping, application development, and technical architecture."
               showLearnMore={false}
             />
           </motion.div>
@@ -107,8 +104,8 @@ export function ServicesSection() {
             className="btn-hover-lift bg-alpine hover:bg-summit text-white px-6 sm:px-8 py-3 sm:py-4"
             style={{ minHeight: '48px' }}
           >
-            <Link href="/services">
-              View All Services <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <Link href="/offerings">
+              View All Offerings <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </Button>
         </div>

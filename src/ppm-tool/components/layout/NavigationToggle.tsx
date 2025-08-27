@@ -25,6 +25,7 @@ interface NavigationToggleProps {
   isProductBumperVisible?: boolean;
   getReportButtonRef?: React.RefObject<HTMLButtonElement>;
   onChartButtonPosition?: (position: { x: number; y: number }) => void;
+  onCloseExitIntentBumper?: () => void;
 }
 
 export const NavigationToggle: React.FC<NavigationToggleProps> = ({
@@ -38,7 +39,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
   onShowHowItWorks,
   isProductBumperVisible = false,
   getReportButtonRef,
-  onChartButtonPosition
+  onChartButtonPosition,
+  onCloseExitIntentBumper
 }) => {
   const isMobile = useMobileDetection();
   const [isChartGlowing, setIsChartGlowing] = useState(false);
@@ -214,8 +216,10 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
               "flex items-center relative",
               isMobile ? "space-x-4" : "space-x-6"
             )}>
-              {/* Continuous base line - spans across all tabs */}
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-300"></div>
+              {/* Continuous base line - mobile only */}
+              {isMobile && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-300"></div>
+              )}
               
               {steps.map((step) => {
                 const isActive = currentStep === step.id;
@@ -246,10 +250,14 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
                         {compareCount}
                       </div>
                     )}
-                    {/* Active underline indicator - sits on top of base line */}
+                    {/* Active underline indicator */}
                     <div className={cn(
                       "absolute bottom-0 left-0 right-0 h-0.5 transition-all duration-300",
-                      isActive ? "bg-blue-600" : "bg-transparent"
+                      isActive 
+                        ? "bg-blue-600" 
+                        : isMobile 
+                          ? "bg-transparent" 
+                          : "bg-gray-300"
                     )} />
                   </button>
                 );
@@ -281,6 +289,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
               filteredTools={filteredTools}
               onShowHowItWorks={onShowHowItWorks}
               getReportButtonRef={getReportButtonRef}
+              onCloseExitIntentBumper={onCloseExitIntentBumper}
             />
           )}
                  </div>

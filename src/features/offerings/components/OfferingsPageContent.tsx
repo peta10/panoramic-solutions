@@ -25,35 +25,41 @@ import {
   Wrench,
 } from 'lucide-react'
 
-interface ServiceItem {
+interface OfferingItem {
   title: string
   description: string
   icon: React.ElementType
+  isHighlighted?: boolean
+  ctaText?: string
+  ctaLink?: string
 }
 
-interface ServiceCategory {
+interface OfferingCategory {
   id: string
   title: string
   subtitle: string
   icon: React.ElementType
   iconColor: string
-  services: ServiceItem[]
+  offerings: OfferingItem[]
   keyBenefits: string[]
   logos?: string[]
 }
 
-const serviceCategories: ServiceCategory[] = [
+const offeringCategories: OfferingCategory[] = [
   {
     id: 'project-portfolio',
     title: 'Project & Portfolio Consulting',
     subtitle: 'Project portfolio management offerings with certified expertise',
     icon: Briefcase,
     iconColor: 'bg-alpine',
-    services: [
+    offerings: [
       {
-        title: 'Project Management Tool Assessment',
-        description: 'Evaluation and selection of project portfolio management tools',
+        title: 'PPM Tool Finder - FREE Interactive Assessment',
+        description: 'Use our comprehensive, research-backed tool to find the perfect project management software for your organization. Get personalized recommendations in minutes.',
         icon: FileCheck,
+        isHighlighted: true,
+        ctaText: 'Try PPM Tool Finder',
+        ctaLink: '/ppm-tool'
       },
       {
         title: 'Project Portfolio Management (PPM) Implementation',
@@ -79,7 +85,7 @@ const serviceCategories: ServiceCategory[] = [
     subtitle: 'End-to-end business solutions and system implementations',
     icon: Grid3X3,
     iconColor: 'bg-summit',
-    services: [
+    offerings: [
       {
         title: 'SaaS Architecture, Implementation & Managed Services',
         description: 'Expert implementation & management of Smartsheet, Airtable, Miro and other cloud-based solutions',
@@ -110,7 +116,7 @@ const serviceCategories: ServiceCategory[] = [
     subtitle: 'Custom development and technical integration solutions',
     icon: Code,
     iconColor: 'bg-alpine',
-    services: [
+    offerings: [
       {
         title: 'Rapid Prototyping',
         description: 'Accelerate time to market with AI-powered prototyping and development solutions',
@@ -136,7 +142,7 @@ const serviceCategories: ServiceCategory[] = [
   },
 ]
 
-export function ServicesPageContent() {
+export function OfferingsPageContent() {
   const [expandedService, setExpandedService] = useState<string | null>('project-portfolio')
 
   const toggleService = (serviceId: string) => {
@@ -158,23 +164,23 @@ export function ServicesPageContent() {
               className="heading-mobile font-bold text-alpine mb-4 sm:mb-6"
               variants={fadeInUp}
             >
-              Our Services
+              Our Offerings
             </motion.h1>
             <motion.p
               className="subheading-mobile text-midnight/70 mb-8 sm:mb-12 leading-relaxed"
               variants={fadeInUp}
             >
-              Comprehensive services & solutions tailored to your business needs
+              Comprehensive offerings & solutions tailored to your business needs
             </motion.p>
           </motion.div>
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* Offerings Section */}
       <section className="mobile-py bg-snow">
         <div className="container max-w-6xl mx-auto mobile-px">
           <div className="space-y-6">
-            {serviceCategories.map((category, index) => (
+            {offeringCategories.map((category, index) => (
               <motion.div
                 key={category.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -237,26 +243,43 @@ export function ServicesPageContent() {
                       >
                         <div className="p-6 sm:p-8">
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-                            {/* Services List */}
+                            {/* Offerings List */}
                             <div className="lg:col-span-2 space-y-6">
-                              {category.services.map((service, serviceIndex) => (
+                              {category.offerings.map((offering, offeringIndex) => (
                                 <motion.div
-                                  key={serviceIndex}
+                                  key={offeringIndex}
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.4, delay: serviceIndex * 0.1 }}
-                                  className="flex items-start space-x-4"
+                                  transition={{ duration: 0.4, delay: offeringIndex * 0.1 }}
+                                  className={`${
+                                    offering.isHighlighted 
+                                      ? 'bg-gradient-to-r from-alpine/10 to-summit/10 p-6 rounded-xl border-2 border-alpine/20' 
+                                      : ''
+                                  } flex items-start space-x-4`}
                                 >
-                                  <div className="flex-shrink-0 text-summit">
+                                  <div className={`flex-shrink-0 ${offering.isHighlighted ? 'text-alpine' : 'text-summit'}`}>
                                     <ArrowRight className="h-5 w-5 mt-1" />
                                   </div>
-                                  <div>
-                                    <h4 className="text-lg font-semibold text-midnight mb-2">
-                                      {service.title}
+                                  <div className="flex-1">
+                                    <h4 className={`text-lg font-semibold text-midnight mb-2 ${
+                                      offering.isHighlighted ? 'text-xl' : ''
+                                    }`}>
+                                      {offering.title}
                                     </h4>
-                                    <p className="text-midnight/70 text-sm sm:text-base">
-                                      {service.description}
+                                    <p className="text-midnight/70 text-sm sm:text-base mb-4">
+                                      {offering.description}
                                     </p>
+                                    {offering.isHighlighted && offering.ctaText && offering.ctaLink && (
+                                      <Button
+                                        asChild
+                                        size="sm"
+                                        className="btn-hover-lift bg-alpine hover:bg-summit text-white px-4 py-2 text-sm font-semibold"
+                                      >
+                                        <Link href={offering.ctaLink}>
+                                          {offering.ctaText} <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Link>
+                                      </Button>
+                                    )}
                                   </div>
                                 </motion.div>
                               ))}
@@ -316,8 +339,7 @@ export function ServicesPageContent() {
               Our <span className="text-alpine">Methodology</span>
             </h2>
             <p className="subheading-mobile text-midnight/70 max-w-3xl mx-auto">
-              A systematic approach rooted in engineering principles that delivers 
-              consistent results across all digital transformation initiatives
+              A systematic approach rooted in engineering principles that delivers consistent results
             </p>
           </motion.div>
 
@@ -368,31 +390,35 @@ export function ServicesPageContent() {
       </section>
 
       {/* CTA Section */}
-      <section className="mobile-py bg-alpine">
-        <div className="container max-w-6xl mx-auto text-center mobile-px">
+      <section className="py-12 sm:py-16 lg:py-20 bg-alpine">
+        <div className="container max-w-6xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="heading-mobile font-bold text-white mb-4 sm:mb-6">
-              Ready to Transform Your Operations?
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
+              Let&apos;s Build a Better Way to Work
             </h2>
-            <p className="subheading-mobile text-white/90 mb-6 sm:mb-8 max-w-3xl mx-auto">
-              Let&apos;s discuss how our comprehensive services can maximize value for your organization 
-              and drive measurable business results.
+            <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto">
+              Ready to reimagine how your organization can utilize user-centric digital technologies? 
+              Let&apos;s start with a conversation about your transformation goals.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-lg sm:max-w-none mx-auto">
-              <Button
-                size="lg"
-                className="btn-hover-lift bg-summit hover:bg-summit/90 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4"
-                style={{ minHeight: '48px' }}
-                onClick={() => window.open('https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt', '_blank')}
+            <Button
+              asChild
+              size="lg"
+              className="bg-white hover:bg-gray-100 text-alpine font-semibold px-6 sm:px-8 py-3 sm:py-4"
+              style={{ minHeight: '48px' }}
+            >
+              <a 
+                href="https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Schedule a Call <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-            </div>
+                Book A Call <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+              </a>
+            </Button>
           </motion.div>
         </div>
       </section>

@@ -12,7 +12,7 @@ import { cn } from '@/shared/utils/cn'
 
 const navigation = [
   { name: 'Home', href: '/' },
-  { name: 'Services', href: '/services' },
+  { name: 'Offerings', href: '/offerings' },
   { 
     name: 'Products', 
     href: '/products',

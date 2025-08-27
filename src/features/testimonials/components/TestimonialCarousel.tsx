@@ -101,11 +101,11 @@ export function TestimonialCarousel({
 
   return (
     <div className={`relative ${className}`}>
-      <div className="relative h-auto min-h-[280px] sm:h-80 overflow-hidden">
+      <div className="relative h-auto min-h-[320px] sm:min-h-[400px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            className="absolute inset-0 flex flex-col justify-center p-4 sm:p-8 bg-snow border border-midnight/10 rounded-lg shadow-lg"
+            className="absolute inset-0 flex flex-col justify-center p-3 sm:p-6 bg-snow border border-midnight/10 rounded-lg shadow-lg"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
@@ -119,7 +119,7 @@ export function TestimonialCarousel({
             </div>
 
             {/* Quote */}
-            <blockquote className="text-base sm:text-lg text-midnight mb-4 sm:mb-6 italic text-center sm:text-left leading-relaxed">
+            <blockquote className="text-sm sm:text-base text-midnight mb-4 sm:mb-6 italic text-center sm:text-left leading-relaxed">
               &ldquo;{testimonials[currentIndex].quote}&rdquo;
             </blockquote>
 

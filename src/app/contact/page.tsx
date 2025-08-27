@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { fadeInUp, slideInLeft, slideInRight } from '@/shared/utils/motion';
-import { submitContactForm } from '@/lib/supabase';
+// Contact form now uses API route for submission and email notification
 import { usePostHog } from '@/hooks/usePostHog';
 import {
   Mail,
@@ -97,17 +97,27 @@ export default function ContactPage() {
     });
 
     try {
-      const { data, error: submitError } = await submitContactForm(formData);
-      
-      if (submitError) {
-        throw submitError;
+      // Submit form via API route (handles both Supabase storage and email notification)
+      const response = await fetch('/api/contact-form-submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to submit form');
       }
 
       // Track successful submission and ranking submittal
       capture('contact_form_submitted', {
         company: formData.company,
         message_length: formData.message.length,
-        submission_time: Date.now()
+        submission_time: Date.now(),
+        submission_id: result.submissionId
       });
 
       // Track new ranking submittal
@@ -161,34 +171,24 @@ export default function ContactPage() {
             </h1>
             
             <p className="text-lg sm:text-xl text-midnight/70 mb-6 sm:mb-8">
-              Your message has been received. Matt will review your information and respond 
+              Your message has been received. Team Panoramic will review your information and respond 
               within 24 hours with next steps for your discovery call.
             </p>
 
-            {/* Calendly Embed Placeholder */}
-            <div className="bg-snow rounded-2xl shadow-xl p-6 sm:p-8 mb-6 sm:mb-8 border border-midnight/10">
-              <h3 className="text-xl sm:text-2xl font-semibold text-midnight mb-4">
+            {/* Schedule Call Button */}
+            <div className="mb-6 sm:mb-8">
+              <Button 
+                className="bg-alpine hover:bg-summit text-white text-lg px-8 py-4"
+                onClick={handleScheduleCall}
+                style={{ minHeight: '56px' }}
+              >
+                <Calendar className="mr-3 h-5 w-5" />
                 Schedule Your Discovery Call
-              </h3>
-              <div className="h-64 sm:h-96 bg-white rounded-lg border-2 border-dashed border-alpine/30 flex items-center justify-center">
-                <div className="text-center p-4">
-                  <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-alpine mx-auto mb-4" />
-                  <p className="text-midnight/70 mb-4 text-sm sm:text-base">
-                    Calendly booking widget will be embedded here
-                  </p>
-                  <Button 
-                    className="bg-alpine hover:bg-summit text-white"
-                    onClick={handleScheduleCall}
-                    style={{ minHeight: '48px' }}
-                  >
-                    Schedule a Call
-                  </Button>
-                </div>
-              </div>
+              </Button>
             </div>
 
             <p className="text-midnight/60 text-sm sm:text-base">
-              Prefer to email directly? Reach Matt at{' '}
+              Prefer to email directly? Reach team Panoramic at{' '}
               <a href="mailto:Matt.Wagner@panoramic-solutions.com" className="text-alpine hover:text-summit">
                 Matt.Wagner@panoramic-solutions.com
               </a>
@@ -202,9 +202,9 @@ export default function ContactPage() {
   return (
     <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 bg-white">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* Main Form - 2 columns */}
-          <div className="lg:col-span-2">
+                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+           {/* Main Form - 3 columns */}
+           <div className="lg:col-span-3">
             <motion.div
               variants={slideInLeft}
               initial="initial"
@@ -212,11 +212,10 @@ export default function ContactPage() {
             >
               <div className="mb-6 sm:mb-8">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-midnight mb-3 sm:mb-4">
-                  Let&apos;s Start Your <span className="text-midnight">Digital Transformation</span>
+                  Let&apos;s Build What&apos;s Next
                 </h1>
                 <p className="text-base sm:text-lg text-midnight/70">
-                  Every successful transformation begins with understanding your unique operational challenges. 
-                  Let&apos;s have that conversation.
+                  Change is easier when you have the right partner. Share your goals, and we&apos;ll create a plan that works for you.
                 </p>
               </div>
 
@@ -315,8 +314,8 @@ export default function ContactPage() {
             </motion.div>
           </div>
 
-          {/* Sidebar - 1 column */}
-          <div className="lg:col-span-1">
+                     {/* Sidebar - 2 columns */}
+           <div className="lg:col-span-2">
             <motion.div
               variants={slideInRight}
               initial="initial"
@@ -355,7 +354,7 @@ export default function ContactPage() {
 
               {/* Testimonials */}
               <Card className="border border-midnight/10 bg-white">
-                <CardContent className="p-4 sm:p-6">
+                <CardContent className="p-3 sm:p-4">
                   <h3 className="text-lg sm:text-xl font-semibold text-midnight mb-3 sm:mb-4">
                     What Clients Say
                   </h3>
@@ -366,6 +365,39 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+
+      {/* CTA Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-alpine">
+        <div className="container max-w-6xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
+              Let&apos;s Build a Better Way to Work
+            </h2>
+            <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto">
+              Partner with Team Panoramic to reimagine how your organization can utilize user-centric digital technologies
+            </p>
+            <Button
+              asChild
+              size="lg"
+              className="bg-white hover:bg-gray-100 text-alpine font-semibold px-6 sm:px-8 py-3 sm:py-4"
+              style={{ minHeight: '48px' }}
+            >
+              <a 
+                href="https://app.onecal.io/b/matt-wagner/schedule-a-meeting-with-matt"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Book a Call <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+              </a>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
     </section>
   );
 }

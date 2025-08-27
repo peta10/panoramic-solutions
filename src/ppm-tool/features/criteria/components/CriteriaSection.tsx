@@ -9,9 +9,8 @@ import { defaultCriteria } from '@/ppm-tool/data/criteria';
 
 import { CriteriaGuidance } from '@/ppm-tool/components/overlays/CriteriaGuidance';
 import { Slider } from '@/ppm-tool/components/ui/slider';
+import { MobileTooltip } from '@/ppm-tool/components/ui/MobileTooltip';
 import { DesktopTooltip } from '@/ppm-tool/components/ui/desktop-tooltip';
-import { BasicHoverTooltip } from '@/ppm-tool/components/ui/basic-hover-tooltip';
-import { MobileTouchTooltip } from '@/ppm-tool/components/ui/mobile-touch-tooltip';
 
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
 
@@ -158,7 +157,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                           <h3 className="text-lg font-semibold text-gray-900">
                             {criterion.name}
                           </h3>
-                          <BasicHoverTooltip 
+                          <MobileTooltip 
                             content={
                               <div className="break-words">
                                 {getTooltipDescription(criterion)}
@@ -175,7 +174,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                             >
                               <HelpCircle className="w-4 h-4" />
                             </button>
-                          </BasicHoverTooltip>
+                          </MobileTooltip>
                         </div>
                       </div>
                       <div data-lenis-prevent>

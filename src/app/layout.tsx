@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/nextjs'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
@@ -15,7 +14,6 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
-// Add or edit your "generateMetadata" to include the Sentry trace data:
 export function generateMetadata(): Metadata {
   return {
     ...generateSiteMetadata({
@@ -23,10 +21,7 @@ export function generateMetadata(): Metadata {
       description: 'Solutions Architect Matt Wagner specializes in SaaS Architecture, Enterprise Automations, and Digital Transformation. PMP®, SAFe 6, Airtable & Smartsheet certified.',
       keywords: 'SaaS Architecture, Digital Transformation, Project Management, Enterprise Automation, Matt Wagner, PMP, SAFe, Utah Consultant',
       canonicalUrl: 'https://panoramicsolutions.com',
-    }),
-    other: {
-      ...Sentry.getTraceData()
-    }
+    })
   }
 }
 

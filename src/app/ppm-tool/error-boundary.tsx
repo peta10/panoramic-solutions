@@ -1,6 +1,5 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { Component, ReactNode } from 'react';
 
 interface Props {
@@ -37,14 +36,8 @@ export class PPMToolErrorBoundary extends Component<Props, State> {
       } : null
     });
 
-    // Send to Sentry with context
-    Sentry.captureException(error, {
-      extra: {
-        componentStack: errorInfo.componentStack,
-        location: 'PPMToolErrorBoundary',
-        ...errorInfo
-      }
-    });
+    // Log error details for debugging
+    this.setState({ errorInfo });
   }
 
   render() {

@@ -132,7 +132,7 @@ panoramic-solutions/
 │   │   │   ├── HomePage.tsx       # Landing page
 │   │   │   ├── AboutPage.tsx      # About Matt page
 │   │   │   ├── ContactPage.tsx    # Contact form page
-│   │   │   ├── OfferingsPage.tsx  # Services page
+│   │   │   ├── OfferingsPage.tsx  # Offerings page
 │   │   │   ├── PPMToolFinderPage.tsx # PPM tool finder
 │   │   │   └── CaseStudiesPage.tsx # Case studies (placeholder)
 │   │   │
@@ -201,7 +201,7 @@ contact_submissions (
 - Skills and specialties grid
 - Contact information links
 
-### Offerings (`/services`)
+### Offerings (`/offerings`)
 - Expandable service categories:
   - Project & Portfolio Consulting
   - Business Applications

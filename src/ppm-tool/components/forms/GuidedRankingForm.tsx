@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/ppm-tool/components/ui/button';
 import { Slider } from '@/ppm-tool/components/ui/slider';
 import { trackNewRankingSubmittal } from '@/lib/posthog';
+import { markGuidedRankingComplete } from '@/ppm-tool/shared/utils/productBumperState';
 
 interface GuidedRankingFormProps {
   isOpen: boolean;
@@ -246,6 +247,10 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
       
       // Save answers and personalization data if available
       onSaveAnswers?.(answers, personalizationData);
+      
+      // Mark that user has interacted with guided ranking (prevents ProductBumper from showing again)
+      markGuidedRankingComplete();
+      console.log('✅ Guided ranking interaction detected - ProductBumper will no longer show');
     }
     
     resetFormState();
@@ -446,6 +451,10 @@ export const GuidedRankingForm: React.FC<GuidedRankingFormProps> = ({
     
     // Save answers and personalization data
     onSaveAnswers?.(answers, personalizationData);
+    
+    // Mark that user has completed guided ranking (prevents ProductBumper from showing again)
+    markGuidedRankingComplete();
+    console.log('✅ Guided ranking completed - ProductBumper will no longer show');
     
     // Track PostHog New_Ranking_Submittal event
     try {

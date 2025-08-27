@@ -85,8 +85,8 @@ export function Footer() {
                 </Link>
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Link href="/services" className="block transition-colors duration-200 hover:text-alpine">
-                  Services
+                <Link href="/offerings" className="block transition-colors duration-200 hover:text-alpine">
+                  Offerings
                 </Link>
               </motion.div>
 

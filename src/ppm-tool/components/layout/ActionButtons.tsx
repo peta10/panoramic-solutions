@@ -14,6 +14,7 @@ interface ActionButtonsProps {
   filteredTools?: Tool[];
   onShowHowItWorks?: () => void;
   getReportButtonRef?: React.RefObject<HTMLButtonElement>;
+  onCloseExitIntentBumper?: () => void;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({ 
@@ -21,13 +22,16 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   selectedCriteria = [],
   filteredTools = [],
   onShowHowItWorks,
-  getReportButtonRef
+  getReportButtonRef,
+  onCloseExitIntentBumper
 }) => {
   const isMobile = useMobileDetection();
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
   const handleGetReport = () => {
+    // Dismiss exit intent bumper when user clicks the report button
+    onCloseExitIntentBumper?.();
     setShowEmailModal(true);
   };
 

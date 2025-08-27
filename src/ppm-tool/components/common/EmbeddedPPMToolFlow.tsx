@@ -32,7 +32,8 @@ import {
   resetMouseMovement,
   getTimingConstants,
   resetProductBumperState,
-  getProductBumperState
+  getProductBumperState,
+  hasUserCompletedGuidedRanking
 } from '@/ppm-tool/shared/utils/productBumperState';
 // REMOVED: import { MobileDiagnostics } from './MobileDiagnostics'; - Causes browser compatibility issues
 import { MobileRecoverySystem } from './MobileRecoverySystem';
@@ -554,9 +555,12 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
         const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
                                  (typeof window !== 'undefined' && window.location.hostname === 'localhost');
         
+        // Check if user has completed guided ranking
+        const hasCompletedGuidedRanking = hasUserCompletedGuidedRanking();
+        
         const shouldShow = isDevelopmentMode ? 
-          (state.initialTimerComplete && !showProductBumper) : 
-          (!state.dismissed && state.initialTimerComplete && !showProductBumper);
+          (state.initialTimerComplete && !showProductBumper && !hasCompletedGuidedRanking) : 
+          (!state.dismissed && state.initialTimerComplete && !showProductBumper && !hasCompletedGuidedRanking);
         
         if (shouldShow) {
           console.log('🎯 Triggering ProductBumper after mouse movement stopped' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
@@ -567,6 +571,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             dismissed: state.dismissed,
             initialTimerComplete: state.initialTimerComplete,
             alreadyShowing: showProductBumper,
+            hasCompletedGuidedRanking: hasCompletedGuidedRanking,
             developmentMode: isDevelopmentMode,
             currentStep: currentStep
           });
@@ -1012,6 +1017,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             isProductBumperVisible={showProductBumper}
             getReportButtonRef={getReportButtonRef}
             onChartButtonPosition={setChartButtonPosition}
+            onCloseExitIntentBumper={closeExitIntentBumper}
           />
           <main 
             className={cn(
@@ -1048,6 +1054,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
               filteredTools={filteredTools}
               onShowHowItWorks={onShowHowItWorks}
               getReportButtonRef={getReportButtonRef}
+              onCloseExitIntentBumper={closeExitIntentBumper}
             />
           )}
         </div>

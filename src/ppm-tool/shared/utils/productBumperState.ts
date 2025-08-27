@@ -10,6 +10,8 @@ export interface ProductBumperState {
   initialTimerComplete?: boolean;
   mouseMovementDetected?: boolean;
   lastMouseMovementAt?: string;
+  hasCompletedGuidedRanking?: boolean;
+  guidedRankingCompletedAt?: string;
 }
 
 const STORAGE_KEY = 'productBumperState';
@@ -30,7 +32,9 @@ export function getProductBumperState(): ProductBumperState {
         showCount: 0,
         initialTimerComplete: false,
         mouseMovementDetected: false,
-        lastMouseMovementAt: ''
+        lastMouseMovementAt: '',
+        hasCompletedGuidedRanking: false,
+        guidedRankingCompletedAt: ''
       };
     }
 
@@ -49,7 +53,10 @@ export function getProductBumperState(): ProductBumperState {
           dismissedAt: '',
           initialTimerComplete: false,
           mouseMovementDetected: false,
-          lastMouseMovementAt: ''
+          lastMouseMovementAt: '',
+          // Keep guided ranking completion status even after 30 days
+          hasCompletedGuidedRanking: state.hasCompletedGuidedRanking || false,
+          guidedRankingCompletedAt: state.guidedRankingCompletedAt || ''
         };
       }
     }
@@ -63,7 +70,9 @@ export function getProductBumperState(): ProductBumperState {
       showCount: 0,
       initialTimerComplete: false,
       mouseMovementDetected: false,
-      lastMouseMovementAt: ''
+      lastMouseMovementAt: '',
+      hasCompletedGuidedRanking: false,
+      guidedRankingCompletedAt: ''
     };
   }
 }
@@ -143,6 +152,27 @@ export function resetMouseMovement(): void {
 }
 
 /**
+ * Mark that the user has completed the guided ranking process
+ */
+export function markGuidedRankingComplete(): void {
+  const currentState = getProductBumperState();
+  const newState: ProductBumperState = {
+    ...currentState,
+    hasCompletedGuidedRanking: true,
+    guidedRankingCompletedAt: new Date().toISOString()
+  };
+  saveProductBumperState(newState);
+}
+
+/**
+ * Check if the user has ever completed the guided ranking process
+ */
+export function hasUserCompletedGuidedRanking(): boolean {
+  const state = getProductBumperState();
+  return state.hasCompletedGuidedRanking || false;
+}
+
+/**
  * Check if we're in development mode
  */
 function isDevelopmentMode(): boolean {
@@ -155,6 +185,11 @@ function isDevelopmentMode(): boolean {
  */
 export function shouldShowProductBumper(): boolean {
   const state = getProductBumperState();
+  
+  // NEVER show if user has already completed guided rankings
+  if (state.hasCompletedGuidedRanking) {
+    return false;
+  }
   
   // In development mode, ignore dismissed state to always allow testing
   if (!isDevelopmentMode()) {
@@ -197,7 +232,7 @@ export function getTimingConstants() {
 export function resetProductBumperState(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
-    console.log('✅ Product bumper state reset - should show again now');
+    console.log('✅ Product bumper state reset - should show again now (unless user has completed guided ranking)');
   } catch (error) {
     console.error('Error resetting product bumper state:', error);
   }
@@ -227,11 +262,31 @@ export function forceResetProductBumper(): void {
   }
 }
 
+/**
+ * Complete reset for testing - clears everything including guided ranking completion
+ */
+export function completeResetProductBumper(): void {
+  try {
+    console.log('🧹 COMPLETE RESET - Clearing all ProductBumper state including guided ranking completion');
+    localStorage.removeItem(STORAGE_KEY);
+    
+    const newState = getProductBumperState();
+    console.log('🔍 After complete reset:', newState);
+    
+    console.log('✅ COMPLETE RESET DONE - ProductBumper should show again normally');
+  } catch (error) {
+    console.error('❌ Error in complete reset:', error);
+  }
+}
+
 // Make reset function available globally for testing
 if (typeof window !== 'undefined') {
   (window as any).resetProductBumperState = resetProductBumperState;
   (window as any).forceResetProductBumper = forceResetProductBumper;
+  (window as any).completeResetProductBumper = completeResetProductBumper;
   (window as any).getProductBumperState = getProductBumperState;
   (window as any).resetMouseMovement = resetMouseMovement;
+  (window as any).markGuidedRankingComplete = markGuidedRankingComplete;
+  (window as any).hasUserCompletedGuidedRanking = hasUserCompletedGuidedRanking;
   console.log('🔧 ProductBumper debugging functions available globally');
 }
