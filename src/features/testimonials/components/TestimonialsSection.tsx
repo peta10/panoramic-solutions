@@ -57,7 +57,7 @@ export function TestimonialsSection() {
           animate={isIntersecting ? "animate" : "initial"}
           style={{ willChange: 'transform, opacity' }}
         >
-          <TestimonialCarousel className="max-w-3xl mx-auto" autoPlay={true} interval={6000} backgroundColor="white" />
+          <TestimonialCarousel className="max-w-3xl mx-auto" autoPlay={true} interval={8000} backgroundColor="white" />
         </motion.div>
       </div>
     </section>

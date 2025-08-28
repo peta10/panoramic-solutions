@@ -72,7 +72,6 @@ export function Footer() {
             >
               <p className="font-medium text-midnight">Get in touch</p>
               <p>Salt Lake City, Utah</p>
-              <p>Matt.Wagner@panoramic-solutions.com</p>
             </motion.div>
           </motion.div>
 

@@ -10,7 +10,8 @@ import { defaultCriteria } from '@/ppm-tool/data/criteria';
 import { CriteriaGuidance } from '@/ppm-tool/components/overlays/CriteriaGuidance';
 import { Slider } from '@/ppm-tool/components/ui/slider';
 import { MobileTooltip } from '@/ppm-tool/components/ui/MobileTooltip';
-import { DesktopTooltip } from '@/ppm-tool/components/ui/desktop-tooltip';
+import { EnhancedDesktopTooltip } from '@/ppm-tool/components/ui/enhanced-desktop-tooltip';
+import { useTouchDevice } from '@/ppm-tool/shared/hooks/useTouchDevice';
 
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
 
@@ -42,6 +43,7 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
 
 
   const sectionRef = useRef<HTMLDivElement>(null);
+  const isTouchDevice = useTouchDevice();
   const { 
     showManualGuidance, 
     closeManualGuidance,
@@ -157,24 +159,47 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
                           <h3 className="text-lg font-semibold text-gray-900">
                             {criterion.name}
                           </h3>
-                          <MobileTooltip 
-                            content={
-                              <div className="break-words">
-                                {getTooltipDescription(criterion)}
-                              </div>
-                            }
-                            side="top"
-                            align="center"
-                            className="max-w-xs text-sm"
-                          >
-                            <button 
-                              type="button"
-                              className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
-                              aria-label={`More information about ${criterion.name}`}
+                          {isTouchDevice ? (
+                            <MobileTooltip 
+                              content={
+                                <div className="break-words">
+                                  {getTooltipDescription(criterion)}
+                                </div>
+                              }
+                              side="top"
+                              align="center"
+                              className="max-w-xs text-sm"
                             >
-                              <HelpCircle className="w-4 h-4" />
-                            </button>
-                          </MobileTooltip>
+                              <button 
+                                type="button"
+                                className="text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -m-2 p-2 rounded-full hover:bg-gray-100 active:bg-gray-200"
+                                aria-label={`More information about ${criterion.name}`}
+                              >
+                                <HelpCircle className="w-4 h-4" />
+                              </button>
+                            </MobileTooltip>
+                          ) : (
+                            <EnhancedDesktopTooltip
+                              content={
+                                <div className="break-words">
+                                  {getTooltipDescription(criterion)}
+                                </div>
+                              }
+                              side="top"
+                              align="center"
+                              className="max-w-xs text-sm"
+                              delay={300}
+                            >
+                              <button 
+                                type="button"
+                                className="text-gray-400 hover:text-gray-600 focus:text-gray-600 transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center -m-1 p-1 rounded-full hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-alpine-blue-400 focus:ring-opacity-50"
+                                aria-label={`More information about ${criterion.name}`}
+                                tabIndex={0}
+                              >
+                                <HelpCircle className="w-4 h-4" />
+                              </button>
+                            </EnhancedDesktopTooltip>
+                          )}
                         </div>
                       </div>
                       <div data-lenis-prevent>

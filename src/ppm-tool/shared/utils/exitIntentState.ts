@@ -175,9 +175,46 @@ export function resetExitIntentState(): void {
   }
 }
 
-// Make reset function available globally for testing
+// Make debugging functions available globally for testing
 if (typeof window !== 'undefined') {
   (window as any).resetExitIntentState = resetExitIntentState;
   (window as any).getExitIntentState = getExitIntentState;
-  console.log('🔧 ExitIntent debugging functions available globally');
+  (window as any).checkExitIntentStatus = () => {
+    const state = getExitIntentState();
+    const canShow = shouldShowExitIntent();
+    console.log('🔍 Exit Intent Status:', {
+      state,
+      canShow,
+      timeOnPage: 'Check in browser console by moving mouse to trigger'
+    });
+    return { state, canShow };
+  };
+  
+  // Cross-browser testing function
+  (window as any).testExitIntent = () => {
+    console.log('🔍 Cross-Browser Exit Intent Test:');
+    console.log('Browser Info:', {
+      userAgent: navigator.userAgent,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      pixelRatio: window.devicePixelRatio,
+      touchSupport: 'ontouchstart' in window,
+      maxTouchPoints: navigator.maxTouchPoints
+    });
+    
+    // Reset for testing
+    resetExitIntentState();
+    
+    console.log('✅ Ready to test - try moving mouse to top-right corner');
+    console.log('📋 Test Instructions:');
+    console.log('1. Move mouse to browser tabs area');
+    console.log('2. Move mouse to X button (top-right corner)');
+    console.log('3. Switch tabs (Ctrl+Tab)');
+    console.log('4. Check console for trigger logs');
+  };
+  
+  console.log('🔧 ExitIntent debugging functions available globally:');
+  console.log('- resetExitIntentState() - Reset exit intent state');
+  console.log('- getExitIntentState() - Get current state');
+  console.log('- checkExitIntentStatus() - Check if can show');
+  console.log('- testExitIntent() - Cross-browser compatibility test');
 }

@@ -11,8 +11,6 @@ import { fadeInUp, slideInLeft, slideInRight } from '@/shared/utils/motion';
 // Contact form now uses API route for submission and email notification
 import { usePostHog } from '@/hooks/usePostHog';
 import {
-  Mail,
-  MapPin,
   Calendar,
   ArrowRight,
   CheckCircle,
@@ -186,12 +184,7 @@ export default function ContactPage() {
               </Button>
             </div>
 
-            <p className="text-midnight/60 text-sm sm:text-base">
-              Prefer to email directly? Reach team Panoramic at{' '}
-              <a href="mailto:Matt.Wagner@panoramic-solutions.com" className="text-alpine hover:text-summit">
-                Matt.Wagner@panoramic-solutions.com
-              </a>
-            </p>
+
           </motion.div>
         </div>
       </section>
@@ -313,51 +306,21 @@ export default function ContactPage() {
             </motion.div>
           </div>
 
-                     {/* Sidebar - 2 columns */}
-           <div className="lg:col-span-2">
+                               {/* Sidebar - 2 columns */}
+          <div className="lg:col-span-2">
             <motion.div
               variants={slideInRight}
               initial="initial"
               animate="animate"
               className="space-y-6 sm:space-y-8"
             >
-              {/* Contact Info */}
-              <Card className="border border-midnight/10 bg-white">
-                <CardContent className="p-4 sm:p-6">
-                  <h3 className="text-lg sm:text-xl font-semibold text-midnight mb-3 sm:mb-4">
-                    Get In Touch
-                  </h3>
-                  <div className="space-y-4">
-
-                    <div className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-alpine rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Mail className="h-3 w-3 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-midnight text-sm">Email Matt</div>
-                        <div className="text-alpine text-sm font-medium break-all">Matt.Wagner@panoramic-solutions.com</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-alpine rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <MapPin className="h-3 w-3 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-midnight text-sm">Location</div>
-                        <div className="text-alpine text-sm font-medium">Salt Lake City, Utah</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Testimonials */}
               <Card className="border border-midnight/10 bg-white">
                 <CardContent className="p-3 sm:p-4">
                   <h3 className="text-lg sm:text-xl font-semibold text-midnight mb-3 sm:mb-4">
                     What Clients Say
                   </h3>
-                  <TestimonialCarousel className="h-auto" autoPlay={true} interval={4000} />
+                  <TestimonialCarousel className="h-auto" autoPlay={true} interval={8000} />
                 </CardContent>
               </Card>
             </motion.div>
