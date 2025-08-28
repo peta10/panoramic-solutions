@@ -109,7 +109,7 @@ export function HeroSection() {
           style={{ textShadow: '1px 1px 6px rgba(0,0,0,0.7), 0 0 15px rgba(0,0,0,0.4)' }}
         >
           Professional software development, SaaS architecture, and project management services 
-          that drive measurable business results for forward-thinking organizations.
+          that launch measurable business results for forward-thinking organizations.
         </motion.p>
 
         {/* PPM Tool Finder Highlight */}

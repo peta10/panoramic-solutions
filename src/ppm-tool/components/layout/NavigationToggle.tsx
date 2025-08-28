@@ -195,8 +195,8 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
       )}
       style={{ 
         backgroundColor: '#F0F4FE',
-        top: `${getHeaderHeight()}px`, // Position right below the header
-        '--total-fixed-height': `${getTotalFixedHeight()}px` // Expose total height for content padding
+        top: `${getHeaderHeight() + 8}px`, // Position below header with additional spacing
+        '--total-fixed-height': `${getTotalFixedHeight() + 8}px` // Expose total height for content padding (including extra spacing)
       } as React.CSSProperties}
       aria-label="PPM Tool Navigation"
       role="navigation"

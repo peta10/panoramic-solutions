@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -74,57 +73,6 @@ export function Footer() {
               <p className="font-medium text-midnight">Get in touch</p>
               <p>Salt Lake City, Utah</p>
               <p>Matt.Wagner@panoramic-solutions.com</p>
-            </motion.div>
-            
-            {/* Social Media Buttons */}
-            <motion.div 
-              className="flex space-x-3"
-              variants={containerVariants}
-            >
-              <motion.div variants={itemVariants}>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-full bg-white/80 border-midnight/20 text-midnight hover:bg-alpine hover:text-white hover:border-alpine transition-all duration-200 hover:scale-105"
-                >
-                  <Facebook className="h-4 w-4" />
-                  <span className="sr-only">Facebook</span>
-                </Button>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-full bg-white/80 border-midnight/20 text-midnight hover:bg-alpine hover:text-white hover:border-alpine transition-all duration-200 hover:scale-105"
-                >
-                  <Twitter className="h-4 w-4" />
-                  <span className="sr-only">Twitter</span>
-                </Button>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-full bg-white/80 border-midnight/20 text-midnight hover:bg-alpine hover:text-white hover:border-alpine transition-all duration-200 hover:scale-105"
-                >
-                  <Instagram className="h-4 w-4" />
-                  <span className="sr-only">Instagram</span>
-                </Button>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-full bg-white/80 border-midnight/20 text-midnight hover:bg-alpine hover:text-white hover:border-alpine transition-all duration-200 hover:scale-105"
-                  onClick={() => window.open('https://www.linkedin.com/company/panoramicsolutions/', '_blank')}
-                >
-                  <Linkedin className="h-4 w-4" />
-                  <span className="sr-only">LinkedIn</span>
-                </Button>
-              </motion.div>
             </motion.div>
           </motion.div>
 
