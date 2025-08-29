@@ -172,13 +172,7 @@ export function hasUserCompletedGuidedRanking(): boolean {
   return state.hasCompletedGuidedRanking || false;
 }
 
-/**
- * Check if we're in development mode
- */
-function isDevelopmentMode(): boolean {
-  return process.env.NODE_ENV === 'development' || 
-         (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-}
+
 
 /**
  * Check if the product bumper should be shown
@@ -191,12 +185,9 @@ export function shouldShowProductBumper(): boolean {
     return false;
   }
   
-  // In development mode, ignore dismissed state to always allow testing
-  if (!isDevelopmentMode()) {
-    // Don't show if user has dismissed it (and not enough time has passed)
-    if (state.dismissed) {
-      return false;
-    }
+  // Don't show if user has dismissed it (and not enough time has passed)
+  if (state.dismissed) {
+    return false;
   }
   
   // Check if initial timer is complete

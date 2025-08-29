@@ -123,13 +123,7 @@ export function recordTabSwitchTrigger(): void {
   saveExitIntentState(newState);
 }
 
-/**
- * Check if we're in development mode
- */
-function isDevelopmentMode(): boolean {
-  return process.env.NODE_ENV === 'development' || 
-         (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-}
+
 
 /**
  * Check if the exit intent should be shown
@@ -137,12 +131,9 @@ function isDevelopmentMode(): boolean {
 export function shouldShowExitIntent(): boolean {
   const state = getExitIntentState();
   
-  // In development mode, ignore dismissed state to always allow testing
-  if (!isDevelopmentMode()) {
-    // Don't show if user has dismissed it (and not enough time has passed)
-    if (state.dismissed) {
-      return false;
-    }
+  // Don't show if user has dismissed it (and not enough time has passed)
+  if (state.dismissed) {
+    return false;
   }
   
   // Don't show if already shown this session

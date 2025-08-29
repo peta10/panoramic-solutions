@@ -27,6 +27,7 @@ import { useUnifiedExitIntent } from '@/ppm-tool/shared/hooks/useUnifiedExitInte
 import { useUnifiedMouseTracking } from '@/ppm-tool/shared/hooks/useUnifiedMouseTracking';
 import { useDevelopmentKeyboards } from '@/ppm-tool/shared/hooks/useDevelopmentKeyboards';
 import { resetUnifiedBumperState } from '@/ppm-tool/shared/utils/unifiedBumperState';
+import '@/ppm-tool/shared/utils/bumperDebugger'; // Import debugger for global functions
 // REMOVED: import { MobileDiagnostics } from './MobileDiagnostics'; - Causes browser compatibility issues
 import { MobileRecoverySystem } from './MobileRecoverySystem';
 

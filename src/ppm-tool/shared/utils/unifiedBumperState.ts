@@ -292,43 +292,36 @@ export function shouldShowProductBumper(): boolean {
   // PRIORITY CHECK: Must be in home state to show any bumpers
   const { shouldAllowBumpers } = require('./homeState');
   if (!shouldAllowBumpers()) {
-    console.log('⛔ Product Bumper blocked - not in home state');
     return false;
   }
   
   // Never show if user has clicked into Guided Rankings
   if (state.hasClickedIntoGuidedRankings) {
-    console.log('⛔ Product Bumper blocked - user clicked into Guided Rankings');
     return false;
   }
   
   // Never show if any bumper is currently open
   if (state.isAnyBumperCurrentlyOpen) {
-    console.log('⛔ Product Bumper blocked - another bumper is open');
     return false;
   }
   
   // Never show if Guided Rankings is currently open
   if (state.isGuidedRankingsCurrentlyOpen) {
-    console.log('⛔ Product Bumper blocked - Guided Rankings is open');
     return false;
   }
   
   // Never show if Comparison Report is currently open
   if (state.isComparisonReportCurrentlyOpen) {
-    console.log('⛔ Product Bumper blocked - Comparison Report is open');
     return false;
   }
   
   // Never show if already dismissed
   if (state.productBumperDismissed) {
-    console.log('⛔ Product Bumper blocked - already dismissed');
     return false;
   }
   
   // Never show if already shown
   if (state.productBumperShown) {
-    console.log('⛔ Product Bumper blocked - already shown');
     return false;
   }
   
@@ -343,13 +336,11 @@ export function shouldShowProductBumper(): boolean {
     
     // Must wait 23 seconds since Guided Rankings closed
     if (timeSinceGuidedClosed < INITIAL_TIMER_MS) {
-      console.log('⏱️ Product Bumper blocked - waiting for 23s after Guided Rankings closed');
       return false;
     }
     
     // Must wait 3 seconds after mouse stopped
     if (!state.mouseStoppedAt) {
-      console.log('🖱️ Product Bumper blocked - waiting for mouse to stop');
       return false;
     }
     
@@ -357,7 +348,6 @@ export function shouldShowProductBumper(): boolean {
     const timeSinceMouseStopped = now - mouseStoppedAt;
     
     if (timeSinceMouseStopped < MOUSE_MOVEMENT_TIMER_MS) {
-      console.log('⏱️ Product Bumper blocked - waiting for 3s after mouse stopped');
       return false;
     }
     
@@ -372,13 +362,11 @@ export function shouldShowProductBumper(): boolean {
     
     // Must wait 23 seconds since Comparison Report closed
     if (timeSinceReportClosed < INITIAL_TIMER_MS) {
-      console.log('⏱️ Product Bumper blocked - waiting for 23s after Comparison Report closed');
       return false;
     }
     
     // Must wait 3 seconds after mouse stopped
     if (!state.mouseStoppedAt) {
-      console.log('🖱️ Product Bumper blocked - waiting for mouse to stop');
       return false;
     }
     
@@ -386,7 +374,6 @@ export function shouldShowProductBumper(): boolean {
     const timeSinceMouseStopped = now - mouseStoppedAt;
     
     if (timeSinceMouseStopped < MOUSE_MOVEMENT_TIMER_MS) {
-      console.log('⏱️ Product Bumper blocked - waiting for 3s after mouse stopped');
       return false;
     }
     
@@ -400,13 +387,11 @@ export function shouldShowProductBumper(): boolean {
     
     // Must wait 23 seconds since tool opened
     if (timeSinceToolOpened < INITIAL_TIMER_MS) {
-      console.log('⏱️ Product Bumper blocked - waiting for 23s after tool opened');
       return false;
     }
     
     // Must wait 3 seconds after mouse stopped
     if (!state.mouseStoppedAt) {
-      console.log('🖱️ Product Bumper blocked - waiting for mouse to stop');
       return false;
     }
     
@@ -414,7 +399,6 @@ export function shouldShowProductBumper(): boolean {
     const timeSinceMouseStopped = now - mouseStoppedAt;
     
     if (timeSinceMouseStopped < MOUSE_MOVEMENT_TIMER_MS) {
-      console.log('⏱️ Product Bumper blocked - waiting for 3s after mouse stopped');
       return false;
     }
     
@@ -422,7 +406,6 @@ export function shouldShowProductBumper(): boolean {
     return true;
   }
   
-  console.log('⛔ Product Bumper blocked - no applicable scenario');
   return false;
 }
 
@@ -435,37 +418,31 @@ export function shouldShowExitIntentBumper(): boolean {
   // PRIORITY CHECK: Must be in home state to show any bumpers
   const { shouldAllowBumpers } = require('./homeState');
   if (!shouldAllowBumpers()) {
-    console.log('⛔ Exit Intent blocked - not in home state');
     return false;
   }
   
   // Never show if user has clicked into Guided Rankings
   if (state.hasClickedIntoGuidedRankings) {
-    console.log('⛔ Exit Intent blocked - user clicked into Guided Rankings');
     return false;
   }
   
   // Never show if any bumper is currently open
   if (state.isAnyBumperCurrentlyOpen) {
-    console.log('⛔ Exit Intent blocked - another bumper is open');
     return false;
   }
   
   // Never show if Guided Rankings is currently open
   if (state.isGuidedRankingsCurrentlyOpen) {
-    console.log('⛔ Exit Intent blocked - Guided Rankings is open');
     return false;
   }
   
   // Never show if Comparison Report is currently open
   if (state.isComparisonReportCurrentlyOpen) {
-    console.log('⛔ Exit Intent blocked - Comparison Report is open');
     return false;
   }
   
   // Never show if already shown
   if (state.exitIntentShown) {
-    console.log('⛔ Exit Intent blocked - already shown');
     return false;
   }
   
@@ -475,7 +452,6 @@ export function shouldShowExitIntentBumper(): boolean {
     const timeSinceDismissed = Date.now() - dismissedAt;
     
     if (timeSinceDismissed < POST_BUMPER_DELAY_MS) {
-      console.log('⏱️ Exit Intent blocked - waiting for 23s after dismissal');
       return false;
     }
   }
@@ -485,7 +461,6 @@ export function shouldShowExitIntentBumper(): boolean {
   const timeOnPage = Date.now() - toolOpenedAt;
   
   if (timeOnPage < EXIT_INTENT_TIMER_MS) {
-    console.log('⏱️ Exit Intent blocked - need 2 minutes on page');
     return false;
   }
   
@@ -515,10 +490,4 @@ export function resetUnifiedBumperState(): void {
   }
 }
 
-/**
- * Check if in development mode
- */
-function isDevelopmentMode(): boolean {
-  return process.env.NODE_ENV === 'development' || 
-         (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-}
+

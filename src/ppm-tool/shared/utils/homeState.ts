@@ -152,11 +152,9 @@ export function shouldAllowBumpers(): boolean {
   const openOverlays = getOpenOverlays();
   
   if (!inHomeState) {
-    console.log(`⛔ Bumpers blocked - not in home state. Open overlays:`, openOverlays);
     return false;
   }
   
-  console.log(`✅ Bumpers allowed - tool is in home state`);
   return true;
 }
 
