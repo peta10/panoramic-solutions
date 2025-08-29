@@ -98,7 +98,7 @@ export const useEmailReport = (options: UseEmailReportOptions = {}) => {
           selectedTools: data.selectedTools,
           selectedCriteria: data.selectedCriteria,
           chartImageUrl: data.chartImageUrl,
-          userAgent: typeof window !== 'undefined' ? navigator.userAgent : undefined,
+          userAgent: typeof window !== 'undefined' && typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
           guidedRankingAnswers,
           personalizationData
         }),
@@ -217,7 +217,7 @@ async function trackEmailSent(email: string, toolCount: number, criteriaCount: n
           tool_count: toolCount,
           criteria_count: criteriaCount,
           timestamp: new Date().toISOString(),
-          user_agent: typeof window !== 'undefined' ? navigator.userAgent : 'server'
+          user_agent: typeof window !== 'undefined' && typeof navigator !== 'undefined' ? navigator.userAgent : 'server'
         }
       }),
       // Don't wait too long for analytics

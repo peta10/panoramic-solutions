@@ -194,11 +194,11 @@ if (typeof window !== 'undefined') {
   (window as any).testExitIntent = () => {
     console.log('🔍 Cross-Browser Exit Intent Test:');
     console.log('Browser Info:', {
-      userAgent: navigator.userAgent,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR',
       viewport: { width: window.innerWidth, height: window.innerHeight },
       pixelRatio: window.devicePixelRatio,
       touchSupport: 'ontouchstart' in window,
-      maxTouchPoints: navigator.maxTouchPoints
+      maxTouchPoints: typeof navigator !== 'undefined' ? navigator.maxTouchPoints : 0
     });
     
     // Reset for testing

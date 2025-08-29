@@ -32,8 +32,8 @@ export const EnvironmentDebug: React.FC = () => {
       setBuildInfo({
         env: process.env.NODE_ENV,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        locale: navigator.language,
-        userAgent: navigator.userAgent.substring(0, 50) + '...',
+        locale: typeof navigator !== 'undefined' ? navigator.language : 'unknown',
+        userAgent: typeof navigator !== 'undefined' ? (navigator.userAgent.substring(0, 50) + '...') : 'SSR',
         viewport: `${window.innerWidth}x${window.innerHeight}`,
         timestamp: new Date().toISOString(),
       });
@@ -44,7 +44,7 @@ export const EnvironmentDebug: React.FC = () => {
       const info: any = {};
       
       // Check service workers
-      if ('serviceWorker' in navigator) {
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         info.serviceWorkers = registrations.length;
       }

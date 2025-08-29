@@ -320,7 +320,7 @@ export default function ContactPage() {
                   <h3 className="text-lg sm:text-xl font-semibold text-midnight mb-3 sm:mb-4">
                     What Clients Say
                   </h3>
-                  <TestimonialCarousel className="h-auto" autoPlay={true} interval={8000} />
+                  <TestimonialCarousel className="h-auto" autoPlay={true} interval={13000} />
                 </CardContent>
               </Card>
             </motion.div>

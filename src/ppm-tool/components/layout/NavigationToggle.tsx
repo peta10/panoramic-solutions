@@ -79,13 +79,13 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     const padding = 16; // py-2 = 16px (fixed)
     const contentHeight = 40; // Approximate content height
     
-    // Mobile logo is now scrollable, so no extra height needed for sticky nav
-    const mobileLogoHeight = 0; // Logo is no longer part of sticky navigation
+    // Add extra spacing below toggles on mobile for logo
+    const mobileLogoSpacing = isMobile ? 8 : 0; // Extra space below toggles for mobile logo
     
     // Comfortable spacing between navigation and main content
     const extraSpacing = isMobile ? 28 : 28; // Increased spacing for better visual separation
     
-    return padding + contentHeight + mobileLogoHeight + extraSpacing;
+    return padding + contentHeight + mobileLogoSpacing + extraSpacing;
   }, [isMobile]);
 
   // Total combined height for content offset
@@ -93,7 +93,7 @@ export const NavigationToggle: React.FC<NavigationToggleProps> = ({
     return getHeaderHeight() + getNavigationHeight();
   }, [getHeaderHeight, getNavigationHeight]);
 
-  // Update position on mount and when compare count changes (affects button size)
+  // Update position on mount and when compare count changes (affects button size) 
   useEffect(() => {
     updateChartButtonPosition();
   }, [updateChartButtonPosition, compareCount]);

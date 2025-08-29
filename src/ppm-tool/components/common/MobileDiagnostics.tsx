@@ -8,6 +8,7 @@ interface MobileDiagnosticsProps {
 
 const getBrowserName = (): string => {
   try {
+    if (typeof navigator === 'undefined') return 'SSR';
     const userAgent = navigator.userAgent;
     if (userAgent.includes('Chrome')) return 'Chrome';
     if (userAgent.includes('Firefox')) return 'Firefox';
@@ -33,10 +34,10 @@ export const MobileDiagnostics: React.FC<MobileDiagnosticsProps> = ({
       try {
         const data = {
           // Device info
-          userAgent: navigator.userAgent,
-          platform: navigator.platform,
-          cookieEnabled: navigator.cookieEnabled,
-          language: navigator.language,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR',
+          platform: typeof navigator !== 'undefined' ? navigator.platform : 'SSR',
+          cookieEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : false,
+          language: typeof navigator !== 'undefined' ? navigator.language : 'unknown',
           
           // Screen info
           screenWidth: window.screen.width,
@@ -63,7 +64,7 @@ export const MobileDiagnostics: React.FC<MobileDiagnosticsProps> = ({
           
           // Touch support
           touchSupport: 'ontouchstart' in window,
-          maxTouchPoints: navigator.maxTouchPoints || 0,
+          maxTouchPoints: typeof navigator !== 'undefined' ? (navigator.maxTouchPoints || 0) : 0,
           
           // Orientation
           orientation: screen.orientation?.type || 'unknown',
@@ -75,7 +76,7 @@ export const MobileDiagnostics: React.FC<MobileDiagnosticsProps> = ({
           webkitFillAvailableSupported: CSS.supports('height', '-webkit-fill-available'),
           
           // Performance
-          connectionType: (navigator as any).connection?.effectiveType || 'unknown',
+          connectionType: typeof navigator !== 'undefined' ? ((navigator as any).connection?.effectiveType || 'unknown') : 'unknown',
           
           // Errors and debugging
           lastError: window.localStorage?.getItem('lastPPMError') || 'none',
@@ -143,8 +144,12 @@ export const MobileDiagnostics: React.FC<MobileDiagnosticsProps> = ({
             <h3 className="font-bold text-sm">Mobile Diagnostics</h3>
             <button
               onClick={() => {
-                navigator.clipboard?.writeText(JSON.stringify(diagnostics, null, 2));
-                alert('Diagnostics copied to clipboard!');
+                if (typeof navigator !== 'undefined') {
+                  navigator.clipboard?.writeText(JSON.stringify(diagnostics, null, 2));
+                  alert('Diagnostics copied to clipboard!');
+                } else {
+                  alert('Clipboard API not available');
+                }
               }}
               className="text-blue-500 hover:text-blue-700"
               title="Copy diagnostics"

@@ -1,15 +1,22 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getProductBumperState, dismissProductBumper } from '@/ppm-tool/shared/utils/productBumperState';
-import { getExitIntentState, dismissExitIntent } from '@/ppm-tool/shared/utils/exitIntentState';
 import { 
-  canShowProductBumper, 
-  canShowExitIntentBumper, 
-  recordBumperShown,
-  markGuidedRankingActive,
-  markGuidedRankingCompleted
-} from '@/ppm-tool/shared/utils/bumperCoordination';
+  getUnifiedBumperState,
+  shouldShowProductBumper,
+  shouldShowExitIntentBumper,
+  recordGuidedRankingsClick,
+  recordComparisonReportClick,
+  recordGuidedRankingsOpened,
+  recordGuidedRankingsClosed,
+  recordComparisonReportOpened,
+  recordComparisonReportClosed,
+  recordProductBumperShown,
+  recordProductBumperDismissed,
+  recordExitIntentBumperShown,
+  recordExitIntentBumperDismissed,
+  setBumperCurrentlyOpen
+} from '@/ppm-tool/shared/utils/unifiedBumperState';
 
 interface GuidanceContextType {
   showManualGuidance: boolean;
@@ -27,6 +34,10 @@ interface GuidanceContextType {
   exitIntentTriggerType: 'mouse-leave' | 'tab-switch' | null;
   onGuidedRankingStart: () => void;
   onGuidedRankingComplete: () => void;
+  onGuidedRankingClick: () => void;
+  onComparisonReportClick: () => void;
+  onComparisonReportOpen: () => void;
+  onComparisonReportClose: () => void;
 }
 
 const GuidanceContext = createContext<GuidanceContextType | undefined>(undefined);
@@ -54,13 +65,12 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // This runs only on client after hydration
-      const productBumperState = getProductBumperState();
-      if (productBumperState.dismissed) {
+      const state = getUnifiedBumperState();
+      if (state.productBumperDismissed) {
         setHasShownProductBumper(true);
       }
       
-      const exitIntentState = getExitIntentState();
-      if (exitIntentState.dismissed) {
+      if (state.exitIntentDismissed) {
         setHasShownExitIntentBumper(true);
       }
     }
@@ -83,77 +93,46 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
   const triggerProductBumper = () => {
     console.log('🎯 triggerProductBumper called - current state:', { internalShowProductBumper, hasShownProductBumper });
     
-    // Check if we're in development mode
-    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
-                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-    
-    // Always check localStorage for dismissed state
-    if (typeof window !== 'undefined') {
-      const state = getProductBumperState();
-      if (state.dismissed) {
-        console.log('⛔ ProductBumper permanently dismissed via localStorage');
-        return;
-      }
-    }
-    
-    // Check bumper coordination rules
-    if (!canShowProductBumper()) {
-      console.log('⚠️ ProductBumper blocked by coordination rules');
+    // Use unified state management
+    if (!shouldShowProductBumper()) {
+      console.log('⚠️ ProductBumper blocked by unified rules');
       return;
     }
     
-    // Check if already showing or has been shown
+    // Check if already showing or has been shown in this session
     const canShow = !internalShowProductBumper && !hasShownProductBumper;
     
     if (canShow) {
       console.log('✅ Showing ProductBumper');
       setInternalShowProductBumper(true);
       setHasShownProductBumper(true);
-      recordBumperShown('product');
+      recordProductBumperShown();
+      setBumperCurrentlyOpen(true);
     } else {
       console.log('⚠️ ProductBumper already shown or visible, skipping...');
     }
   };
 
   const closeProductBumper = () => {
-    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
-                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-    
     setInternalShowProductBumper(false);
     
-    // Always dismiss to localStorage for persistence
-    dismissProductBumper();
-    console.log('💾 ProductBumper dismissed - saved to localStorage');
+    // Record dismissal in unified state
+    recordProductBumperDismissed();
+    setBumperCurrentlyOpen(false);
+    console.log('💾 ProductBumper dismissed - saved to unified state');
     setHasShownProductBumper(true);
-    
-    if (isDevelopmentMode) {
-      console.log('🔄 ProductBumper closed [DEV MODE] - but still dismissed in localStorage');
-    }
   };
 
   const triggerExitIntentBumper = (triggerType: 'mouse-leave' | 'tab-switch') => {
     console.log('🎯 triggerExitIntentBumper called - trigger type:', triggerType);
     
-    // Check if we're in development mode
-    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
-                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-    
-    // Always check localStorage for dismissed state
-    if (typeof window !== 'undefined') {
-      const state = getExitIntentState();
-      if (state.dismissed) {
-        console.log('⛔ ExitIntentBumper permanently dismissed via localStorage');
-        return;
-      }
-    }
-    
-    // Check bumper coordination rules (includes guided ranking and delay logic)
-    if (!canShowExitIntentBumper()) {
-      console.log('⚠️ ExitIntentBumper blocked by coordination rules');
+    // Use unified state management
+    if (!shouldShowExitIntentBumper()) {
+      console.log('⚠️ ExitIntentBumper blocked by unified rules');
       return;
     }
     
-    // Check if already showing or has been shown
+    // Check if already showing or has been shown in this session
     const canShow = !showExitIntentBumper && !hasShownExitIntentBumper;
     
     if (canShow) {
@@ -161,36 +140,51 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       setExitIntentTriggerType(triggerType);
       setShowExitIntentBumper(true);
       setHasShownExitIntentBumper(true);
-      recordBumperShown('exit-intent');
+      recordExitIntentBumperShown();
+      setBumperCurrentlyOpen(true);
     } else {
       console.log('⚠️ ExitIntentBumper already shown or visible, skipping...');
     }
   };
 
   const closeExitIntentBumper = () => {
-    const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
-                             (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-    
     setShowExitIntentBumper(false);
     
-    // Always dismiss to localStorage for persistence
-    dismissExitIntent();
-    console.log('💾 ExitIntentBumper dismissed - saved to localStorage');
+    // Record dismissal in unified state
+    recordExitIntentBumperDismissed();
+    setBumperCurrentlyOpen(false);
+    console.log('💾 ExitIntentBumper dismissed - saved to unified state');
     setHasShownExitIntentBumper(true);
-    
-    if (isDevelopmentMode) {
-      console.log('🔄 ExitIntentBumper closed [DEV MODE] - but still dismissed in localStorage');
-    }
   };
 
   const onGuidedRankingStart = () => {
-    console.log('🎯 Guided ranking started - marking as active');
-    markGuidedRankingActive();
+    console.log('🎯 Guided ranking started');
+    recordGuidedRankingsOpened();
   };
 
   const onGuidedRankingComplete = () => {
-    console.log('🎯 Guided ranking completed - starting delay timer');
-    markGuidedRankingCompleted();
+    console.log('🎯 Guided ranking completed');
+    recordGuidedRankingsClosed();
+  };
+
+  const onGuidedRankingClick = () => {
+    console.log('🎯 User clicked into Guided Rankings');
+    recordGuidedRankingsClick();
+  };
+
+  const onComparisonReportClick = () => {
+    console.log('📊 User clicked into Comparison Report');
+    recordComparisonReportClick();
+  };
+
+  const onComparisonReportOpen = () => {
+    console.log('📊 Comparison Report opened');
+    recordComparisonReportOpened();
+  };
+
+  const onComparisonReportClose = () => {
+    console.log('📊 Comparison Report closed');
+    recordComparisonReportClosed();
   };
 
   return (
@@ -209,7 +203,11 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       hasShownExitIntentBumper,
       exitIntentTriggerType,
       onGuidedRankingStart,
-      onGuidedRankingComplete
+      onGuidedRankingComplete,
+      onGuidedRankingClick,
+      onComparisonReportClick,
+      onComparisonReportOpen,
+      onComparisonReportClose
     }}>
       {children}
     </GuidanceContext.Provider>

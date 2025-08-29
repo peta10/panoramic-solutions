@@ -16,20 +16,20 @@ export const useTouchDevice = () => {
       const screenHeight = window.screen?.height || window.innerHeight;
       const isMobileScreen = screenWidth < 768 || (screenWidth < 1024 && screenHeight < 768);
       
-      // Enhanced user agent detection for better browser coverage
-      const userAgent = navigator.userAgent || '';
-      const platform = navigator.platform || '';
-      const vendor = navigator.vendor || '';
+      // Enhanced user agent detection with better browser coverage - with SSR guard
+      const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
+      const platform = typeof navigator !== 'undefined' ? (navigator.platform || '') : '';
+      const vendor = typeof navigator !== 'undefined' ? (navigator.vendor || '') : '';
       
       // More comprehensive mobile/tablet detection
       const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent);
       const isTabletUserAgent = /iPad|Tablet|PlayBook|Silk/i.test(userAgent) || 
-                               (platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPad Pro detection
+                               (platform === 'MacIntel' && typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1); // iPad Pro detection
       const isAndroidTablet = /Android/i.test(userAgent) && !/Mobile/i.test(userAgent);
       
       // Touch capability detection with fallbacks
       const hasTouchEvents = 'ontouchstart' in window || 'ontouchend' in window || 'ontouchmove' in window;
-      const hasMaxTouchPoints = navigator.maxTouchPoints > 0 || (navigator as any).msMaxTouchPoints > 0;
+      const hasMaxTouchPoints = typeof navigator !== 'undefined' && (navigator.maxTouchPoints > 0 || (navigator as any).msMaxTouchPoints > 0);
       const hasTouch = hasTouchEvents || hasMaxTouchPoints;
       
       // CSS Media queries with better browser compatibility
@@ -74,7 +74,7 @@ export const useTouchDevice = () => {
     } catch (e) {
       // Ultimate fallback to conservative detection if anything fails
       console.warn('Touch detection failed, defaulting to safe user agent detection:', e);
-      const userAgent = navigator.userAgent || '';
+      const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
       const isSmallScreen = window.innerWidth < 768;
       return isMobile && isSmallScreen;
@@ -85,7 +85,7 @@ export const useTouchDevice = () => {
     // Simple re-evaluation on resize to handle device orientation changes
     const handleResize = () => {
       const screenWidth = window.innerWidth;
-      const userAgent = navigator.userAgent || '';
+      const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
       const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
       const isMobileScreen = screenWidth < 768;
       

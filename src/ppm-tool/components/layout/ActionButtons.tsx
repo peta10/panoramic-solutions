@@ -5,6 +5,7 @@ import { Send, HelpCircle } from 'lucide-react';
 import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
 import { cn } from '@/ppm-tool/shared/lib/utils';
 import { EmailCaptureModal } from '@/ppm-tool/components/forms/EmailCaptureModal';
+import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
 // REMOVED: PDF generation functionality - now focuses on email reports only
 import type { Tool, Criterion } from '@/ppm-tool/shared/types';
 
@@ -28,8 +29,12 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   const isMobile = useMobileDetection();
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { onComparisonReportClick, onComparisonReportOpen, onComparisonReportClose } = useGuidance();
   
   const handleGetReport = () => {
+    // Record that user clicked into Comparison Report
+    onComparisonReportClick();
+    onComparisonReportOpen();
     // Dismiss exit intent bumper when user clicks the report button
     onCloseExitIntentBumper?.();
     setShowEmailModal(true);
@@ -47,6 +52,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       console.log('Criteria:', selectedCriteria.length);
       
       // Close modal after successful submission
+      onComparisonReportClose();
       setShowEmailModal(false);
     } catch (error) {
       console.error('Error sending email report:', error);
@@ -99,7 +105,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
         <EmailCaptureModal
           isOpen={showEmailModal}
-          onClose={() => setShowEmailModal(false)}
+          onClose={() => {
+            onComparisonReportClose();
+            setShowEmailModal(false);
+          }}
           onSubmit={handleEmailSubmit}
           isLoading={isProcessing}
           selectedTools={filteredTools.length > 0 ? filteredTools : selectedTools}
@@ -138,7 +147,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
       <EmailCaptureModal
         isOpen={showEmailModal}
-        onClose={() => setShowEmailModal(false)}
+        onClose={() => {
+          onComparisonReportClose();
+          setShowEmailModal(false);
+        }}
         onSubmit={handleEmailSubmit}
         isLoading={isProcessing}
         selectedTools={filteredTools.length > 0 ? filteredTools : selectedTools}

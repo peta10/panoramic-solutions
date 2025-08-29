@@ -23,6 +23,7 @@ export const EnhancedDesktopTooltip: React.FC<EnhancedDesktopTooltipProps> = ({
   delay = 200
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isPositioned, setIsPositioned] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -35,9 +36,9 @@ export const EnhancedDesktopTooltip: React.FC<EnhancedDesktopTooltipProps> = ({
     if (typeof window === 'undefined') return true;
     
     try {
-      // Multi-layered hover capability detection
-      const userAgent = navigator.userAgent || '';
-      const platform = navigator.platform || '';
+      // Multi-layered hover capability detection - with SSR guards
+      const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
+      const platform = typeof navigator !== 'undefined' ? (navigator.platform || '') : '';
       
       // Enhanced desktop detection with geographic considerations
       const isDesktopUA = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent);
@@ -189,6 +190,7 @@ export const EnhancedDesktopTooltip: React.FC<EnhancedDesktopTooltipProps> = ({
     }
 
     setPosition({ top, left });
+    setIsPositioned(true);
   }, [side, align]);
 
   // Show tooltip with delay
@@ -208,6 +210,7 @@ export const EnhancedDesktopTooltip: React.FC<EnhancedDesktopTooltipProps> = ({
     
     hideTimeoutRef.current = setTimeout(() => {
       setIsVisible(false);
+      setIsPositioned(false);
     }, 100);
   }, []);
 
@@ -305,7 +308,7 @@ export const EnhancedDesktopTooltip: React.FC<EnhancedDesktopTooltipProps> = ({
         {children}
       </div>
 
-      {isVisible && (
+      {isVisible && isPositioned && (
         <div
           ref={tooltipRef}
           className={`fixed z-50 px-3 py-2 text-sm bg-gray-900 text-white rounded-md shadow-xl pointer-events-none max-w-xs break-words ${className}`}
@@ -345,6 +348,22 @@ export const EnhancedDesktopTooltip: React.FC<EnhancedDesktopTooltipProps> = ({
             if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
           }}
           onMouseLeave={hideTooltip}
+        >
+          {content}
+        </div>
+      )}
+
+      {/* Hidden tooltip for measurement - only render when visible but not positioned */}
+      {isVisible && !isPositioned && (
+        <div
+          ref={tooltipRef}
+          className={`fixed z-50 px-3 py-2 text-sm bg-gray-900 text-white rounded-md shadow-xl pointer-events-none max-w-xs break-words ${className}`}
+          style={{
+            top: '-9999px',
+            left: '-9999px',
+            opacity: 0,
+            visibility: 'hidden'
+          }}
         >
           {content}
         </div>

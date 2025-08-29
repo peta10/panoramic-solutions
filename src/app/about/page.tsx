@@ -49,7 +49,7 @@ const personalStats = [
   { value: '98', label: 'Client Satisfaction', prefix: '', suffix: '%' },
 ];
 
-export default function PPMToolFinderPage() {
+export default function AboutPage() {
   return (
     <>
       <StructuredData data={personData} />

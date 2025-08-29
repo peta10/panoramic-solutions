@@ -12,29 +12,21 @@ import { FilterCondition } from '@/ppm-tool/components/filters/FilterSystem';
 import { filterTools } from '@/ppm-tool/shared/utils/filterTools';
 import { supabase } from '@/lib/supabase';
 import { ErrorBoundary } from '@/ppm-tool/components/common/ErrorBoundary';
-import { useMobileDetection } from '@/ppm-tool/shared/hooks/useMobileDetection';
+import { useUnifiedMobileDetection } from '@/ppm-tool/shared/hooks/useUnifiedMobileDetection';
 import { useLenis } from '@/ppm-tool/shared/hooks/useLenis';
 import { CriteriaSection } from '@/ppm-tool/features/criteria/components/CriteriaSection';
 import { ToolSection } from '@/ppm-tool/features/tools/ToolSection';
 import { cn } from '@/ppm-tool/shared/lib/utils';
 import { ActionButtons } from '@/ppm-tool/components/layout/ActionButtons';
+import { MobileOptimizedLoader } from '@/components/MobileOptimizedLoader';
 import { GuidedRankingForm } from '@/ppm-tool/components/forms/GuidedRankingForm';
 import { ProductBumper } from '@/ppm-tool/components/overlays/ProductBumper';
 import { ExitIntentBumper } from '@/ppm-tool/components/overlays/ExitIntentBumper';
 import { useGuidance } from '@/ppm-tool/shared/contexts/GuidanceContext';
-import { useExitIntent } from '@/ppm-tool/shared/hooks/useExitIntent';
-import { 
-  shouldShowProductBumper, 
-  dismissProductBumper, 
-  incrementShowCount,
-  markInitialTimerComplete,
-  recordMouseMovement,
-  resetMouseMovement,
-  getTimingConstants,
-  resetProductBumperState,
-  getProductBumperState,
-  hasUserCompletedGuidedRanking
-} from '@/ppm-tool/shared/utils/productBumperState';
+import { useUnifiedExitIntent } from '@/ppm-tool/shared/hooks/useUnifiedExitIntent';
+import { useUnifiedMouseTracking } from '@/ppm-tool/shared/hooks/useUnifiedMouseTracking';
+import { useDevelopmentKeyboards } from '@/ppm-tool/shared/hooks/useDevelopmentKeyboards';
+import { resetUnifiedBumperState } from '@/ppm-tool/shared/utils/unifiedBumperState';
 // REMOVED: import { MobileDiagnostics } from './MobileDiagnostics'; - Causes browser compatibility issues
 import { MobileRecoverySystem } from './MobileRecoverySystem';
 
@@ -90,8 +82,8 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   onShowHowItWorks,
   guidedButtonRef
 }) => {
-  // Simple, reliable mobile detection
-  const isMobile = useMobileDetection();
+  // Unified mobile detection to prevent hydration mismatches
+  const { isMobile, isTouchDevice, isHydrated } = useUnifiedMobileDetection();
   
   // Disable Lenis smooth scroll on mobile to prevent tooltip interference
   useLenis({
@@ -109,7 +101,11 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     triggerExitIntentBumper,
     exitIntentTriggerType,
     onGuidedRankingStart,
-    onGuidedRankingComplete
+    onGuidedRankingComplete,
+    onGuidedRankingClick,
+    onComparisonReportClick,
+    onComparisonReportOpen,
+    onComparisonReportClose
   } = useGuidance();
 
   // Debug logging for guidance state (only log when state changes)
@@ -138,11 +134,39 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     };
   }, [showProductBumper]);
 
-  // Exit intent detection hook
-  const { hasTriggered: exitIntentTriggered } = useExitIntent({
-    onTrigger: triggerExitIntentBumper,
-    enabled: !isMobile, // Only enable on desktop
-    minTimeOnPage: 120000 // Minimum 2 minutes before showing
+  // Unified mouse tracking for timing-based triggers
+  useUnifiedMouseTracking({
+    enabled: !isMobile,
+    onInitialTimerComplete: () => {
+      console.log('⏱️ Initial timer complete - checking for Product Bumper');
+    },
+    onMouseMovementTimerComplete: () => {
+      console.log('🖱️ Mouse movement timer complete - checking for Product Bumper');
+    }
+  });
+
+  // Unified exit intent detection
+  const { hasTriggeredProductBumper, hasTriggeredExitIntent } = useUnifiedExitIntent({
+    enabled: !isMobile,
+    onTriggerProductBumper: triggerProductBumper,
+    onTriggerExitIntentBumper: triggerExitIntentBumper
+  });
+
+  // Development keyboard shortcuts for testing bumpers
+  useDevelopmentKeyboards({
+    onTriggerProductBumper: () => {
+      console.log('🔥 Development: Triggering ProductBumper via keyboard');
+      triggerProductBumper();
+    },
+    onTriggerExitIntentBumper: () => {
+      console.log('🔥 Development: Triggering ExitIntentBumper via keyboard');
+      triggerExitIntentBumper('mouse-leave');
+    },
+    onResetState: () => {
+      console.log('🔥 Development: Resetting unified bumper state');
+      resetUnifiedBumperState();
+    },
+    enabled: true
   });
   // Set initial step based on mobile detection - move logic outside hook
   const getInitialStep = () => {
@@ -503,114 +527,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // Product bumper timing strategy: 23s initial timer + 3s mouse movement timer (only on first page, desktop only)
-  useEffect(() => {
-    const { INITIAL_TIMER_MS, MOUSE_MOVEMENT_TIMER_MS } = getTimingConstants();
-    let initialTimer: NodeJS.Timeout;
-    let mouseMovementTimer: NodeJS.Timeout;
-    
-    // Only show ProductBumper on the first page (not on chart comparison page)
-    const isFirstPage = currentStep === 'criteria' || currentStep === 'criteria-tools';
-    
-    if (!isFirstPage) {
-      console.log('📄 Not on first page - ProductBumper disabled');
-      return;
-    }
-    
-    // Don't run ProductBumper logic on mobile devices
-    if (isMobile) {
-      console.log('📱 Mobile device detected - ProductBumper disabled');
-      return;
-    }
-    
-    // Start 23-second initial timer immediately when component mounts
-    initialTimer = setTimeout(() => {
-      console.log('🕐 Initial 23-second timer complete - marking timer complete');
-      markInitialTimerComplete();
-    }, INITIAL_TIMER_MS);
-
-    // Set up mouse movement tracking
-    const trackMouseMovement = (e: MouseEvent) => {
-      // Clear existing timer when mouse moves (restart the countdown)
-      if (mouseMovementTimer) {
-        clearTimeout(mouseMovementTimer);
-      }
-      
-      // Record that mouse movement is happening (reset the movement detection)
-      recordMouseMovement();
-      
-      // Start 3-second timer that triggers when mouse movement STOPS
-      mouseMovementTimer = setTimeout(() => {
-        console.log('🖱️ 3 seconds after mouse movement STOPPED - checking if should show ProductBumper');
-        const state = getProductBumperState();
-        console.log('📊 ProductBumper state check:', {
-          dismissed: state.dismissed,
-          initialTimerComplete: state.initialTimerComplete,
-          mouseMovementDetected: state.mouseMovementDetected,
-          showProductBumper: showProductBumper,
-          currentStep: currentStep
-        });
-        
-        // Check if we should show the ProductBumper
-        const isDevelopmentMode = process.env.NODE_ENV === 'development' || 
-                                 (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-        
-        // Check if user has completed guided ranking
-        const hasCompletedGuidedRanking = hasUserCompletedGuidedRanking();
-        
-        const shouldShow = isDevelopmentMode ? 
-          (state.initialTimerComplete && !showProductBumper && !hasCompletedGuidedRanking) : 
-          (!state.dismissed && state.initialTimerComplete && !showProductBumper && !hasCompletedGuidedRanking);
-        
-        if (shouldShow) {
-          console.log('🎯 Triggering ProductBumper after mouse movement stopped' + (isDevelopmentMode ? ' [DEV MODE]' : ''));
-          incrementShowCount();
-          triggerProductBumper();
-        } else {
-          console.log('⚠️ ProductBumper not triggered:', {
-            dismissed: state.dismissed,
-            initialTimerComplete: state.initialTimerComplete,
-            alreadyShowing: showProductBumper,
-            hasCompletedGuidedRanking: hasCompletedGuidedRanking,
-            developmentMode: isDevelopmentMode,
-            currentStep: currentStep
-          });
-        }
-      }, MOUSE_MOVEMENT_TIMER_MS);
-    };
-
-    // Shift+Click testing trigger
-    const testProductBumperClick = (e: MouseEvent) => {
-      if (e.shiftKey) {
-        console.log('🧪 Shift+Click detected - resetting and triggering ProductBumper for testing');
-        resetProductBumperState();
-        triggerProductBumper();
-      }
-    };
-
-    // Add event listeners
-    document.addEventListener('mousemove', trackMouseMovement);
-    document.addEventListener('click', testProductBumperClick);
-
-    console.log('🕐 ProductBumper: Starting 23-second initial timer (first page only)...');
-    console.log('🧪 To test ProductBumper: Shift+Click anywhere');
-
-    return () => {
-      document.removeEventListener('mousemove', trackMouseMovement);
-      document.removeEventListener('click', testProductBumperClick);
-      if (initialTimer) clearTimeout(initialTimer);
-      if (mouseMovementTimer) clearTimeout(mouseMovementTimer);
-    };
-  }, [triggerProductBumper, showProductBumper, currentStep, isMobile]);
-
-  // Close ProductBumper when navigating away from first page
-  useEffect(() => {
-    const isFirstPage = currentStep === 'criteria' || currentStep === 'criteria-tools';
-    if (!isFirstPage && showProductBumper) {
-      console.log('📄 Navigating away from first page - closing ProductBumper');
-      closeProductBumper();
-    }
-  }, [currentStep, showProductBumper, closeProductBumper]);
+  // Note: ProductBumper timing logic is now handled by useUnifiedMouseTracking and useUnifiedExitIntent hooks
 
   // Track guided ranking state for coordination
   useEffect(() => {
@@ -999,6 +916,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
 
   return (
     <ErrorBoundary>
+      <MobileOptimizedLoader isHydrated={isHydrated}>
         {/* PPM Tool Embedded Application */}
         <div 
           className="min-h-screen rounded-lg"
@@ -1080,6 +998,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
           isVisible={showProductBumper}
           onClose={closeProductBumper}
           onUseGuided={() => {
+            onGuidedRankingClick();
             closeProductBumper();
             onOpenGuidedRanking && onOpenGuidedRanking();
           }}
@@ -1111,7 +1030,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
             }}
           />
         )}
-
+      </MobileOptimizedLoader>
     </ErrorBoundary>
   );
 }; 

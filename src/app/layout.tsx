@@ -11,8 +11,9 @@ import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ 
   subsets: ['latin'],
-  display: 'swap',
+  display: 'optional', // Changed from 'swap' to 'optional' to prevent flash
   variable: '--font-inter',
+  preload: true,
 })
 
 export function generateMetadata(): Metadata {
@@ -44,6 +45,50 @@ export default function RootLayout({
         <StructuredData />
         <MainStructuredData data={organizationData} />
         <MainStructuredData data={websiteData} />
+        
+        {/* Critical CSS to prevent mobile flashing */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            /* Critical mobile styles to prevent FOUC */
+            * {
+              -webkit-tap-highlight-color: transparent;
+              box-sizing: border-box;
+            }
+            
+            html, body {
+              margin: 0;
+              padding: 0;
+              overflow-x: hidden;
+              -webkit-font-smoothing: antialiased;
+              -moz-osx-font-smoothing: grayscale;
+            }
+            
+            body {
+              font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+              background-color: white;
+              color: rgb(11, 30, 45);
+            }
+            
+            /* Prevent layout shifts on mobile */
+            @media (max-width: 768px) {
+              .min-h-screen {
+                min-height: 100vh;
+                min-height: 100dvh;
+              }
+              
+              body {
+                width: 100%;
+                -webkit-overflow-scrolling: touch;
+              }
+              
+              /* Mobile content stabilization */
+              main {
+                flex: 1;
+                width: 100%;
+              }
+            }
+          `
+        }} />
       </head>
       <body className="font-sans antialiased bg-white">
         <ClientProviders>

@@ -16,6 +16,17 @@ interface UseExitIntentOptions {
 
 // Browser detection utilities for cross-browser compatibility
 const getBrowserInfo = () => {
+  // Guard against SSR where navigator is not available
+  if (typeof navigator === 'undefined') {
+    return {
+      isChrome: false,
+      isFirefox: false,
+      isSafari: false,
+      isEdge: false,
+      isMobile: false
+    };
+  }
+  
   const userAgent = navigator.userAgent.toLowerCase();
   return {
     isChrome: userAgent.includes('chrome') && !userAgent.includes('edge'),
@@ -42,7 +53,7 @@ export const useExitIntent = (options: UseExitIntentOptions) => {
   useEffect(() => {
     const checkMobile = () => {
       const width = window.innerWidth;
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isTouchDevice = 'ontouchstart' in window || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
       const isMobileUA = browserInfo.isMobile;
       setIsMobile(width < 768 || isTouchDevice || isMobileUA);
     };
@@ -62,7 +73,7 @@ export const useExitIntent = (options: UseExitIntentOptions) => {
       console.log('🎯 Exit intent triggered:', triggerType, {
         browser: Object.keys(browserInfo).find(key => browserInfo[key as keyof typeof browserInfo]),
         timeOnPage: Math.round(timeOnPage / 1000) + 's',
-        userAgent: navigator.userAgent,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR',
         viewport: { width: window.innerWidth, height: window.innerHeight },
         pixelRatio: window.devicePixelRatio,
         ...debugInfo

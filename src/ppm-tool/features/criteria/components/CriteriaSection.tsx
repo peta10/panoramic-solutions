@@ -47,7 +47,8 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
   const { 
     showManualGuidance, 
     closeManualGuidance,
-    showProductBumper
+    showProductBumper,
+    onGuidedRankingClick
   } = useGuidance();
 
   // Debug logging
@@ -56,10 +57,14 @@ export const CriteriaSection: React.FC<CriteriaSectionProps> = ({
   // console.log('CriteriaSection - guidedButtonRef:', guidedButtonRef);
 
   const handleGuidedRankingsClick = () => {
+    // Record that user clicked into Guided Rankings - this prevents all future bumpers
+    onGuidedRankingClick();
     onOpenGuidedRanking?.();
   };
 
   const handleUseGuided = () => {
+    // Record that user clicked into Guided Rankings - this prevents all future bumpers
+    onGuidedRankingClick();
     closeManualGuidance();
     onOpenGuidedRanking?.();
   };
