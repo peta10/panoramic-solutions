@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { resetToHomeState } from '@/ppm-tool/shared/utils/homeState';
 
 interface DevelopmentKeyboardsConfig {
   onTriggerProductBumper?: () => void;
@@ -10,8 +11,10 @@ interface DevelopmentKeyboardsConfig {
 /**
  * Development hook for keyboard shortcuts to test bumpers
  * Ctrl+Shift+Q - Trigger ProductBumper
- * Ctrl+Shift+E - Trigger ExitIntentBumper
- * Ctrl+Shift+R - Reset State
+ * Ctrl+Shift+X - Trigger ExitIntentBumper (changed from E to avoid browser conflicts)
+ * Ctrl+Shift+R - Reset All States (Home + Bumper)
+ * 
+ * Note: Home state shortcuts are separate (Ctrl+Shift+H/T/O)
  */
 export const useDevelopmentKeyboards = ({
   onTriggerProductBumper,
@@ -38,16 +41,20 @@ export const useDevelopmentKeyboards = ({
             onTriggerProductBumper?.();
             break;
           
-          case 'e':
+          case 'x':
             event.preventDefault();
-            console.log('🔥 Development Keyboard: Triggering ExitIntentBumper (Ctrl+Shift+E)');
+            console.log('🔥 Development Keyboard: Triggering ExitIntentBumper (Ctrl+Shift+X)');
             onTriggerExitIntentBumper?.();
             break;
           
           case 'r':
             event.preventDefault();
-            console.log('🔥 Development Keyboard: Resetting State (Ctrl+Shift+R)');
+            console.log('🔥 Development Keyboard: Resetting All States (Ctrl+Shift+R)');
+            // Reset home state first
+            resetToHomeState();
+            // Then reset bumper states
             onResetState?.();
+            console.log('✅ Reset Complete: Home state and bumper states reset');
             break;
         }
       }
@@ -56,10 +63,15 @@ export const useDevelopmentKeyboards = ({
     document.addEventListener('keydown', handleKeyDown);
 
     // Log available shortcuts in development
-    console.log('🎹 Development Keyboard Shortcuts Enabled:');
+    console.log('🎹 Bumper Development Keyboard Shortcuts Enabled:');
     console.log('  Ctrl+Shift+Q - Trigger ProductBumper');
-    console.log('  Ctrl+Shift+E - Trigger ExitIntentBumper');
-    console.log('  Ctrl+Shift+R - Reset State');
+    console.log('  Ctrl+Shift+X - Trigger ExitIntentBumper (X for eXit)');
+    console.log('  Ctrl+Shift+R - Reset All States (Home + Bumper)');
+    console.log('');
+    console.log('🏠 Home State Shortcuts (separate):');
+    console.log('  Ctrl+Shift+H - Show home state info');
+    console.log('  Ctrl+Shift+T - Reset to home state only');
+    console.log('  Ctrl+Shift+O - List open overlays');
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);

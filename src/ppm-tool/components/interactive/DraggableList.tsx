@@ -34,28 +34,22 @@ export function DraggableList<T>({
 }: DraggableListProps<T>) {
   const isMobile = useMobileDetection();
 
-  // IMPORTANT: All hooks must be called before any early returns
+  // Always create sensors but configure them based on mobile state
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px movement required before drag starts
+        distance: isMobile ? 99999 : 8, // Effectively disable on mobile
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 200, // 200ms delay before drag starts on touch
-        tolerance: 8, // 8px movement allowed during delay
+        delay: isMobile ? 99999 : 200, // Effectively disable on mobile
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }));
-
-  // Create stable sensor arrays to prevent useEffect dependency warnings
-  const emptySensors = React.useMemo(() => [], []);
-  const activeSensors = React.useMemo(() => 
-    isMobile ? emptySensors : sensors, 
-    [isMobile, sensors, emptySensors]
+      coordinateGetter: isMobile ? undefined : sortableKeyboardCoordinates,
+    })
   );
 
   // Guard against undefined items
@@ -78,7 +72,7 @@ export function DraggableList<T>({
     <DndContext
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
-      sensors={activeSensors}
+      sensors={sensors}
     >
       <SortableContext
         items={items.map(getItemId)}

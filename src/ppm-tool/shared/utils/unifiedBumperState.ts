@@ -289,6 +289,13 @@ export function setBumperCurrentlyOpen(isOpen: boolean): void {
 export function shouldShowProductBumper(): boolean {
   const state = getUnifiedBumperState();
   
+  // PRIORITY CHECK: Must be in home state to show any bumpers
+  const { shouldAllowBumpers } = require('./homeState');
+  if (!shouldAllowBumpers()) {
+    console.log('⛔ Product Bumper blocked - not in home state');
+    return false;
+  }
+  
   // Never show if user has clicked into Guided Rankings
   if (state.hasClickedIntoGuidedRankings) {
     console.log('⛔ Product Bumper blocked - user clicked into Guided Rankings');
@@ -424,6 +431,13 @@ export function shouldShowProductBumper(): boolean {
  */
 export function shouldShowExitIntentBumper(): boolean {
   const state = getUnifiedBumperState();
+  
+  // PRIORITY CHECK: Must be in home state to show any bumpers
+  const { shouldAllowBumpers } = require('./homeState');
+  if (!shouldAllowBumpers()) {
+    console.log('⛔ Exit Intent blocked - not in home state');
+    return false;
+  }
   
   // Never show if user has clicked into Guided Rankings
   if (state.hasClickedIntoGuidedRankings) {

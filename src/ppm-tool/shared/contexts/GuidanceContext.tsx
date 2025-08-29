@@ -17,6 +17,11 @@ import {
   recordExitIntentBumperDismissed,
   setBumperCurrentlyOpen
 } from '@/ppm-tool/shared/utils/unifiedBumperState';
+import { 
+  setOverlayOpen, 
+  setOverlayClosed, 
+  OVERLAY_TYPES 
+} from '@/ppm-tool/shared/utils/homeState';
 
 interface GuidanceContextType {
   showManualGuidance: boolean;
@@ -108,6 +113,7 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       setHasShownProductBumper(true);
       recordProductBumperShown();
       setBumperCurrentlyOpen(true);
+      setOverlayOpen(OVERLAY_TYPES.PRODUCT_BUMPER);
     } else {
       console.log('⚠️ ProductBumper already shown or visible, skipping...');
     }
@@ -119,6 +125,7 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
     // Record dismissal in unified state
     recordProductBumperDismissed();
     setBumperCurrentlyOpen(false);
+    setOverlayClosed(OVERLAY_TYPES.PRODUCT_BUMPER);
     console.log('💾 ProductBumper dismissed - saved to unified state');
     setHasShownProductBumper(true);
   };
@@ -142,6 +149,7 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
       setHasShownExitIntentBumper(true);
       recordExitIntentBumperShown();
       setBumperCurrentlyOpen(true);
+      setOverlayOpen(OVERLAY_TYPES.EXIT_INTENT_BUMPER);
     } else {
       console.log('⚠️ ExitIntentBumper already shown or visible, skipping...');
     }
@@ -153,6 +161,7 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
     // Record dismissal in unified state
     recordExitIntentBumperDismissed();
     setBumperCurrentlyOpen(false);
+    setOverlayClosed(OVERLAY_TYPES.EXIT_INTENT_BUMPER);
     console.log('💾 ExitIntentBumper dismissed - saved to unified state');
     setHasShownExitIntentBumper(true);
   };
@@ -160,11 +169,13 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
   const onGuidedRankingStart = () => {
     console.log('🎯 Guided ranking started');
     recordGuidedRankingsOpened();
+    setOverlayOpen(OVERLAY_TYPES.GUIDED_RANKINGS);
   };
 
   const onGuidedRankingComplete = () => {
     console.log('🎯 Guided ranking completed');
     recordGuidedRankingsClosed();
+    setOverlayClosed(OVERLAY_TYPES.GUIDED_RANKINGS);
   };
 
   const onGuidedRankingClick = () => {
@@ -180,11 +191,13 @@ export const GuidanceProvider = ({ children, showProductBumper: externalShowProd
   const onComparisonReportOpen = () => {
     console.log('📊 Comparison Report opened');
     recordComparisonReportOpened();
+    setOverlayOpen(OVERLAY_TYPES.COMPARISON_REPORT);
   };
 
   const onComparisonReportClose = () => {
     console.log('📊 Comparison Report closed');
     recordComparisonReportClosed();
+    setOverlayClosed(OVERLAY_TYPES.COMPARISON_REPORT);
   };
 
   return (

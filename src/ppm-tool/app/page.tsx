@@ -7,6 +7,7 @@ import { EmbeddedPPMToolFlow } from '@/ppm-tool/components/common/EmbeddedPPMToo
 import { GuidanceProvider } from '@/ppm-tool/shared/contexts/GuidanceContext';
 import { HowItWorksOverlay } from '@/ppm-tool/components/overlays/HowItWorksOverlay';
 import { usePostHog } from '@/hooks/usePostHog';
+import { setOverlayOpen, setOverlayClosed, OVERLAY_TYPES, addDevelopmentKeyboardShortcuts } from '@/ppm-tool/shared/utils/homeState';
 
 export default function Home() {
   const [showHowItWorks, setShowHowItWorks] = useState(false); // Changed from auto-popup to manual trigger
@@ -37,6 +38,9 @@ export default function Home() {
     document.addEventListener('click', handleFirstInteraction);
     document.addEventListener('scroll', handleFirstInteraction);
 
+    // Add development keyboard shortcuts for home state testing
+    addDevelopmentKeyboardShortcuts();
+
     return () => {
       document.removeEventListener('click', handleFirstInteraction);
       document.removeEventListener('scroll', handleFirstInteraction);
@@ -47,6 +51,7 @@ export default function Home() {
     trackClick('get_started_button', { location: 'how_it_works_overlay' });
     trackTool('ppm_tool', 'started_guided_flow', { source: 'how_it_works' });
     setShowHowItWorks(false);
+    setOverlayClosed(OVERLAY_TYPES.HOW_IT_WORKS);
     setShowGuidedRanking(true); // Directly open guided ranking
   };
 
@@ -54,6 +59,7 @@ export default function Home() {
     trackClick('manual_ranking_button', { location: 'how_it_works_overlay' });
     trackTool('ppm_tool', 'started_manual_flow', { source: 'how_it_works' });
     setShowHowItWorks(false);
+    setOverlayClosed(OVERLAY_TYPES.HOW_IT_WORKS);
     // Go directly to manual tool selection
   };
 
@@ -75,6 +81,7 @@ export default function Home() {
     trackClick('show_how_it_works', { location: 'main_page' });
     trackTool('ppm_tool', 'viewed_how_it_works', { source: 'main_page' });
     setShowHowItWorks(true);
+    setOverlayOpen(OVERLAY_TYPES.HOW_IT_WORKS);
   };
 
   return (
@@ -92,7 +99,10 @@ export default function Home() {
             {/* How It Works Overlay - triggered manually via button */}
             <HowItWorksOverlay
               isVisible={showHowItWorks}
-              onClose={() => setShowHowItWorks(false)}
+              onClose={() => {
+                setShowHowItWorks(false);
+                setOverlayClosed(OVERLAY_TYPES.HOW_IT_WORKS);
+              }}
               onGetStarted={handleGetStarted}
               onManualRanking={handleManualRanking}
             />

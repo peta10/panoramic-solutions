@@ -99,6 +99,7 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
     showExitIntentBumper,
     closeExitIntentBumper,
     triggerExitIntentBumper,
+    hasShownExitIntentBumper,
     exitIntentTriggerType,
     onGuidedRankingStart,
     onGuidedRankingComplete,
@@ -155,11 +156,17 @@ export const EmbeddedPPMToolFlow: React.FC<EmbeddedPPMToolFlowProps> = ({
   // Development keyboard shortcuts for testing bumpers
   useDevelopmentKeyboards({
     onTriggerProductBumper: () => {
-      console.log('🔥 Development: Triggering ProductBumper via keyboard');
+      console.log('🔥 Development Keyboard: Triggering ProductBumper (Ctrl+Shift+Q)');
+      console.log('📊 Pre-trigger state check:');
+      console.log('  - Product Bumper visible:', showProductBumper);
+      console.log('  - Has shown Product Bumper:', hasShownProductBumper);
       triggerProductBumper();
     },
     onTriggerExitIntentBumper: () => {
-      console.log('🔥 Development: Triggering ExitIntentBumper via keyboard');
+      console.log('🔥 Development Keyboard: Triggering ExitIntentBumper (Ctrl+Shift+X)');
+      console.log('📊 Pre-trigger state check:');
+      console.log('  - Exit Intent visible:', showExitIntentBumper);
+      console.log('  - Has shown Exit Intent:', hasShownExitIntentBumper);
       triggerExitIntentBumper('mouse-leave');
     },
     onResetState: () => {
